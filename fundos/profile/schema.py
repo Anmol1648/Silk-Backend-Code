@@ -67,7 +67,15 @@ SHIPPED_SECTIONS = [
             "website": "string - primary website URL",
             "country": "string - ISO-2 country code of headquarters, e.g. IN, US, SG",
             "macro_sector": "string - e.g. Technology, Healthcare, Financial Services",
-            "sub_sector": "string - e.g. SaaS, Digital Health, Payments",
+            # The examples here used to be "SaaS, Digital Health, Payments".
+            # Only one of those three is a real benchmark group, so the
+            # guidance was actively steering the model off the list it has to
+            # hit. The list itself is appended to the prompt by
+            # `taxonomy_block()`, because it is loaded from the benchmark
+            # table rather than written down twice.
+            "sub_sector": ("string - MUST be copied exactly from the "
+                           "SUB-SECTOR list given below; it selects the peer "
+                           "group this company is benchmarked against"),
             "funding_status_name": (
                 "string - one of: Bootstrapped, Private, Angel Funded, Seed Funded, "
                 "VC Funded, Private Equity Funded, Corporate Backed, Public, Acquired, "
@@ -550,6 +558,115 @@ def canonical_source(claimed, labels):
     return best
 
 
+#: A canonical group must be at least this long to be recognised inside a
+#: longer claim. Short fragments match too much to be trusted as evidence
+#: that a company belongs to a cohort.
+_MIN_SUB_SECTOR_MATCH = 6
+
+
+def sub_sector_vocabulary():
+    """The sub-sectors that resolve to a benchmark cohort, or [] if none load.
+
+    This is not a style guide, it is the join key. `sub_sector` is matched
+    against the benchmark table to pick the peer cohort a company is scored
+    against, and a value that misses matches nothing:
+
+        'B2B E-commerce platform'  ->  unresolved, 3 benchmarks
+        'B2B Ecommerce'            ->  exact,      6 benchmarks
+
+    Tyreplex got the first. Its own run said so — `sub_sector_method:
+    'unresolved'` beside a warning that Category F carries 20% of the rating
+    and would score blank — while the prompt offered "e.g. SaaS, Digital
+    Health, Payments" as guidance, none of which are in the table either.
+
+    A model cannot reliably produce a value it has not been shown, and this
+    one is worth a fifth of a rating.
+    """
+    try:
+        from fundos.assessment.models import SectorDealData
+        return sorted({row.clubbed_group
+                       for row in SectorDealData.objects.all()
+                       if (row.clubbed_group or "").strip()
+                       and row.clubbed_group != "Unassigned"})
+    except Exception:                       # pragma: no cover - never fatal
+        return []
+
+
+def taxonomy_block():
+    """The sub-sector list, for the prompt. "" when nothing is loaded."""
+    vocabulary = sub_sector_vocabulary()
+    if not vocabulary:
+        return ""
+    listed = "\n".join(f"  - {name}" for name in vocabulary)
+    return (
+        "\n\nSUB-SECTOR — `company_profile.sub_sector` MUST be copied "
+        "EXACTLY from this list.\nIt selects the peer group this company is "
+        "benchmarked against; a value that is not on the list matches no "
+        "peers and the whole benchmark category scores blank. Choose the "
+        "closest one rather than inventing a more precise label.\n"
+        + listed + "\n")
+
+
+def _canonicalise_sub_sector(data, notes=None):
+    """Point `sub_sector` at a real benchmark group where one is recognisable.
+
+    The model's own words are kept when nothing matches — an unresolved
+    sub-sector is a visible gap, and overwriting it with a plausible-looking
+    neighbour would benchmark the company against the wrong industry while
+    looking correct.
+    """
+    claimed = str(data.get("sub_sector") or "").strip()
+    if not claimed:
+        return
+    resolved = canonical_sub_sector(claimed)
+    if not resolved:
+        if notes is not None and sub_sector_vocabulary():
+            notes.append(
+                f"company_profile: sub-sector {claimed!r} matches no "
+                f"benchmark group, so the benchmark category will score "
+                f"blank")
+        return
+    if resolved != claimed:
+        data["sub_sector"] = resolved
+        if notes is not None:
+            notes.append(f"company_profile: sub-sector {claimed!r} resolved "
+                         f"to the benchmark group {resolved!r}")
+
+
+def canonical_sub_sector(claimed):
+    """The benchmark group a claimed sub-sector names, or "" if none.
+
+    A second line of defence behind the prompt list. Exact match first, then
+    containment either way, longest wins — so "B2B E-commerce platform"
+    resolves to "B2B Ecommerce" and Category F keeps its peers instead of
+    scoring blank over a hyphen and a trailing noun.
+
+    Returns "" rather than a guess when nothing matches. An unresolved
+    sub-sector is a visible gap; a wrongly resolved one silently benchmarks a
+    company against the wrong industry, which is worse.
+    """
+    claim = _normalise_label(str(claimed or "").replace("-", ""))
+    if not claim:
+        return ""
+    best = ""
+    for name in sub_sector_vocabulary():
+        norm = _normalise_label(name.replace("-", ""))
+        if not norm:
+            continue
+        if norm == claim:
+            return name
+        # ONE DIRECTION ONLY: the claim may be more specific than the group
+        # ("B2B E-commerce platform" contains "B2B Ecommerce"), never vaguer.
+        # Matching the other way round resolved a company describing itself as
+        # "SaaS" to "Travel Tech SaaS" — a real group, a real cohort, and the
+        # wrong industry, benchmarked with every appearance of being right.
+        # A vague claim stays unresolved, which is a visible gap.
+        if (norm in claim and len(norm) >= _MIN_SUB_SECTOR_MATCH
+                and len(norm) > len(_normalise_label(best.replace("-", "")))):
+            best = name
+    return best
+
+
 def schema_prompt_block(active=None, source_labels=None, document_count=0):
     """Render the schema as prompt text for the synthesis call.
 
@@ -572,6 +689,7 @@ def schema_prompt_block(active=None, source_labels=None, document_count=0):
             lines.append(f"  - {name}: {description}")
         lines.append("")
     lines.append(sources_block(source_labels, document_count))
+    lines.append(taxonomy_block())
     return "\n".join(lines).rstrip()
 
 
@@ -898,6 +1016,14 @@ def normalize_profile(raw, active=None, notes=None, allowed_sources=None):
 
         if section_notes and notes is not None:
             notes.extend(f"{key} · {line}" for line in section_notes)
+
+        # `sub_sector` is a join key, not prose: it selects the peer cohort
+        # the company is benchmarked against. Resolving it here means a
+        # near-miss is rescued at the boundary rather than reaching the
+        # scorecard as an unmatched string that quietly blanks a fifth of the
+        # rating.
+        if key == "company_profile" and isinstance(data, dict):
+            _canonicalise_sub_sector(data, notes)
 
         profile["sections"][key] = {
             "sectionKey": key,
