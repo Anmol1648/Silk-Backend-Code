@@ -173,9 +173,29 @@ def recompute_stage_completion(deal_id):
         2: _stage2_completion(deal_id),
         3: _stage3_completion(deal_id),
     }
+    # The tenant is required on the row and was never supplied, so the
+    # get_or_create raised IntegrityError the first time a deal needed a
+    # StageState created rather than fetched:
+    #
+    #     null value in column "tenant_id" of relation "stage_state"
+    #     violates not-null constraint
+    #
+    # Every existing deal already had its three rows, so the `get` half always
+    # won and the defect only reached a deal created after this code path
+    # existed — which is why five tests died in setUp for months while the
+    # feature looked fine. It is read off the deal rather than from the
+    # ambient tenant context: this runs inside Celery, where that context is
+    # not always set, and a row filed under the wrong tenant is worse than one
+    # that fails loudly.
+    from fundos.core.models import Deal
+
+    tenant_id = (Deal.objects.filter(id=deal_id)
+                 .values_list("tenant_id", flat=True).first())
+
     for stage_no, pct in results.items():
         state, _ = StageState.objects.get_or_create(
-            deal_id=deal_id, stage_no=stage_no, defaults={})
+            deal_id=deal_id, stage_no=stage_no,
+            defaults={"tenant_id": tenant_id})
         state.completion_pct = Decimal(str(round(pct, 2)))
         state.hard_gate_met = True          # no hard gates (C6)
         if pct >= 100:
