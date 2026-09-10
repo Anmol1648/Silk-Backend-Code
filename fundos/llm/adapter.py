@@ -938,6 +938,37 @@ def llm_generate(role: str, system: str = None, prompt: str = None,
     enforcement = (search_enforcement_for(_probe_endpoint.provider_kind)
                    if _probe_endpoint is not None else None)
 
+    # Layer 4a: the breaker, for a role that CANNOT answer without retrieval.
+    #
+    # This check lived inside `if "web_search" in capabilities` below, which
+    # is the one place it cannot do its job: a search-required role whose
+    # profile has web_search switched OFF never reached it, so the breaker was
+    # silently inapplicable to exactly the roles it exists to protect. The
+    # live config shows the shape of it — `tier.simple.gemini` carries
+    # `web_search: False` — and the run log carries the consequence:
+    #
+    #     role assessment_inputs performed NO web search (0 searches). Its
+    #     answers came from the supplied context and the model's own
+    #     recollection, and cannot be cited.
+    #
+    # Whether search is CONFIGURED is a different question from whether this
+    # role may run without it. Conflating them let an ungroundable call
+    # through under both answers.
+    if role in SEARCH_REQUIRED_ROLES and search_breaker_tripped(config_profile):
+        _trace(f"llm.call.{role}", _FAIL, mode="BREAKER_OPEN",
+               config_profile=str(config_profile or "none"),
+               error="search breaker is open on a search-required role",
+               remedy="the model overran its search cap repeatedly — raise "
+                      "max_uses or fix the prompt, then wait for the cooldown")
+        raise UngroundableCall(
+            f"The web-search breaker is open for profile "
+            f"'{config_profile}', and role '{role}' cannot produce a "
+            f"publishable answer without retrieval. The breaker opens after "
+            f"repeated search-cap overruns: raise max_uses or correct the "
+            f"prompt that is driving them. Running this role without search "
+            f"would publish recollection as research, which is what the "
+            f"breaker is meant to prevent paying for.")
+
     if "web_search" in capabilities:
         # PRESENCE, not truthiness. `web_search: {}` is a legal, falsy payload
         # and it used to skip this whole block — while the tool-assembly code
@@ -958,22 +989,9 @@ def llm_generate(role: str, system: str = None, prompt: str = None,
             # than an unbounded bill" is a false choice: what it actually
             # produces is a confident dossier built from recollection, at a
             # cost the breaker was opened to avoid paying for real evidence.
-            if role in SEARCH_REQUIRED_ROLES:
-                _trace(f"llm.call.{role}", _FAIL, mode="BREAKER_OPEN",
-                       config_profile=str(config_profile or "none"),
-                       error="search breaker is open on a search-required role",
-                       remedy="the model overran its search cap repeatedly — "
-                              "raise max_uses or fix the prompt, then wait for "
-                              "the cooldown")
-                raise UngroundableCall(
-                    f"The web-search breaker is open for profile "
-                    f"'{config_profile}', and role '{role}' cannot produce a "
-                    f"publishable answer without retrieval. The breaker opens "
-                    f"after repeated search-cap overruns: raise max_uses or "
-                    f"correct the prompt that is driving them. Running this "
-                    f"role without search would publish recollection as "
-                    f"research, which is what the breaker is meant to prevent "
-                    f"paying for.")
+            # A search-required role has already been refused above; what
+            # reaches here searches to IMPROVE its answer, so thinning it is
+            # the right trade rather than a false choice.
             logger.error(
                 "LLM: search breaker is OPEN for profile %s — running %s "
                 "WITHOUT web search.", config_profile, role)

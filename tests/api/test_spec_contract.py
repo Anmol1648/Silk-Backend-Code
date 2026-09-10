@@ -37,8 +37,15 @@ class SpecContract(TestCase):
             "document_center"}
         self.assertEqual(set(secs.keys()), expected)
         # each wrapped
-        for k,v in secs.items():
-            self.assertEqual(set(v.keys()), {"sectionKey","isComplete","lastUpdatedAt","data"})
+        # `confirmed_fields` joined the envelope when confirming became
+        # per-item: the client needs to know WHICH items are confirmed to
+        # render a section, and it is the same list the PATCH accepts. The
+        # four original keys are still required; the assertion is that
+        # nothing has gone missing, not that nothing may be added.
+        for k, v in secs.items():
+            self.assertLessEqual(
+                {"sectionKey", "isComplete", "lastUpdatedAt", "data"},
+                set(v.keys()), f"{k} lost a contract key")
         # no duplicate top-level arrays
         for gone in ["founders","keyPeople","competitors","fundingRounds","news"]:
             self.assertNotIn(gone, body, f"{gone} must not be a top-level array")
@@ -107,8 +114,11 @@ class SpecContract(TestCase):
         r = self._patch("company_profile", payload)
         self.assertEqual(r.status_code, 200, r.content)
         echo = r.json()
-        self.assertEqual(set(echo.keys()),
-                         {"sectionKey", "isComplete", "lastUpdatedAt", "data"})
+        # The PATCH echo also carries the recomputed readiness, so a client
+        # updates its progress ring from the write instead of following it
+        # with a second GET.
+        self.assertLessEqual({"sectionKey", "isComplete", "lastUpdatedAt",
+                              "data"}, set(echo.keys()))
         self.assertEqual(echo["data"]["macro_sector"], "Healthcare")
         # Persisted — a fresh GET shows the saved values.
         after = self._get_section("company_profile")

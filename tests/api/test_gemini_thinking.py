@@ -288,7 +288,12 @@ class ProductionLoggingTests(TestCase):
                           logging_config["loggers"][name]["handlers"], name)
         # The console stays JSON for the platform's collector.
         self.assertIn("console", logging_config["handlers"])
-        self.assertIn('"time"',
+        # The timestamp key was renamed "time" -> "ts" and this assertion was
+        # not. What the collector needs is a timestamp, not that particular
+        # spelling, so it is checked by role.
+        self.assertIn('"ts"',
+                      logging_config["formatters"]["json"]["format"])
+        self.assertIn("asctime",
                       logging_config["formatters"]["json"]["format"])
 
 

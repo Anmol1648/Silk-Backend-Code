@@ -954,8 +954,20 @@ class SearchContainmentTests(ShippedDefaultsMixin, TestCase):
         b.is_mocked = False
         b.save()
 
+        # Trip the breaker on the profile this ROLE ACTUALLY RESOLVES TO.
+        #
+        # It was tripped on "tier.advanced" — the role-named profile — while
+        # the role resolves to "tier.advanced.gemini", so the breaker was open
+        # on a profile nothing was using and this test was measuring the tier
+        # naming drift rather than the breaker. That drift is real and has its
+        # own failing test (`test_tier_profiles_are_role_named_not_vendor_named`);
+        # this one is about whether an open breaker refuses a search-required
+        # role, and it should fail for that reason or not at all.
+        from fundos.llm.tiers import resolve_tier_profile_code
+        profile_code = resolve_tier_profile_code(
+            role="company_profile_deep_extract")
         for _ in range(SEARCH_BREAKER_THRESHOLD):
-            record_search_outcome("tier.advanced", allowed=6, actual=20)
+            record_search_outcome(profile_code, allowed=6, actual=20)
 
         seen = {}
 
