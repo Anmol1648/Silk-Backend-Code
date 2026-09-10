@@ -581,3 +581,28 @@ class PlatformFlag(models.Model):
             cls.objects.get_or_create(key=key, defaults={"note": note})
         except Exception:
             pass
+
+
+# The five master lookup tables live in their own module for readability, and
+# were never imported here — so Django's app registry did not hold them when
+# migrations were built, and `makemigrations` read them as DELETED:
+#
+#     Migrations for 'platformcfg':
+#       - Delete model Currency, FundingStatus, RevenueSize, Sector, SubSector
+#
+# Generating and applying that would have dropped `lookup_sector` (30 rows),
+# `lookup_sub_sector` (60), `lookup_funding_status` (22), `lookup_revenue_size`
+# (10) and `lookup_currency` (8) — the master data behind the Macro Sector,
+# Sub Sector, Funding Status, Revenue Size and Currency controls. The tables
+# and the model definitions were both there the whole time; only this import
+# was missing, and its absence made the schema and the code look like they
+# disagreed.
+#
+# Imported for the side effect of registering them. `noqa: F401` says so.
+from fundos.platformcfg.lookup_models import (      # noqa: E402,F401
+    Currency,
+    FundingStatus,
+    RevenueSize,
+    Sector,
+    SubSector,
+)
