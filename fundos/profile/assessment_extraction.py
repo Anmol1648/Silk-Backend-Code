@@ -345,22 +345,22 @@ def resolve_sub_sector(label):
     if named:
         return (named.clubbed_group or named.name), "name"
 
-    # 3. Known sub-sector aliases dictionary.
-    SUB_SECTOR_ALIASES = {
-        "digital health": "Healthtech",
-        "digital healthcare": "Healthtech",
-        "health management": "Healthtech",
-        "teleconsultation": "Healthtech",
-        "telemedicine": "Healthtech",
-        "b2b aftermarket tyre e-commerce": "B2B E-commerce",
-        "automotive e-commerce": "B2B E-commerce",
-        "aftermarket tyre": "B2B E-commerce",
-        "aftermarket tyre e-commerce": "B2B E-commerce",
-    }
-    for alias_raw, target_group in SUB_SECTOR_ALIASES.items():
-        if _normalise(alias_raw) == target_norm:
-            logger.info("ASSESSMENT INPUTS: sub-sector %r resolved to %r via sub-sector alias.", text, target_group)
-            return target_group, "alias"
+    # 3. Aliases live in SectorMapping, which is step 4 — not in a literal
+    #    here.
+    #
+    #    There WAS a dictionary at this point mapping nine labels onto groups,
+    #    and it demonstrated why sector knowledge does not belong in source.
+    #    Four of its nine entries — the tyre ones, added to rescue exactly the
+    #    Tyreplex case — targeted "B2B E-commerce", which is not a group in
+    #    the benchmark table. The table holds "B2B Ecommerce", without the
+    #    hyphen. So the aliases written to fix the problem resolved to a
+    #    cohort that does not exist and did nothing at all, and nothing said
+    #    so, because an alias that resolves to a missing group looks exactly
+    #    like an alias that was never consulted.
+    #
+    #    They are seeded into SectorMapping instead, with the targets
+    #    corrected, so they are visible, editable without a deploy, and
+    #    validated against the groups that actually exist.
 
     # 4. Normalized exact match on raw_label or clubbed_group.
     for m in SectorMapping.objects.all():

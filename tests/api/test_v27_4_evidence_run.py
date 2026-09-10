@@ -146,8 +146,12 @@ class ReplayOf17Aug(TestCase):
         for k, v in totals.items():
             print(f"  {k:24} {v}")
         print("-" * 74)
+        # "INR" rather than the symbol: this report prints to whatever
+        # console the suite runs on, and a Windows cp1252 terminal raises
+        # UnicodeEncodeError on the rupee sign — failing the test over its own
+        # diagnostic output rather than over anything it measures.
         print(f"  {'role':32} {'calls':>5} {'in':>7} {'out':>6} "
-              f"{'think':>6} {'₹':>7} {'in/out':>7}")
+              f"{'think':>6} {'INR':>7} {'in/out':>7}")
         from fundos.profile.services import _ratio
         for r in ledger.by_role(entries):
             print(f"  {r['role']:32} {r['calls']:>5} {r['prompt_tokens']:>7} "
