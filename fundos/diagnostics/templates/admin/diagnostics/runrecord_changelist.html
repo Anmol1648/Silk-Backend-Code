@@ -1,0 +1,7 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools %}
+<ul class="object-tools">
+  <li><a href="{% url 'admin:diagnostics_dashboard' %}" class="addlink">System health dashboard</a></li>
+</ul>
+{{ block.super }}
+{% endblock %}

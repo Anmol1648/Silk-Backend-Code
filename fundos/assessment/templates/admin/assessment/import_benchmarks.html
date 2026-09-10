@@ -1,0 +1,91 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Import sector benchmarks</h1>
+
+<p style="max-width:60em">
+  Categories <strong>E (Sector, 10%)</strong> and <strong>F (Sub-Sector,
+  20%)</strong> are scored against these tables, so between them a third of
+  every deal rating rests on this data. A re-import <strong>updates rows in
+  place</strong> — newer market data is meant to move ratings, so an
+  assessment re-run after an import will score differently. Run it once with
+  <em>Write the changes</em> unticked and read the diff first.
+</p>
+
+{% if error %}
+  <div class="errornote">{{ error }}</div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+  <table>{{ form.as_table }}</table>
+  <p><input type="submit" class="default" value="Read workbook"></p>
+</form>
+
+{% if report %}
+  <h2>Columns detected</h2>
+  <p>Check these before applying. Header text in a hand-maintained workbook
+     is the least reliable thing about it — if a column is mapped to the
+     wrong field, correct the header in the workbook and re-upload.</p>
+  {% for block in report.blocks %}
+    <h3>Block {{ block.block }} — {{ block.level }}
+        (header row {{ block.header_row }}, {{ block.rows }} rows)</h3>
+    <table>
+      <tr><th>Field</th><th>Workbook column</th></tr>
+      {% for field, header in block.columns.items %}
+        <tr><td><code>{{ field }}</code></td><td>{{ header }}</td></tr>
+      {% endfor %}
+    </table>
+  {% endfor %}
+
+  {% if report.raw_sub_sector_columns %}
+    <h3>Raw sub-sector → clubbed group
+        ({{ report.raw_sub_sector_mappings }} pairs)</h3>
+    <table>
+      <tr><th>Field</th><th>Workbook column</th></tr>
+      {% for field, header in report.raw_sub_sector_columns.items %}
+        <tr><td><code>{{ field }}</code></td><td>{{ header }}</td></tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+
+  {% if report.skipped %}
+    <h3>Rows skipped ({{ report.skipped|length }})</h3>
+    <ul>{% for line in report.skipped %}<li>{{ line }}</li>{% endfor %}</ul>
+  {% endif %}
+{% endif %}
+
+{% if result %}
+  <h2>{% if dry_run %}What this import would change{% else %}Applied{% endif %}</h2>
+  <p>
+    {{ sector_count }} sector and {{ sub_count }} sub-sector rows parsed ·
+    <strong>{{ result.created|length }}</strong> created ·
+    <strong>{{ result.updated|length }}</strong> updated ·
+    {{ result.unchanged }} unchanged ·
+    {{ result.mappings_created }} new mappings,
+    {{ result.mappings_updated }} updated
+  </p>
+
+  {% if result.updated %}
+    <h3>Rows that change</h3>
+    <p>Each of these moves the score of any company benchmarked against it.</p>
+    <ul>{% for line in result.updated %}<li><code>{{ line }}</code></li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if result.mapping_changes %}
+    <h3>Sub-sector mappings that change</h3>
+    <p>A company on one of these labels will be judged against a different
+       benchmark group than before.</p>
+    <ul>{% for line in result.mapping_changes %}<li><code>{{ line }}</code></li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if result.created %}
+    <h3>Rows that are new</h3>
+    <ul>{% for name in result.created %}<li>{{ name }}</li>{% endfor %}</ul>
+  {% endif %}
+
+  {% if dry_run %}
+    <p class="help"><strong>Nothing was written.</strong> Tick
+      <em>Write the changes</em> and submit again to apply.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

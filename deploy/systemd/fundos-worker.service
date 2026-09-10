@@ -1,0 +1,17 @@
+﻿[Unit]
+Description=FundOS Celery worker â€” gyain / befundos
+After=network.target redis.service postgresql.service
+
+[Service]
+User=fundos
+Group=fundos
+EnvironmentFile=/etc/fundos/fundos.env
+WorkingDirectory=/d01/fundos/src
+ExecStart=/d01/fundos/app/venv/bin/celery -A fundos.celeryapp worker \
+  --loglevel=INFO --concurrency=4 --max-tasks-per-child=100 \
+  --logfile=/d01/fundos/logs/celery-worker.log
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

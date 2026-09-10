@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Django
+#
+# var/ is the runtime tree: the dev database, the local storage backend and
+# the log files. Its DIRECTORIES are tracked (via .gitkeep) because settings
+# expect them to exist; nothing written into them is.
+var/*
+!var/.gitkeep
+!var/logs/
+var/logs/*
+!var/logs/.gitkeep
+!var/storage/
+var/storage/*
+!var/storage/.gitkeep
+
+# collectstatic output — regenerated at deploy time, never edited by hand.
+staticfiles/
+
+# Celery beat's schedule shelf. A binary file holding the last-run time of
+# each periodic task; committing it makes every developer's beat think tasks
+# ran on someone else's machine.
+celerybeat-schedule*
+celerybeat.pid
+
+# Secrets. deploy/befundos.env.template is the tracked example; the filled
+# copy never is.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Customer artefacts. The filled assessment and investor workbooks are
+# customer data; point FUNDOS_ASSESSMENT_WORKBOOK at a local copy instead.
+# deploy/sector_deal_data_TEMPLATE.xlsx is the tracked blank template.
+*.xlsx
+!deploy/*_TEMPLATE.xlsx
+~$*
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

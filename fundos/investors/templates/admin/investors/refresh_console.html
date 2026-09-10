@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<style>
+  .rc-card{border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:16px;background:#fff}
+  .rc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .rc-kpi{border:1px solid #e5e5e5;border-radius:6px;padding:12px}
+  .rc-kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#737373}
+  .rc-kpi .v{font-size:18px;font-weight:600;margin-top:4px}
+  .rc-row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end}
+  .rc-note{color:#737373;font-size:12px;margin-top:8px}
+  table.rc{width:100%;border-collapse:collapse;font-size:13px}
+  table.rc th,table.rc td{text-align:left;padding:8px;border-bottom:1px solid #e5e5e5}
+</style>
+
+<div class="rc-card">
+  <h2 style="margin-top:0">Schedule</h2>
+  <div class="rc-grid">
+    <div class="rc-kpi"><div class="l">Cadence</div><div class="v">{{ schedule|default:"Not configured" }}</div></div>
+    <div class="rc-kpi"><div class="l">Next run</div><div class="v">{{ next_run|date:"D d M Y, H:i"|default:"—" }}</div></div>
+    <div class="rc-kpi"><div class="l">Sources</div><div class="v">{{ sources|length }}</div></div>
+  </div>
+  <p class="rc-note">Edit the cadence under Refresh schedules. The next run time above is resolved from it, so a change is visibly confirmed.</p>
+</div>
+
+<div class="rc-card">
+  <h2 style="margin-top:0">Test a refresh</h2>
+  <form method="post">{% csrf_token %}
+    <div class="rc-row">
+      <label>Scope — articles<br><input type="number" name="limitArticles" min="1" max="52" placeholder="all" style="width:90px"></label>
+      <label>Or a single URL<br><input type="url" name="singleUrl" placeholder="https://…" style="width:340px"></label>
+    </div>
+    <p style="margin:12px 0 4px"><strong>Stages</strong></p>
+    {% for s in stages %}
+      <label style="margin-right:14px"><input type="checkbox" name="stages" value="{{ s }}" checked> {{ s }}</label>
+    {% endfor %}
+    <p style="margin-top:16px">
+      <button type="submit" name="mode" value="dry" class="button default">Dry run — writes nothing</button>
+      <button type="submit" name="mode" value="commit" class="button" style="margin-left:8px">Run and commit</button>
+    </p>
+    <p class="rc-note">A dry run executes every selected stage against the real source and reports exactly what would change, without writing. Review the diff on the run page, then commit.</p>
+  </form>
+</div>
+
+<div class="rc-card">
+  <h2 style="margin-top:0">Recent runs</h2>
+  <table class="rc">
+    <tr><th>Started</th><th>Type</th><th>Source</th><th>Status</th><th>Summary</th><th></th></tr>
+    {% for r in recent %}
+      <tr>
+        <td>{{ r.started_at|date:"d M H:i" }}</td>
+        <td>{{ r.get_run_type_display }}</td>
+        <td>{{ r.source_name|default:"—" }}</td>
+        <td>{{ r.get_status_display }}</td>
+        <td>{% for k,v in r.summary.items %}{{ k }}: {{ v }}{% if not forloop.last %} · {% endif %}{% endfor %}</td>
+        <td><a href="{% url 'admin:investors_refreshrun_change' r.id %}">Open</a></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6">No runs yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

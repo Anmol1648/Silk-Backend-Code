@@ -1,0 +1,932 @@
+"""The 17-section company profile schema (spec sections 8.1 – 8.17).
+
+This module is the single definition of the profile's output contract. Every
+consumer of a generated profile — the synthesis prompt, the response
+normalizer, the API serializer — reads its shape from here, so a field never
+needs to be defined and kept in sync in more than one place. It is used three
+ways:
+
+1. :func:`schema_prompt_block` renders the field list into the synthesis prompt.
+2. :func:`empty_profile` produces a fully-keyed skeleton with the
+   ``{sectionKey, isComplete, lastUpdatedAt, data}`` envelope.
+3. :func:`normalize_profile` coerces whatever the model returned into that
+   envelope so downstream consumers always see the same shape.
+
+Design decision: schema-as-data
+-------------------------------
+Sections are plain data, not typed models. Deliberate: the schema must be
+simultaneously (a) renderable as human-readable prompt text field-by-field and
+(b) tolerant of whatever loosely-typed JSON an LLM actually returns, which a
+strict typed model would reject outright rather than coerce. Plain data makes
+both straightforward without fighting a validation layer that assumes
+well-formed input.
+
+Where the schema lives
+----------------------
+The authoritative definition is ``platformcfg.ProfileSectionConfig`` — one row
+per section carrying ``container_kind``, ``spec_ref``, ``field_spec`` and
+``storage_key`` — seeded from :data:`SHIPPED_SECTIONS` below. Because
+:func:`schema_prompt_block` renders from those rows, adding a field to a
+section is an admin edit: the prompt asks for it and the normalizer accepts it
+on the next run, with no deploy.
+
+:data:`SHIPPED_SECTIONS` stays as the seed *and* the runtime fallback, matching
+how prompts and the research bank behave — an unseeded or unmigrated install
+must still produce a profile.
+
+Every section shares one envelope regardless of its own shape::
+
+    {"sectionKey": …, "isComplete": bool, "lastUpdatedAt": …, "data": …}
+
+``data`` is an object or an array of objects per the section's kind. The
+uniform envelope is what lets a client render all 17 sections generically
+rather than needing bespoke handling for each.
+"""
+import logging
+
+from django.utils import timezone
+
+from fundos.profile import sanitize
+
+logger = logging.getLogger("fundos.profile")
+
+# Each section: wire key, storage key, spec reference, container kind, fields.
+#
+# `storage_key` is the section key this profile's data is actually stored
+# under. It differs from the wire key for five sections whose internal names
+# predate this contract; keeping the storage names means no data migration and
+# no rewrite of the record tables behind them.
+SHIPPED_SECTIONS = [
+    {
+        "key": "company_profile",
+        "storage_key": "company_overview",
+        "ref": "8.1 Company Overview",
+        "kind": "object",
+        "fields": {
+            "description_of_business": "string - 2-4 paragraph investment-grade business description",
+            "website": "string - primary website URL",
+            "country": "string - ISO-2 country code of headquarters, e.g. IN, US, SG",
+            "macro_sector": "string - e.g. Technology, Healthcare, Financial Services",
+            "sub_sector": "string - e.g. SaaS, Digital Health, Payments",
+            "funding_status_name": (
+                "string - one of: Bootstrapped, Private, Angel Funded, Seed Funded, "
+                "VC Funded, Private Equity Funded, Corporate Backed, Public, Acquired, "
+                "Subsidiary/Group Owned"),
+            "revenue_size_name": (
+                "string - one of: < USD 100k, USD 100k to 1M, USD 1M to 5M, "
+                "USD 5M to 10M, USD 10M to 25M, > USD 25M"),
+            "currency_id": "string - ISO currency code of the HQ country, e.g. INR, USD",
+            "total_funding_raised_usd_mn": "number|null - total raised, in USD millions",
+            "last_funding_round_date": "string|null - YYYY-MM-DD",
+            "latest_pre_money_usd_mn": "number|null - USD millions",
+            "latest_post_money_usd_mn": "number|null - USD millions",
+        },
+    },
+    {
+        "key": "founders",
+        "storage_key": "founders",
+        "ref": "8.2 Founders & Key People",
+        "kind": "array",
+        "fields": {
+            "name": "string - full name",
+            "role": "string - title at the target company",
+            "background": "string - 2-3 sentences: prior companies, education, achievements",
+            "linkedin_url": "string - verified LinkedIn profile URL, empty string if not found",
+            "is_full_time": "boolean - true if working on this company full-time",
+            "is_founder": "boolean - true for founders, false for other key people",
+        },
+    },
+    {
+        "key": "products_services",
+        "storage_key": "products_services",
+        "ref": "8.3 Products & Services",
+        "kind": "array",
+        "fields": {
+            "name": "string - product or service name",
+            "category": "string - product line or category",
+            "description": "string - what it does and who it is for",
+        },
+    },
+    {
+        "key": "customers_markets",
+        "storage_key": "customers_markets",
+        "ref": "8.4 Customers & Markets",
+        "kind": "array",
+        "fields": {
+            "market": "string - market or vertical served",
+            "customer_type": "string - e.g. Enterprise, SMB, D2C consumers, Government",
+            "geography": "string - city, region or country",
+        },
+    },
+    {
+        "key": "competitive_advantages",
+        "storage_key": "competitive_advantages",
+        "ref": "8.5 Competitive Advantages",
+        "kind": "array",
+        "fields": {
+            "title": "string - short label for the advantage",
+            "description": "string - why it is defensible, with evidence",
+        },
+    },
+    {
+        "key": "business_model",
+        "storage_key": "business_model",
+        "ref": "8.6 Business Model",
+        "kind": "object",
+        "fields": {
+            "business_model_types": "array of strings - e.g. B2B SaaS, Marketplace, D2C",
+            "customer_type": "string - primary customer type",
+            "value_proposition": "string - core value proposition",
+            "delivery_model": "string - how the product reaches the customer",
+            "pricing_model": "string - e.g. subscription, usage-based, commission",
+            "sales_model": "string - e.g. inside sales, self-serve, enterprise field sales",
+            "distribution_channels": "array of strings - channels used to reach customers",
+        },
+    },
+    {
+        "key": "revenue_model",
+        "storage_key": "revenue_model",
+        "ref": "8.7 Revenue Model",
+        "kind": "array",
+        "fields": {
+            "stream": "string - revenue stream name",
+            "share_percent": "number - percentage of total revenue; streams should sum to ~100",
+        },
+    },
+    {
+        "key": "company_metrics",
+        "storage_key": "company_metrics",
+        "ref": "8.8 Company Metrics",
+        "kind": "array",
+        "fields": {
+            "metric": "string - KPI name, e.g. ARR, Active Customers, Net Retention",
+            "value": "string - the value as reported",
+            "unit": "string - unit of the value, e.g. USD mn, %, customers",
+        },
+    },
+    {
+        "key": "financial_summary",
+        "storage_key": "financial_summary",
+        "ref": "8.9 Financial Summary",
+        "kind": "object",
+        "fields": {
+            "financials": (
+                "array of objects with: financial_year (string, e.g. 'FY 2024'), "
+                "is_estimate (boolean), revenue_m (number|null), ebitda_m (number|null), "
+                "pat_m (number|null), yoy_revenue_growth_pct (number|null), "
+                "ev_revenue_multiple (number|null), currency (string ISO code)"),
+            "observations": "array of strings - concise financial observations",
+        },
+    },
+    {
+        "key": "funding_history",
+        "storage_key": "funding_history",
+        "ref": "8.10 Funding History",
+        "kind": "array",
+        "fields": {
+            "date": "string - YYYY-MM-DD or YYYY-MM if the day is unknown",
+            "round": "string - e.g. Seed, Series A, Series C",
+            # Report the figure AS THE SOURCE STATES IT. A deck saying
+            # "INR 20 crore" is amount 20, currency INR, denomination Cr --
+            # not 2.4. Converting before writing is what discarded the deck's
+            # own words, buried the rate inside a sentence, and rounded 12
+            # crore to $1.6M when it is $1.45M.
+            "amount": ("number|null - the figure exactly as the source "
+                       "states it, with no conversion"),
+            "currency": ("string - ISO code of THAT figure: INR, USD, EUR, "
+                         "GBP"),
+            "denomination": ("string - the scale as written: Cr (crore), L "
+                             "(lakh), K, Mn, Bn, or \"\" for whole units"),
+            "pre_money": "number|null - as stated, same currency rules",
+            "post_money": "number|null - as stated, same currency rules",
+            "valuation_currency": "string - ISO code for the two above",
+            "valuation_denomination": "string - scale for the two above",
+            "investors": "array of strings - all participating investors",
+            "lead_investors": "array of strings - lead investors only",
+        },
+    },
+    {
+        "key": "competitors",
+        "storage_key": "competitors",
+        "ref": "8.11 Competitors & Market Positioning",
+        "kind": "array",
+        "fields": {
+            "name": "string - competitor name",
+            # Emitted by the serializer and writable through the records
+            # endpoint since CR-12, and never actually asked for — so every
+            # competitor on a live profile came back with both empty. CR-12's
+            # own reasoning is why that matters: without a plain description of
+            # what a competitor does, neither a reader nor a later model can
+            # judge whether a listed company is a genuine comparable.
+            "description": "string - what this company does, in one or two sentences",
+            "website": "string - the competitor's primary website URL",
+            "fy_year": "number|null - financial year the revenue figure refers to",
+            "revenue": "number|null - revenue in USD millions",
+            "funding_usd_mn": "number|null - total funding raised, USD millions",
+            "status": "string - e.g. Private, Public, Acquired",
+            "investors": "array of strings",
+            "business_model": "string",
+            "market_positioning": "string",
+            "latest_valuation_usd_mn": "number|null",
+            "revenue_growth_pct": "number|null",
+            "market_share_pct": "number|null",
+            "relative_scale": "string - e.g. Larger, Comparable, Smaller vs the target",
+            "key_differentiators": "array of strings",
+            "strengths": "array of strings",
+            "weaknesses": "array of strings",
+            "ev_revenue_multiple": "number|null",
+            "ev_ebitda_multiple": "number|null",
+            "recent_activity": (
+                "array of objects with: activity_type (string), date (string), "
+                "investors_or_acquirers (array of strings), target_company (string), "
+                "deal_value_usd_mn (number|null), implied_valuation_multiple (number|null)"),
+        },
+    },
+    {
+        "key": "news",
+        "storage_key": "recent_news",
+        "ref": "8.12 Recent News & Media",
+        "kind": "array",
+        "fields": {
+            "title": "string - headline",
+            "date": "string - YYYY-MM-DD",
+            "description": "string - 1-2 sentence summary",
+            "source": "string - publication name",
+            "link": "string - full URL to the article",
+        },
+    },
+    {
+        "key": "investors_cap_table",
+        "storage_key": "cap_table",
+        "ref": "8.13 Investors & Cap Table",
+        "kind": "object",
+        "fields": {
+            "cap_table_summary": (
+                "object with: total_investors (number|null), ownership (array of objects "
+                "with stakeholder_category (string) and ownership_pct (number))"),
+            "investors_list": (
+                "array of objects with: investor_name (string), investor_type (string), "
+                "funding_amount_usd_mn (number|null), valuation_usd_mn (number|null), "
+                "dilution_pct (number|null), date (string), round (string)"),
+        },
+    },
+    {
+        "key": "company_story",
+        "storage_key": "company_story",
+        "ref": "8.14 Company Story & USP",
+        "kind": "object",
+        "fields": {
+            "origin_story": "string - founding narrative",
+            "brand_evolution": "string - how the brand/positioning evolved",
+            "usp": "string - unique selling proposition",
+            "milestones": (
+                "array of objects with: date (string), title (string), description (string)"),
+        },
+    },
+    {
+        "key": "industry_research",
+        "storage_key": "market_research",
+        "ref": "8.15 Industry & Market Research",
+        "kind": "object",
+        "fields": {
+            "industry_evolution": "string - how the industry has developed",
+            "market_sizing": (
+                "object with: tam (string), sam (string), som (string) - each including "
+                "the figure, currency and source year"),
+            "performance_trends": "array of strings - performance and technology trends",
+            "regulatory_developments": "array of strings",
+        },
+    },
+    {
+        "key": "investment_thesis",
+        "storage_key": "investment_thesis",
+        "ref": "8.16 Investment Thesis",
+        "kind": "object",
+        "fields": {
+            "opportunity_explanation": "string - the core investment rationale",
+            "leadership_assessment": "string - assessment of the founding/leadership team",
+            "risks_and_concerns": "array of strings - key risks and diligence concerns",
+        },
+    },
+    {
+        "key": "document_center",
+        "storage_key": "document_center",
+        "ref": "8.17 Document Center",
+        "kind": "object",
+        "fields": {
+            "documents": (
+                "array of objects with: id (string), filename (string), category (string), "
+                "status (string), handler (string)"),
+        },
+    },
+]
+
+SHIPPED_BY_KEY = {section["key"]: section for section in SHIPPED_SECTIONS}
+
+# Sections the model must not invent — the pipeline fills them from its own
+# records. Currently just the Document Center: the model is never asked to
+# produce it (it is filtered out of the prompt), and
+# :func:`apply_document_center` overwrites it from the run's own extraction
+# results regardless of what came back. So this set doubles as "exclude from
+# the prompt" and "always overwrite after normalization".
+PIPELINE_OWNED_SECTIONS = {"document_center"}
+
+
+def _now():
+    return timezone.now().isoformat()
+
+
+# --- schema resolution ------------------------------------------------------
+
+
+def sections():
+    """The active section definitions, admin rows first.
+
+    Falls back to :data:`SHIPPED_SECTIONS` when the config table is unseeded or
+    unmigrated. A row missing ``field_spec`` inherits the shipped spec for that
+    key rather than contributing an empty section to the prompt — a
+    half-configured row should degrade to the shipped behaviour, not silently
+    ask the model for nothing.
+    """
+    try:
+        from fundos.platformcfg.models import ProfileSectionConfig
+        rows = list(ProfileSectionConfig.objects.filter(is_active=True)
+                    .order_by("sort_order", "section_key"))
+    except Exception as exc:
+        logger.info("PIPELINE: section config unavailable (%s) — using the "
+                    "shipped schema.", exc)
+        return list(SHIPPED_SECTIONS)
+
+    by_storage = {s["storage_key"]: s for s in SHIPPED_SECTIONS}
+
+    resolved = []
+    for row in rows:
+        # A config row is keyed by its STORAGE key, which for five sections
+        # differs from the wire key the contract uses.
+        shipped = (SHIPPED_BY_KEY.get(row.section_key)
+                   or by_storage.get(row.section_key) or {})
+        spec = getattr(row, "field_spec", None) or shipped.get("fields") or {}
+        if not spec:
+            # Not necessarily a fault. ProfileSectionConfig also carries
+            # sections other subsystems own and generation never writes —
+            # readiness, the knowledge base — and those legitimately have no
+            # field spec. Only a section the contract KNOWS about but cannot
+            # resolve a spec for is worth a warning; the rest are simply not
+            # part of the generated profile.
+            if row.section_key in SHIPPED_BY_KEY or \
+                    row.section_key in by_storage:
+                logger.warning("PIPELINE: section %r is in the profile "
+                               "contract but has no field spec; skipped.",
+                               row.section_key)
+            continue
+        resolved.append({
+            # The contract speaks WIRE keys. A row keyed by its storage name
+            # still contributes its wire name, so renaming a section on the
+            # API surface never required renaming it in storage.
+            "key": shipped.get("key") or row.section_key,
+            "storage_key": (getattr(row, "storage_key", "") or
+                            shipped.get("storage_key") or row.section_key),
+            "ref": (getattr(row, "spec_ref", "") or shipped.get("ref") or
+                    row.label),
+            "kind": (getattr(row, "container_kind", "") or
+                     shipped.get("kind") or "object"),
+            "fields": spec,
+        })
+    return resolved or list(SHIPPED_SECTIONS)
+
+
+def section_keys():
+    return [section["key"] for section in sections()]
+
+
+def sections_by_key():
+    return {section["key"]: section for section in sections()}
+
+
+def storage_key_for(wire_key):
+    """Wire section key -> the key the section is actually stored under."""
+    section = sections_by_key().get(wire_key)
+    if section:
+        return section["storage_key"]
+    shipped = SHIPPED_BY_KEY.get(wire_key)
+    return shipped["storage_key"] if shipped else wire_key
+
+
+def wire_key_for(storage_key):
+    """Storage key -> wire key. The inverse of :func:`storage_key_for`."""
+    for section in sections():
+        if section["storage_key"] == storage_key:
+            return section["key"]
+    return storage_key
+
+
+# --- prompt rendering -------------------------------------------------------
+
+
+#: What the model is told about citing its work.
+#:
+#: Asked of synthesis rather than reconstructed afterwards, because synthesis
+#: is the only party that knows. It has the dossier in front of it and writes
+#: the value; nothing downstream can recover which of forty pages a sentence
+#: came from without guessing, and a guessed citation is worse than none — it
+#: survives review by looking exactly like a real one.
+#:
+#: The labels it may use are the dossier's own headings, so a citation names
+#: something a reader can actually turn to.
+SOURCES_INSTRUCTION = """
+### sources  (required alongside every section)
+
+For each section you fill, also return a `sources` object beside its `data`,
+mapping each field you filled to where you read it:
+
+    "company_profile": {
+      "data": { "website": "https://example.com" },
+      "sources": {
+        "website": {
+          "source": "TyrePlex Investor Deck.pdf",
+          "locator": "Page 3",
+          "quote": "www.example.com"
+        }
+      }
+    }
+
+For an ARRAY section, key `sources` by the item's position as a string --
+"0", "1", "2" -- matching the order you return the items in.
+
+RULES:
+  * `source` MUST be copied EXACTLY from the list of sources below. Not a
+    description of it, not the channel it arrived through -- the string
+    itself, character for character. A `source` that is not on that list is
+    discarded, and the value loses its citation.
+  * PREFER AN UPLOADED DOCUMENT over web research whenever both say the same
+    thing. The company's own deck and financial model are what a reader
+    trusts; a search result repeating the same fact is weaker evidence for
+    exactly the same claim.
+  * When the value came from what the COMPANY ITSELF supplied -- a founder
+    named in their own records, their website -- cite that, even though those
+    records are unverified. For "who is a founder here", the company saying so
+    is the primary evidence; research is what you cite for what you then
+    LEARNED about that person.
+  * `locator` is where inside that source you read it, in the form the
+    dossier itself uses: "Page 12" or "Slide 4" for a document, the sheet
+    name for a spreadsheet, "" when the dossier states no position.
+  * `quote` is a SHORT verbatim extract from the dossier that supports the
+    value -- never a paraphrase, never your own words. Under 200 characters.
+  * If the extract itself contains a double-quote character, use a SINGLE
+    quote in its place. An unescaped `"` inside a value ends the string
+    early and breaks the whole response, not just that one citation.
+  * If you cannot point to a specific place in the dossier for a field, leave
+    that field out of `sources` entirely. An omitted citation is honest; an
+    invented one is not.
+"""
+
+
+def sources_block(labels, document_count=0):
+    """The citation instruction, with the sources it is allowed to name.
+
+    The list is the point. Told only to "name a dossier heading", the model
+    wrote the channel instead -- 64 citations reading "Web Research
+    (search-grounded)" for a company whose investor deck was sitting in the
+    dossier, and one of them spelled "search-groundd", which is what writing
+    from memory looks like. A model cannot reliably copy a string it has not
+    been shown; given the strings, it can.
+    """
+    if not labels:
+        return SOURCES_INSTRUCTION
+
+    # Which labels are the uploaded documents is stated, not left implied by
+    # the ordering. "Prefer an uploaded document" is not an instruction the
+    # model can follow against a flat list it cannot tell apart.
+    from fundos.profile.pipeline.dossier import FOUNDER_SOURCE_LABEL
+
+    documents = list(labels[:document_count])
+    research = [label for label in labels[document_count:]
+                if label != FOUNDER_SOURCE_LABEL]
+    parts = ["\nTHE ONLY VALID VALUES FOR `source` -- copy one exactly:\n"]
+    if FOUNDER_SOURCE_LABEL in labels:
+        # First, because it outranks both: for a name the company typed into
+        # its own onboarding form, no research result is better evidence.
+        parts.append("THE COMPANY ITSELF (use for a value THEY supplied — a "
+                     "founder's name, the website):")
+        parts.append(f"  - {FOUNDER_SOURCE_LABEL}")
+        parts.append("")
+    if documents:
+        parts.append("UPLOADED DOCUMENTS (prefer these):")
+        parts.extend(f"  - {label}" for label in documents)
+        parts.append("")
+    if research:
+        parts.append("WEB RESEARCH (use when no document says it):"
+                     if documents else "SOURCES:")
+        parts.extend(f"  - {label}" for label in research)
+        parts.append("")
+    return SOURCES_INSTRUCTION + "\n".join(parts)
+
+
+def _normalise_label(text):
+    """Both sides of a citation match, lowercased and whitespace-collapsed."""
+    return " ".join(str(text or "").split()).casefold()
+
+
+def canonical_source(claimed, labels):
+    """The dossier heading a claimed source refers to, or "" if none.
+
+    Exact first, then containment either way, so "Web Research, Batch 3:
+    Products, Services & Business Model" still resolves to the batch it
+    names. Longest match wins: "Batch 1" must not swallow "Batch 10".
+    """
+    claim = _normalise_label(claimed)
+    if not claim or not labels:
+        return ""
+    best = ""
+    for label in labels:
+        norm = _normalise_label(label)
+        if not norm:
+            continue
+        if norm == claim:
+            return label
+        if (norm in claim or claim in norm) and len(norm) > len(
+                _normalise_label(best)):
+            best = label
+    return best
+
+
+def schema_prompt_block(active=None, source_labels=None, document_count=0):
+    """Render the schema as prompt text for the synthesis call.
+
+    Single-sourced from the section definitions, so the prompt the model sees
+    and the shape :func:`normalize_profile` expects back cannot drift apart —
+    there is no second, hand-maintained copy of the field list. Skips
+    :data:`PIPELINE_OWNED_SECTIONS`: the model is never told the Document
+    Center's shape, because it is never asked to produce it.
+    """
+    lines = []
+    for section in (active if active is not None else sections()):
+        if section["key"] in PIPELINE_OWNED_SECTIONS:
+            continue
+        container = ("data is an OBJECT with these fields"
+                     if section["kind"] == "object"
+                     else "data is an ARRAY of objects, each with these fields")
+        lines.append(f'### sections["{section["key"]}"]  ({section["ref"]})')
+        lines.append(f"{container}:")
+        for name, description in section["fields"].items():
+            lines.append(f"  - {name}: {description}")
+        lines.append("")
+    lines.append(sources_block(source_labels, document_count))
+    return "\n".join(lines).rstrip()
+
+
+def promptable_keys(active=None):
+    """The section keys the model is actually asked to produce."""
+    return [s["key"] for s in (active if active is not None else sections())
+            if s["key"] not in PIPELINE_OWNED_SECTIONS]
+
+
+# --- normalization ----------------------------------------------------------
+
+
+def _empty_data(section):
+    """The zero value for one section's ``data``, matching its declared kind.
+
+    Never ``None``: every consumer can assume the container type without a null
+    check.
+    """
+    return [] if section["kind"] == "array" else {}
+
+
+def empty_profile(active=None):
+    """A fully-keyed skeleton with empty data for every section.
+
+    This is the baseline :func:`normalize_profile` fills in over, which is what
+    guarantees the final result always has every section key present even when
+    the model's response omitted some entirely.
+    """
+    now = _now()
+    return {
+        "sections": {
+            section["key"]: {
+                "sectionKey": section["key"],
+                "isComplete": False,
+                "lastUpdatedAt": now,
+                "data": _empty_data(section),
+            }
+            for section in (active if active is not None else sections())
+        }
+    }
+
+
+def is_populated(data):
+    """True when a section holds at least one non-empty value.
+
+    Recurses through lists and dicts looking for any leaf that is not blank.
+    This computes ``isComplete`` rather than trusting the model's own claim,
+    which it can get wrong or omit. A section with the right shape but every
+    field empty is correctly treated as unpopulated, which distinguishes "the
+    model tried and found nothing" from "the model reported something" — the
+    difference that tells a reader whether a thin profile reflects thin source
+    material or a synthesis problem.
+    """
+    if isinstance(data, list):
+        return any(is_populated(item) for item in data)
+    if isinstance(data, dict):
+        return any(is_populated(value) for value in data.values())
+    if isinstance(data, str):
+        return data.strip() != ""
+    return data is not None and data is not False
+
+
+def _coerce_fields(section, data, notes):
+    """Type every declared field of one section against its own spec.
+
+    The spec strings are the same text :func:`schema_prompt_block` renders into
+    the prompt, so the type a field is asked for and the type it is stored as
+    come from one declaration. Adding a field in Django admin therefore makes
+    the prompt request it *and* makes this coerce it, with nothing to keep in
+    step by hand.
+
+    Fields the spec does not declare are kept but sanitized. Dropping them
+    would discard data an operator may have started asking for in a spec this
+    code has not seen; keeping them raw would let markup and unbounded strings
+    past the boundary.
+
+    A field the model omitted stays omitted. This types what came back; it does
+    not invent a shape. Materialising every declared field as an empty value
+    would look helpful and would lie twice over: downstream, a row of empty
+    strings is not distinguishable from one the model deliberately left blank,
+    and ``_replace_people`` reads a *missing* ``is_founder`` as True — so
+    filling that in as False would file every unflagged person as a key person
+    and empty the section a reader checks for the team. Clients get the field
+    structure from the GET-path row templates in
+    :mod:`fundos.profile.spec_serializer`, which is the layer that owes them a
+    shape to render.
+    """
+    if not isinstance(data, dict):
+        return data
+    spec = section.get("fields") or {}
+    out = {}
+    for name, value in data.items():
+        clean_name = sanitize.plain_text(name, limit=128)
+        if not clean_name:
+            continue
+        if clean_name in spec:
+            out[clean_name] = sanitize.coerce_to_spec(
+                clean_name, spec[clean_name], value, notes=notes)
+        else:
+            out[clean_name] = sanitize.sanitize_json(value)
+    return out
+
+
+def coerce_section_data(wire_key, data, notes=None):
+    """Type one section's payload against its declared field spec.
+
+    The same coercion :func:`normalize_profile` applies, reachable for a single
+    section. The full pipeline run is typed by the normalizer, but that is not
+    the only door generated content comes through: single-section and
+    field-level regeneration call the per-section roles directly, so without
+    this they would write straight past the boundary.
+
+    Returns ``data`` unchanged when the key names no section in the generated
+    contract — an admin-added section with no field spec, or a legacy storage
+    name. That is not a failure: not every stored section is part of the
+    generated profile.
+    """
+    section = sections_by_key().get(wire_key)
+    if section is None:
+        return data
+    if isinstance(data, list):
+        return [_coerce_fields(section, row, notes)
+                for row in data if isinstance(row, dict)]
+    if isinstance(data, dict):
+        return _coerce_fields(section, data, notes)
+    return data
+
+
+def _one_citation(citation):
+    """The single citation inside whatever the model wrote for one item.
+
+    An object section is cited field by field, so for a LIST section a model
+    reasonably does the same thing one level down: rather than one citation
+    per founder it writes one per field OF that founder --
+
+        "sources": {"0": {"name":       {"source": ..., "quote": ...},
+                          "background": {"source": ..., "quote": ...}}}
+
+    That is a sincere answer to the question asked, and it used to be thrown
+    away whole: the outer dict has no `source` key, so every citation for
+    every founder was dropped and the run reported only that "a sources block
+    came back that could not be read". Tyreplex's five founders arrived cited
+    and reached the reader with nothing.
+
+    An item is confirmed as one part, and shows one provenance line, so one
+    citation per item is what there is room for: take the first that names a
+    source, preferring the one carrying a quote, since that is the one a
+    reader can check.
+    """
+    if not isinstance(citation, dict):
+        return None
+    if citation.get("source"):
+        return citation
+    nested = [inner for inner in citation.values()
+              if isinstance(inner, dict) and inner.get("source")]
+    if not nested:
+        return None
+    for inner in nested:
+        if inner.get("quote"):
+            return inner
+    return nested[0]
+
+
+def _coerce_sources(value, *, notes=None, key="", allowed=None):
+    """Type the `sources` map a section came back with.
+
+    Same discipline as every other field: whatever arrived is coerced rather
+    than trusted, and anything unreadable as a citation is dropped. A
+    malformed citation is not worth keeping — the value it describes is still
+    fine, and an unreadable source block would surface as an empty chip that
+    looks like evidence and is not.
+    """
+    if not isinstance(value, dict):
+        return {}
+    raw_sources = value.get("sources")
+    if isinstance(raw_sources, list):
+        # A list section asked for citations keyed by position often comes
+        # back as a list in that same order instead. It says the same thing.
+        raw_sources = {str(i): item for i, item in enumerate(raw_sources)}
+    if not isinstance(raw_sources, dict):
+        if raw_sources and notes is not None:
+            notes.append(f"{key}: `sources` arrived as "
+                         f"{type(raw_sources).__name__}, which is not a "
+                         f"citation map — it was dropped")
+        return {}
+
+    out, rejected = {}, []
+    for field, citation in raw_sources.items():
+        citation = _one_citation(citation)
+        if not isinstance(citation, dict):
+            continue
+        source = sanitize.plain_text(citation.get("source", ""), limit=300)
+        if not source:
+            continue        # a citation naming no source names nothing
+        if allowed:
+            # It must name something that is actually IN the dossier. The
+            # model was handed the list; a value off it is a label written
+            # from memory, and a citation nobody can turn to is worse than an
+            # honest blank because it passes review looking like evidence.
+            source = canonical_source(source, allowed)
+            if not source:
+                rejected.append(field)
+                continue
+        out[sanitize.plain_text(field, limit=128)] = {
+            "source": source,
+            "locator": sanitize.plain_text(citation.get("locator", ""),
+                                           limit=120),
+            "quote": sanitize.plain_text(citation.get("quote", ""), limit=400),
+        }
+    if rejected and notes is not None:
+        notes.append(
+            f"{key}: {len(rejected)} citation(s) named a source that is not "
+            f"in the dossier and were dropped ({', '.join(rejected[:4])})")
+    elif raw_sources and not out and notes is not None:
+        notes.append(f"{key}: a sources block came back that could not be "
+                     f"read as citations — it was dropped")
+    return out
+
+
+def normalize_profile(raw, active=None, notes=None, allowed_sources=None):
+    """Coerce a model response into the canonical envelope.
+
+    Accepts either the full ``{"sections": {...}}`` shape or a bare mapping of
+    section keys, and tolerates a section given as raw data instead of a
+    wrapped ``{sectionKey, data}`` object. Unknown keys are dropped; missing
+    sections are filled in empty.
+
+    This function's whole reason to exist: a model prompted for strict JSON
+    still does not *guarantee* the exact envelope every time — it may flatten
+    the wrapper, omit a section, add an unrequested key, or return a section's
+    ``data`` with the wrong container kind. Each of those is coerced rather
+    than raised on, because a stricter reading would turn a nearly-correct
+    response into a total failure over a cosmetic mismatch. This is the
+    boundary where "whatever came back" becomes "what every downstream consumer
+    can rely on".
+
+    Since the shape slips above are only half the problem, the same boundary
+    now also enforces *content*: every string is stripped of markdown, every
+    numeric field is coerced to a number or ``None``, every enumerated field is
+    snapped onto a permitted value, and every URL is validated. Those are the
+    defects that reached a live profile — asterisks in prose bound for a PDF, a
+    five-term list in a scalar taxonomy field, and ``""`` beside ``28.5`` in
+    one ``number|null`` column.
+
+    :param raw: The parsed JSON from the synthesis call — untrusted in shape
+        and in content.
+    :param notes: Optional list. Every correction worth a human's attention is
+        appended to it. A sanitizer that silently improves its input is
+        indistinguishable from one that silently damages it, so the caller
+        records these on the run.
+    :returns: A profile with every active section key present, ``isComplete``
+        freshly computed, and every ``data`` matching its declared container.
+    """
+    active = active if active is not None else sections()
+    now = _now()
+    profile = empty_profile(active)
+
+    if not isinstance(raw, dict):
+        if raw is not None and notes is not None:
+            notes.append(
+                f"the synthesis response was a {type(raw).__name__}, not an "
+                f"object — no section could be read from it")
+        return profile
+
+    incoming = raw.get("sections")
+    if not isinstance(incoming, dict):
+        # The model may have returned the section map at the top level.
+        incoming = raw
+
+    for section in active:
+        key = section["key"]
+        value = incoming.get(key)
+        if value is None:
+            # Entirely missing: leave the empty skeleton rather than raising.
+            # A partially-populated profile is still a useful deliverable.
+            continue
+
+        if isinstance(value, dict) and "data" in value:
+            data = value.get("data")
+        else:
+            # The model flattened the wrapper and returned data directly.
+            data = value
+
+        # Coerce a container-kind mismatch rather than rejecting it: a single
+        # object where an array of one was meant (or vice versa) is a shape
+        # slip, not a content problem, and is correctable without losing any of
+        # the model's actual work.
+        expects_list = section["kind"] == "array"
+        if expects_list and isinstance(data, dict):
+            data = [data]
+        elif not expects_list and isinstance(data, list):
+            data = data[0] if data and isinstance(data[0], dict) else {}
+
+        if data is None or not isinstance(data, (list, dict)):
+            # Nothing sane to coerce (a bare string or number where an
+            # object/array was expected) — leave the skeleton empty rather than
+            # store garbage that breaks every consumer's container assumption.
+            if notes is not None:
+                notes.append(
+                    f"{key}: expected {'an array' if expects_list else 'an object'}"
+                    f", got {type(data).__name__} — section left empty")
+            continue
+
+        section_notes = []
+        if expects_list:
+            rows = []
+            for row in data[:sanitize.MAX_LIST_ITEMS]:
+                if isinstance(row, dict):
+                    rows.append(_coerce_fields(section, row, section_notes))
+                elif row not in (None, ""):
+                    # A bare string where a row object was asked for. The one
+                    # declared field that is plainly a label gets it, so a
+                    # model answering "competitors: [Acme, Beta]" is kept
+                    # rather than discarded on a container technicality.
+                    label = next((f for f in ("name", "title", "metric",
+                                              "market", "stream")
+                                  if f in (section.get("fields") or {})), None)
+                    if label:
+                        rows.append(_coerce_fields(section, {label: row},
+                                                   section_notes))
+            data = [row for row in rows if is_populated(row)]
+        else:
+            data = _coerce_fields(section, data, section_notes)
+
+        if section_notes and notes is not None:
+            notes.extend(f"{key} · {line}" for line in section_notes)
+
+        profile["sections"][key] = {
+            "sectionKey": key,
+            "isComplete": is_populated(data),
+            "lastUpdatedAt": now,
+            "data": data,
+            "sources": _coerce_sources(value, notes=notes, key=key,
+                                       allowed=allowed_sources),
+        }
+
+    return profile
+
+
+def apply_document_center(profile, documents):
+    """Fill section 8.17 from the run's own extraction records, not the model.
+
+    Called after :func:`normalize_profile`, unconditionally overwriting that
+    key. The pipeline already has exact, verified data about every document
+    (filename, category, how it was handled, whether OCR ran); there is nothing
+    for the model to usefully add, and letting it try would only risk it
+    inventing document metadata that looks plausible and is not real.
+
+    Mutates and returns ``profile`` for convenient chaining.
+    """
+    profile.setdefault("sections", {})
+    profile["sections"]["document_center"] = {
+        "sectionKey": "document_center",
+        "isComplete": bool(documents),
+        "lastUpdatedAt": _now(),
+        "data": {"documents": list(documents or [])},
+    }
+    return profile

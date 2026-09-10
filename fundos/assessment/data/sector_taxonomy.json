@@ -1,0 +1,1726 @@
+{
+ "coverage": "Sector & Sub-Sector Deal Database — India (Jan'24–May'26)",
+ "source": "Fundraising Strategy V2.0 reference/data/sectors.json",
+ "sectors": [
+  {
+   "name": "Ecommerce",
+   "deals": 606.0,
+   "raised_usd_mn": 4977.553,
+   "avg_ticket_usd_mn": 8.213783828382837,
+   "investors": 193.0,
+   "velocity_score": 10.0,
+   "ticket_score": 2.5,
+   "investor_score": 10.0,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Fintech",
+   "deals": 373.0,
+   "raised_usd_mn": 7387.055,
+   "avg_ticket_usd_mn": 19.804436997319037,
+   "investors": 128.0,
+   "velocity_score": 9.370000000000001,
+   "ticket_score": 10.0,
+   "investor_score": 9.370000000000001,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Enterprise Services",
+   "deals": 364.0,
+   "raised_usd_mn": 4385.138,
+   "avg_ticket_usd_mn": 12.047082417582418,
+   "investors": 102.0,
+   "velocity_score": 8.75,
+   "ticket_score": 7.5,
+   "investor_score": 8.75,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Cleantech",
+   "deals": 199.0,
+   "raised_usd_mn": 2260.34,
+   "avg_ticket_usd_mn": 11.358492462311558,
+   "investors": 52.0,
+   "velocity_score": 8.120000000000001,
+   "ticket_score": 6.870000000000001,
+   "investor_score": 8.120000000000001,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Healthtech",
+   "deals": 178.0,
+   "raised_usd_mn": 1871.403,
+   "avg_ticket_usd_mn": 10.5135,
+   "investors": 50.0,
+   "velocity_score": 7.5,
+   "ticket_score": 5.620000000000001,
+   "investor_score": 7.5,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Consumer Services",
+   "deals": 156.0,
+   "raised_usd_mn": 3026.874,
+   "avg_ticket_usd_mn": 19.40303846153846,
+   "investors": 37.0,
+   "velocity_score": 6.870000000000001,
+   "ticket_score": 9.370000000000001,
+   "investor_score": 6.870000000000001,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Deeptech",
+   "deals": 130.0,
+   "raised_usd_mn": 839.97,
+   "avg_ticket_usd_mn": 6.461307692307693,
+   "investors": 35.0,
+   "velocity_score": 6.25,
+   "ticket_score": 1.87,
+   "investor_score": 6.25,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Artificial Intelligence",
+   "deals": 124.0,
+   "raised_usd_mn": 719.514,
+   "avg_ticket_usd_mn": 5.802532258064516,
+   "investors": 32.0,
+   "velocity_score": 5.620000000000001,
+   "ticket_score": 0.62,
+   "investor_score": 5.620000000000001,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Advanced Hardware & IoT",
+   "deals": 114.0,
+   "raised_usd_mn": 685.547,
+   "avg_ticket_usd_mn": 6.013570175438597,
+   "investors": 31.0,
+   "velocity_score": 5.0,
+   "ticket_score": 1.25,
+   "investor_score": 4.37,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Media & Entertainment",
+   "deals": 102.0,
+   "raised_usd_mn": 866.44,
+   "avg_ticket_usd_mn": 8.494509803921568,
+   "investors": 19.0,
+   "velocity_score": 4.37,
+   "ticket_score": 3.12,
+   "investor_score": 2.5,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Travel Tech",
+   "deals": 72.0,
+   "raised_usd_mn": 1261.046,
+   "avg_ticket_usd_mn": 17.51452777777778,
+   "investors": 29.0,
+   "velocity_score": 3.75,
+   "ticket_score": 8.75,
+   "investor_score": 3.75,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Agritech",
+   "deals": 71.0,
+   "raised_usd_mn": 655.2,
+   "avg_ticket_usd_mn": 9.228169014084507,
+   "investors": 31.0,
+   "velocity_score": 3.12,
+   "ticket_score": 3.75,
+   "investor_score": 4.37,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Edtech",
+   "deals": 66.0,
+   "raised_usd_mn": 721.507,
+   "avg_ticket_usd_mn": 10.931924242424241,
+   "investors": 16.0,
+   "velocity_score": 2.5,
+   "ticket_score": 6.25,
+   "investor_score": 1.87,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Real Estate Tech",
+   "deals": 60.0,
+   "raised_usd_mn": 593.037,
+   "avg_ticket_usd_mn": 9.88395,
+   "investors": 22.0,
+   "velocity_score": 1.87,
+   "ticket_score": 4.37,
+   "investor_score": 3.12,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Logistics",
+   "deals": 57.0,
+   "raised_usd_mn": 775.998,
+   "avg_ticket_usd_mn": 13.614,
+   "investors": 13.0,
+   "velocity_score": 1.25,
+   "ticket_score": 8.120000000000001,
+   "investor_score": 1.25,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Foodtech",
+   "deals": 12.0,
+   "raised_usd_mn": 119.312,
+   "avg_ticket_usd_mn": 9.942666666666666,
+   "investors": 4.0,
+   "velocity_score": 0.62,
+   "ticket_score": 5.0,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Alcoholic Beverages",
+   "deals": 11.0,
+   "raised_usd_mn": 42.87,
+   "avg_ticket_usd_mn": 3.897272727272727,
+   "investors": 1.0,
+   "velocity_score": 0.0,
+   "ticket_score": 0.0,
+   "investor_score": 0.0,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Web3",
+   "deals": 4.0,
+   "raised_usd_mn": 22.0,
+   "avg_ticket_usd_mn": 5.5,
+   "investors": 0.0,
+   "velocity_score": null,
+   "ticket_score": null,
+   "investor_score": null,
+   "sample_quality": "Thin sample (4 deals) — excluded from percentiles"
+  }
+ ],
+ "sub_sectors": [
+  {
+   "name": "D2C & Consumer Brands",
+   "deals": 490.0,
+   "raised_usd_mn": 2799.305,
+   "avg_ticket_usd_mn": 5.712867346938775,
+   "investors": 140.0,
+   "velocity_score": 10.0,
+   "ticket_score": 1.6600000000000001,
+   "investor_score": 10.0,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Horizontal SaaS",
+   "deals": 268.0,
+   "raised_usd_mn": 3575.57,
+   "avg_ticket_usd_mn": 13.341679104477613,
+   "investors": 78.0,
+   "velocity_score": 9.79,
+   "ticket_score": 6.04,
+   "investor_score": 9.79,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Lending & Credit",
+   "deals": 168.0,
+   "raised_usd_mn": 3830.3199999999997,
+   "avg_ticket_usd_mn": 22.79952380952381,
+   "investors": 64.0,
+   "velocity_score": 9.58,
+   "ticket_score": 9.370000000000001,
+   "investor_score": 9.58,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Application & Dev Tools",
+   "deals": 128.0,
+   "raised_usd_mn": 741.514,
+   "avg_ticket_usd_mn": 5.793078125,
+   "investors": 32.0,
+   "velocity_score": 9.370000000000001,
+   "ticket_score": 1.87,
+   "investor_score": 9.16,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "EV & Mobility",
+   "deals": 113.0,
+   "raised_usd_mn": 2170.054,
+   "avg_ticket_usd_mn": 19.204017699115045,
+   "investors": 35.0,
+   "velocity_score": 9.16,
+   "ticket_score": 8.54,
+   "investor_score": 9.370000000000001,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Climate & Clean Tech",
+   "deals": 88.0,
+   "raised_usd_mn": 361.93,
+   "avg_ticket_usd_mn": 4.1128409090909095,
+   "investors": 19.0,
+   "velocity_score": 8.95,
+   "ticket_score": 0.41000000000000003,
+   "investor_score": 7.91,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Hyperlocal Services",
+   "deals": 76.0,
+   "raised_usd_mn": 612.574,
+   "avg_ticket_usd_mn": 8.060184210526316,
+   "investors": 17.0,
+   "velocity_score": 8.75,
+   "ticket_score": 3.75,
+   "investor_score": 7.7,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Fintech SaaS",
+   "deals": 74.0,
+   "raised_usd_mn": 802.525,
+   "avg_ticket_usd_mn": 10.844932432432433,
+   "investors": 25.0,
+   "velocity_score": 8.54,
+   "ticket_score": 5.41,
+   "investor_score": 8.95,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Spacetech",
+   "deals": 68.0,
+   "raised_usd_mn": 469.98,
+   "avg_ticket_usd_mn": 6.911470588235295,
+   "investors": 24.0,
+   "velocity_score": 8.33,
+   "ticket_score": 2.9099999999999997,
+   "investor_score": 8.75,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Unassigned",
+   "deals": 66.0,
+   "raised_usd_mn": 414.238,
+   "avg_ticket_usd_mn": 6.2763333333333335,
+   "investors": 15.0,
+   "velocity_score": null,
+   "ticket_score": null,
+   "investor_score": null,
+   "sample_quality": "Not a real sub-sector — excluded from percentiles"
+  },
+  {
+   "name": "IoT, Hardware & Robotics",
+   "deals": 66.0,
+   "raised_usd_mn": 384.71,
+   "avg_ticket_usd_mn": 5.828939393939393,
+   "investors": 11.0,
+   "velocity_score": 8.120000000000001,
+   "ticket_score": 2.08,
+   "investor_score": 5.2,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Investment & Wealth Tech",
+   "deals": 64.0,
+   "raised_usd_mn": 967.49,
+   "avg_ticket_usd_mn": 15.11703125,
+   "investors": 14.0,
+   "velocity_score": 7.91,
+   "ticket_score": 7.08,
+   "investor_score": 7.08,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Edtech",
+   "deals": 59.0,
+   "raised_usd_mn": 649.3069999999999,
+   "avg_ticket_usd_mn": 11.005203389830507,
+   "investors": 15.0,
+   "velocity_score": 7.7,
+   "ticket_score": 5.620000000000001,
+   "investor_score": 7.5,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Healthtech",
+   "deals": 53.0,
+   "raised_usd_mn": 770.5930000000001,
+   "avg_ticket_usd_mn": 14.539490566037736,
+   "investors": 13.0,
+   "velocity_score": 7.5,
+   "ticket_score": 6.870000000000001,
+   "investor_score": 6.66,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "B2B Ecommerce",
+   "deals": 47.0,
+   "raised_usd_mn": 962.24,
+   "avg_ticket_usd_mn": 20.473191489361703,
+   "investors": 22.0,
+   "velocity_score": 7.29,
+   "ticket_score": 9.16,
+   "investor_score": 8.33,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Gaming & AR/VR",
+   "deals": 44.0,
+   "raised_usd_mn": 324.56,
+   "avg_ticket_usd_mn": 7.376363636363636,
+   "investors": 10.0,
+   "velocity_score": 6.870000000000001,
+   "ticket_score": 3.12,
+   "investor_score": 4.79,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Media & Content",
+   "deals": 44.0,
+   "raised_usd_mn": 363.83,
+   "avg_ticket_usd_mn": 8.268863636363635,
+   "investors": 11.0,
+   "velocity_score": 6.870000000000001,
+   "ticket_score": 3.95,
+   "investor_score": 5.2,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "B2C Ecommerce & Marketplaces",
+   "deals": 43.0,
+   "raised_usd_mn": 724.0699999999999,
+   "avg_ticket_usd_mn": 16.838837209302323,
+   "investors": 23.0,
+   "velocity_score": 6.66,
+   "ticket_score": 8.120000000000001,
+   "investor_score": 8.54,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Market Linkage",
+   "deals": 40.0,
+   "raised_usd_mn": 392.63,
+   "avg_ticket_usd_mn": 9.81575,
+   "investors": 20.0,
+   "velocity_score": 6.45,
+   "ticket_score": 5.0,
+   "investor_score": 8.120000000000001,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Quick Commerce & Delivery",
+   "deals": 37.0,
+   "raised_usd_mn": 1667.9199999999998,
+   "avg_ticket_usd_mn": 45.078918918918916,
+   "investors": 12.0,
+   "velocity_score": 5.83,
+   "ticket_score": 9.79,
+   "investor_score": 6.25,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Enterprise Services",
+   "deals": 37.0,
+   "raised_usd_mn": 495.07,
+   "avg_ticket_usd_mn": 13.38027027027027,
+   "investors": 6.0,
+   "velocity_score": 5.83,
+   "ticket_score": 6.25,
+   "investor_score": 2.7,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Vertical SaaS",
+   "deals": 37.0,
+   "raised_usd_mn": 184.848,
+   "avg_ticket_usd_mn": 4.995891891891892,
+   "investors": 11.0,
+   "velocity_score": 5.83,
+   "ticket_score": 0.62,
+   "investor_score": 5.2,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Fitness & Wellness",
+   "deals": 33.0,
+   "raised_usd_mn": 168.62,
+   "avg_ticket_usd_mn": 5.109696969696969,
+   "investors": 7.0,
+   "velocity_score": 5.41,
+   "ticket_score": 0.8300000000000001,
+   "investor_score": 3.75,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Logistics & Supply Chain",
+   "deals": 33.0,
+   "raised_usd_mn": 502.068,
+   "avg_ticket_usd_mn": 15.214181818181817,
+   "investors": 10.0,
+   "velocity_score": 5.41,
+   "ticket_score": 7.5,
+   "investor_score": 4.79,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Payments",
+   "deals": 31.0,
+   "raised_usd_mn": 430.52,
+   "avg_ticket_usd_mn": 13.88774193548387,
+   "investors": 14.0,
+   "velocity_score": 5.2,
+   "ticket_score": 6.45,
+   "investor_score": 7.08,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Transport, Aerial & Maritime",
+   "deals": 30.0,
+   "raised_usd_mn": 557.9799999999999,
+   "avg_ticket_usd_mn": 18.59933333333333,
+   "investors": 12.0,
+   "velocity_score": 5.0,
+   "ticket_score": 8.33,
+   "investor_score": 6.25,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Travel & Hospitality",
+   "deals": 29.0,
+   "raised_usd_mn": 369.02200000000005,
+   "avg_ticket_usd_mn": 12.72489655172414,
+   "investors": 11.0,
+   "velocity_score": 4.79,
+   "ticket_score": 5.83,
+   "investor_score": 5.2,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Agritech",
+   "deals": 28.0,
+   "raised_usd_mn": 239.17,
+   "avg_ticket_usd_mn": 8.541785714285714,
+   "investors": 11.0,
+   "velocity_score": 4.37,
+   "ticket_score": 4.16,
+   "investor_score": 5.2,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Real Estate Tech",
+   "deals": 28.0,
+   "raised_usd_mn": 265.27,
+   "avg_ticket_usd_mn": 9.473928571428571,
+   "investors": 8.0,
+   "velocity_score": 4.37,
+   "ticket_score": 4.79,
+   "investor_score": 4.37,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Healthcare Services",
+   "deals": 27.0,
+   "raised_usd_mn": 375.69,
+   "avg_ticket_usd_mn": 13.914444444444444,
+   "investors": 13.0,
+   "velocity_score": 4.16,
+   "ticket_score": 6.66,
+   "investor_score": 6.66,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Robotics",
+   "deals": 26.0,
+   "raised_usd_mn": 140.765,
+   "avg_ticket_usd_mn": 5.414038461538461,
+   "investors": 7.0,
+   "velocity_score": 3.95,
+   "ticket_score": 1.45,
+   "investor_score": 3.75,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Medtech",
+   "deals": 25.0,
+   "raised_usd_mn": 60.25,
+   "avg_ticket_usd_mn": 2.41,
+   "investors": 4.0,
+   "velocity_score": 3.75,
+   "ticket_score": 0.0,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Dronetech",
+   "deals": 22.0,
+   "raised_usd_mn": 57.74,
+   "avg_ticket_usd_mn": 2.6245454545454545,
+   "investors": 6.0,
+   "velocity_score": 3.54,
+   "ticket_score": 0.2,
+   "investor_score": 2.7,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Quick Commerce",
+   "deals": 20.0,
+   "raised_usd_mn": 689.21,
+   "avg_ticket_usd_mn": 34.4605,
+   "investors": 4.0,
+   "velocity_score": 2.9099999999999997,
+   "ticket_score": 9.58,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Banking",
+   "deals": 20.0,
+   "raised_usd_mn": 1107.7,
+   "avg_ticket_usd_mn": 55.385000000000005,
+   "investors": 3.0,
+   "velocity_score": 2.9099999999999997,
+   "ticket_score": 10.0,
+   "investor_score": 0.41000000000000003,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Healthcare SaaS",
+   "deals": 20.0,
+   "raised_usd_mn": 393.78,
+   "avg_ticket_usd_mn": 19.689,
+   "investors": 8.0,
+   "velocity_score": 2.9099999999999997,
+   "ticket_score": 8.95,
+   "investor_score": 4.37,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Social Media & Chat",
+   "deals": 19.0,
+   "raised_usd_mn": 123.05,
+   "avg_ticket_usd_mn": 6.476315789473684,
+   "investors": 4.0,
+   "velocity_score": 2.7,
+   "ticket_score": 2.5,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Aerial Vehicles",
+   "deals": 18.0,
+   "raised_usd_mn": 169.112,
+   "avg_ticket_usd_mn": 9.395111111111111,
+   "investors": 4.0,
+   "velocity_score": 2.5,
+   "ticket_score": 4.58,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Semiconductors",
+   "deals": 16.0,
+   "raised_usd_mn": 125.3,
+   "avg_ticket_usd_mn": 7.83125,
+   "investors": 4.0,
+   "velocity_score": 1.45,
+   "ticket_score": 3.33,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Manufacturing & Defence",
+   "deals": 16.0,
+   "raised_usd_mn": 86.4,
+   "avg_ticket_usd_mn": 5.4,
+   "investors": 6.0,
+   "velocity_score": 1.45,
+   "ticket_score": 1.25,
+   "investor_score": 2.7,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Defence Tech",
+   "deals": 16.0,
+   "raised_usd_mn": 143.4,
+   "avg_ticket_usd_mn": 8.9625,
+   "investors": 4.0,
+   "velocity_score": 1.45,
+   "ticket_score": 4.37,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Vertical Marketplace",
+   "deals": 16.0,
+   "raised_usd_mn": 268.618,
+   "avg_ticket_usd_mn": 16.788625,
+   "investors": 4.0,
+   "velocity_score": 1.45,
+   "ticket_score": 7.91,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Ecommerce Logistics",
+   "deals": 16.0,
+   "raised_usd_mn": 251.49,
+   "avg_ticket_usd_mn": 15.718125,
+   "investors": 1.0,
+   "velocity_score": 1.45,
+   "ticket_score": 7.7,
+   "investor_score": 0.0,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Lifescience",
+   "deals": 15.0,
+   "raised_usd_mn": 76.83,
+   "avg_ticket_usd_mn": 5.122,
+   "investors": 4.0,
+   "velocity_score": 0.62,
+   "ticket_score": 1.04,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Travel Tech SaaS",
+   "deals": 15.0,
+   "raised_usd_mn": 92.62,
+   "avg_ticket_usd_mn": 6.174666666666667,
+   "investors": 6.0,
+   "velocity_score": 0.62,
+   "ticket_score": 2.29,
+   "investor_score": 2.7,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Insurtech",
+   "deals": 15.0,
+   "raised_usd_mn": 228.2,
+   "avg_ticket_usd_mn": 15.213333333333333,
+   "investors": 6.0,
+   "velocity_score": 0.62,
+   "ticket_score": 7.29,
+   "investor_score": 2.7,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Shared Spaces",
+   "deals": 15.0,
+   "raised_usd_mn": 158.2,
+   "avg_ticket_usd_mn": 10.546666666666665,
+   "investors": 4.0,
+   "velocity_score": 0.62,
+   "ticket_score": 5.2,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Real Estate Services",
+   "deals": 14.0,
+   "raised_usd_mn": 111.959,
+   "avg_ticket_usd_mn": 7.997071428571429,
+   "investors": 7.0,
+   "velocity_score": 0.2,
+   "ticket_score": 3.54,
+   "investor_score": 3.75,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "OTT",
+   "deals": 14.0,
+   "raised_usd_mn": 270.45,
+   "avg_ticket_usd_mn": 19.317857142857143,
+   "investors": 2.0,
+   "velocity_score": 0.2,
+   "ticket_score": 8.75,
+   "investor_score": 0.2,
+   "sample_quality": "OK"
+  },
+  {
+   "name": "Foodtech & QSR",
+   "deals": 12.0,
+   "raised_usd_mn": 82.112,
+   "avg_ticket_usd_mn": 6.842666666666666,
+   "investors": 4.0,
+   "velocity_score": 0.0,
+   "ticket_score": 2.7,
+   "investor_score": 0.62,
+   "sample_quality": "OK"
+  }
+ ],
+ "raw_sub_sector_map": [
+  {
+   "raw": "D2C",
+   "clubbed": "D2C & Consumer Brands",
+   "deals": 481.0,
+   "raised_usd_mn": 2769.745,
+   "investors": 139.0
+  },
+  {
+   "raw": "Horizontal SaaS",
+   "clubbed": "Horizontal SaaS",
+   "deals": 268.0,
+   "raised_usd_mn": 3575.57,
+   "investors": 78.0
+  },
+  {
+   "raw": "Lending Tech",
+   "clubbed": "Lending & Credit",
+   "deals": 165.0,
+   "raised_usd_mn": 3823.12,
+   "investors": 64.0
+  },
+  {
+   "raw": "Application Layer",
+   "clubbed": "Application & Dev Tools",
+   "deals": 117.0,
+   "raised_usd_mn": 684.214,
+   "investors": 31.0
+  },
+  {
+   "raw": "Electric Vehicles",
+   "clubbed": "EV & Mobility",
+   "deals": 108.0,
+   "raised_usd_mn": 1899.02,
+   "investors": 33.0
+  },
+  {
+   "raw": "Hyperlocal Services",
+   "clubbed": "Hyperlocal Services",
+   "deals": 76.0,
+   "raised_usd_mn": 612.574,
+   "investors": 17.0
+  },
+  {
+   "raw": "Fintech SaaS",
+   "clubbed": "Fintech SaaS",
+   "deals": 72.0,
+   "raised_usd_mn": 794.425,
+   "investors": 25.0
+  },
+  {
+   "raw": "Spacetech",
+   "clubbed": "Spacetech",
+   "deals": 68.0,
+   "raised_usd_mn": 469.98,
+   "investors": 24.0
+  },
+  {
+   "raw": "Unassigned",
+   "clubbed": "Unassigned",
+   "deals": 66.0,
+   "raised_usd_mn": 414.238,
+   "investors": 15.0
+  },
+  {
+   "raw": "IoT & Hardware",
+   "clubbed": "IoT, Hardware & Robotics",
+   "deals": 66.0,
+   "raised_usd_mn": 384.71,
+   "investors": 11.0
+  },
+  {
+   "raw": "Investment Tech",
+   "clubbed": "Investment & Wealth Tech",
+   "deals": 62.0,
+   "raised_usd_mn": 965.09,
+   "investors": 14.0
+  },
+  {
+   "raw": "Climate Tech",
+   "clubbed": "Climate & Clean Tech",
+   "deals": 62.0,
+   "raised_usd_mn": 201.33,
+   "investors": 13.0
+  },
+  {
+   "raw": "B2B Ecommerce",
+   "clubbed": "B2B Ecommerce",
+   "deals": 47.0,
+   "raised_usd_mn": 962.24,
+   "investors": 22.0
+  },
+  {
+   "raw": "Gaming",
+   "clubbed": "Gaming & AR/VR",
+   "deals": 39.0,
+   "raised_usd_mn": 318.31,
+   "investors": 8.0
+  },
+  {
+   "raw": "Market Linkage",
+   "clubbed": "Market Linkage",
+   "deals": 39.0,
+   "raised_usd_mn": 366.63,
+   "investors": 20.0
+  },
+  {
+   "raw": "Hyperlocal Delivery",
+   "clubbed": "Quick Commerce & Delivery",
+   "deals": 34.0,
+   "raised_usd_mn": 1628.33,
+   "investors": 12.0
+  },
+  {
+   "raw": "Fitness & Wellness",
+   "clubbed": "Fitness & Wellness",
+   "deals": 33.0,
+   "raised_usd_mn": 168.62,
+   "investors": 7.0
+  },
+  {
+   "raw": "Skill Development",
+   "clubbed": "Edtech",
+   "deals": 32.0,
+   "raised_usd_mn": 448.31,
+   "investors": 9.0
+  },
+  {
+   "raw": "Telemedicine",
+   "clubbed": "Healthtech",
+   "deals": 31.0,
+   "raised_usd_mn": 173.503,
+   "investors": 7.0
+  },
+  {
+   "raw": "Payments",
+   "clubbed": "Payments",
+   "deals": 31.0,
+   "raised_usd_mn": 430.52,
+   "investors": 14.0
+  },
+  {
+   "raw": "Enterprise Services",
+   "clubbed": "Enterprise Services",
+   "deals": 29.0,
+   "raised_usd_mn": 428.57,
+   "investors": 4.0
+  },
+  {
+   "raw": "Vertical SaaS",
+   "clubbed": "Vertical SaaS",
+   "deals": 28.0,
+   "raised_usd_mn": 110.848,
+   "investors": 8.0
+  },
+  {
+   "raw": "Farmtech",
+   "clubbed": "Agritech",
+   "deals": 27.0,
+   "raised_usd_mn": 226.17,
+   "investors": 10.0
+  },
+  {
+   "raw": "Healthcare Services",
+   "clubbed": "Healthcare Services",
+   "deals": 27.0,
+   "raised_usd_mn": 375.69,
+   "investors": 13.0
+  },
+  {
+   "raw": "Robotics",
+   "clubbed": "Robotics",
+   "deals": 26.0,
+   "raised_usd_mn": 140.765,
+   "investors": 7.0
+  },
+  {
+   "raw": "Medtech",
+   "clubbed": "Medtech",
+   "deals": 25.0,
+   "raised_usd_mn": 60.25,
+   "investors": 4.0
+  },
+  {
+   "raw": "Logistics Tech",
+   "clubbed": "Logistics & Supply Chain",
+   "deals": 25.0,
+   "raised_usd_mn": 414.848,
+   "investors": 6.0
+  },
+  {
+   "raw": "Transport Tech",
+   "clubbed": "Transport, Aerial & Maritime",
+   "deals": 24.0,
+   "raised_usd_mn": 540.52,
+   "investors": 10.0
+  },
+  {
+   "raw": "Property Listing & Discovery",
+   "clubbed": "Real Estate Tech",
+   "deals": 23.0,
+   "raised_usd_mn": 120.77,
+   "investors": 6.0
+  },
+  {
+   "raw": "Dronetech",
+   "clubbed": "Dronetech",
+   "deals": 22.0,
+   "raised_usd_mn": 57.74,
+   "investors": 6.0
+  },
+  {
+   "raw": "B2C Ecommerce",
+   "clubbed": "B2C Ecommerce & Marketplaces",
+   "deals": 22.0,
+   "raised_usd_mn": 356.63,
+   "investors": 10.0
+  },
+  {
+   "raw": "Quick Commerce",
+   "clubbed": "Quick Commerce",
+   "deals": 20.0,
+   "raised_usd_mn": 689.21,
+   "investors": 4.0
+  },
+  {
+   "raw": "Banking",
+   "clubbed": "Banking",
+   "deals": 20.0,
+   "raised_usd_mn": 1107.7,
+   "investors": 3.0
+  },
+  {
+   "raw": "Healthcare SaaS",
+   "clubbed": "Healthcare SaaS",
+   "deals": 20.0,
+   "raised_usd_mn": 393.78,
+   "investors": 8.0
+  },
+  {
+   "raw": "Digital Media",
+   "clubbed": "Media & Content",
+   "deals": 19.0,
+   "raised_usd_mn": 96.46,
+   "investors": 4.0
+  },
+  {
+   "raw": "Social Media & Chat",
+   "clubbed": "Social Media & Chat",
+   "deals": 19.0,
+   "raised_usd_mn": 123.05,
+   "investors": 4.0
+  },
+  {
+   "raw": "Aerial Vehicles",
+   "clubbed": "Aerial Vehicles",
+   "deals": 18.0,
+   "raised_usd_mn": 169.112,
+   "investors": 4.0
+  },
+  {
+   "raw": "Semiconductors",
+   "clubbed": "Semiconductors",
+   "deals": 16.0,
+   "raised_usd_mn": 125.3,
+   "investors": 4.0
+  },
+  {
+   "raw": "Manufacturing Solutions",
+   "clubbed": "Manufacturing & Defence",
+   "deals": 16.0,
+   "raised_usd_mn": 86.4,
+   "investors": 6.0
+  },
+  {
+   "raw": "Defence Tech",
+   "clubbed": "Defence Tech",
+   "deals": 16.0,
+   "raised_usd_mn": 143.4,
+   "investors": 4.0
+  },
+  {
+   "raw": "Vertical Marketplace",
+   "clubbed": "Vertical Marketplace",
+   "deals": 16.0,
+   "raised_usd_mn": 268.618,
+   "investors": 4.0
+  },
+  {
+   "raw": "Ecommerce Logistics",
+   "clubbed": "Ecommerce Logistics",
+   "deals": 16.0,
+   "raised_usd_mn": 251.49,
+   "investors": 1.0
+  },
+  {
+   "raw": "Lifescience",
+   "clubbed": "Lifescience",
+   "deals": 15.0,
+   "raised_usd_mn": 76.83,
+   "investors": 4.0
+  },
+  {
+   "raw": "Travel Tech SaaS",
+   "clubbed": "Travel Tech SaaS",
+   "deals": 15.0,
+   "raised_usd_mn": 92.62,
+   "investors": 6.0
+  },
+  {
+   "raw": "Insurtech",
+   "clubbed": "Insurtech",
+   "deals": 15.0,
+   "raised_usd_mn": 228.2,
+   "investors": 6.0
+  },
+  {
+   "raw": "Shared Spaces",
+   "clubbed": "Shared Spaces",
+   "deals": 15.0,
+   "raised_usd_mn": 158.2,
+   "investors": 4.0
+  },
+  {
+   "raw": "Real Estate Services",
+   "clubbed": "Real Estate Services",
+   "deals": 14.0,
+   "raised_usd_mn": 111.959,
+   "investors": 7.0
+  },
+  {
+   "raw": "OTT",
+   "clubbed": "OTT",
+   "deals": 14.0,
+   "raised_usd_mn": 270.45,
+   "investors": 2.0
+  },
+  {
+   "raw": "Digital Learning Platform",
+   "clubbed": "Edtech",
+   "deals": 13.0,
+   "raised_usd_mn": 104.927,
+   "investors": 2.0
+  },
+  {
+   "raw": "Booking Services",
+   "clubbed": "Travel & Hospitality",
+   "deals": 12.0,
+   "raised_usd_mn": 69.642,
+   "investors": 5.0
+  },
+  {
+   "raw": "Accommodation",
+   "clubbed": "Travel & Hospitality",
+   "deals": 12.0,
+   "raised_usd_mn": 269.93,
+   "investors": 6.0
+  },
+  {
+   "raw": "Energy Tech",
+   "clubbed": "Climate & Clean Tech",
+   "deals": 10.0,
+   "raised_usd_mn": 75.04,
+   "investors": 2.0
+  },
+  {
+   "raw": "Waste Management",
+   "clubbed": "Climate & Clean Tech",
+   "deals": 10.0,
+   "raised_usd_mn": 74.2,
+   "investors": 2.0
+  },
+  {
+   "raw": "Online Pharmacy",
+   "clubbed": "Healthtech",
+   "deals": 9.0,
+   "raised_usd_mn": 527.6,
+   "investors": 0.0
+  },
+  {
+   "raw": "Social Commerce",
+   "clubbed": "Media & Content",
+   "deals": 9.0,
+   "raised_usd_mn": 42.9,
+   "investors": 1.0
+  },
+  {
+   "raw": "K-12",
+   "clubbed": "Edtech",
+   "deals": 8.0,
+   "raised_usd_mn": 23.4,
+   "investors": 2.0
+  },
+  {
+   "raw": "Horizontal Marketplace",
+   "clubbed": "B2C Ecommerce & Marketplaces",
+   "deals": 7.0,
+   "raised_usd_mn": 175.18,
+   "investors": 5.0
+  },
+  {
+   "raw": "AI Infrastructure & Development",
+   "clubbed": "Application & Dev Tools",
+   "deals": 7.0,
+   "raised_usd_mn": 35.3,
+   "investors": 1.0
+  },
+  {
+   "raw": "Recommerce",
+   "clubbed": "Media & Content",
+   "deals": 7.0,
+   "raised_usd_mn": 180.3,
+   "investors": 5.0
+  },
+  {
+   "raw": "QSR",
+   "clubbed": "Foodtech & QSR",
+   "deals": 7.0,
+   "raised_usd_mn": 26.612,
+   "investors": 1.0
+  },
+  {
+   "raw": "Supply Chain",
+   "clubbed": "Logistics & Supply Chain",
+   "deals": 7.0,
+   "raised_usd_mn": 42.22,
+   "investors": 3.0
+  },
+  {
+   "raw": "Roll Ups",
+   "clubbed": "B2C Ecommerce & Marketplaces",
+   "deals": 7.0,
+   "raised_usd_mn": 134.0,
+   "investors": 5.0
+  },
+  {
+   "raw": "Real Estate SaaS",
+   "clubbed": "Vertical SaaS",
+   "deals": 7.0,
+   "raised_usd_mn": 63.5,
+   "investors": 3.0
+  },
+  {
+   "raw": "Diagnostics",
+   "clubbed": "Healthtech",
+   "deals": 6.0,
+   "raised_usd_mn": 35.9,
+   "investors": 3.0
+  },
+  {
+   "raw": "Social Media",
+   "clubbed": "Media & Content",
+   "deals": 6.0,
+   "raised_usd_mn": 41.95,
+   "investors": 1.0
+  },
+  {
+   "raw": "Alcoholic Beverages",
+   "clubbed": "D2C & Consumer Brands",
+   "deals": 6.0,
+   "raised_usd_mn": 28.06,
+   "investors": 1.0
+  },
+  {
+   "raw": "Edtech SaaS",
+   "clubbed": "Edtech",
+   "deals": 6.0,
+   "raised_usd_mn": 72.67,
+   "investors": 2.0
+  },
+  {
+   "raw": "AR/VR",
+   "clubbed": "Gaming & AR/VR",
+   "deals": 5.0,
+   "raised_usd_mn": 6.25,
+   "investors": 2.0
+  },
+  {
+   "raw": "Maritime Tech",
+   "clubbed": "Transport, Aerial & Maritime",
+   "deals": 5.0,
+   "raised_usd_mn": 16.06,
+   "investors": 1.0
+  },
+  {
+   "raw": "Construction",
+   "clubbed": "Real Estate Tech",
+   "deals": 5.0,
+   "raised_usd_mn": 144.5,
+   "investors": 2.0
+  },
+  {
+   "raw": "Home Healthcare",
+   "clubbed": "Healthtech",
+   "deals": 5.0,
+   "raised_usd_mn": 27.09,
+   "investors": 2.0
+  },
+  {
+   "raw": "Water Tech",
+   "clubbed": "Climate & Clean Tech",
+   "deals": 5.0,
+   "raised_usd_mn": 11.13,
+   "investors": 2.0
+  },
+  {
+   "raw": "Blockchain Infrastructure",
+   "clubbed": "Application & Dev Tools",
+   "deals": 4.0,
+   "raised_usd_mn": 22.0,
+   "investors": 0.0
+  },
+  {
+   "raw": "Storage Services",
+   "clubbed": "B2C Ecommerce & Marketplaces",
+   "deals": 4.0,
+   "raised_usd_mn": 3.05,
+   "investors": 1.0
+  },
+  {
+   "raw": "Ride Hailing",
+   "clubbed": "EV & Mobility",
+   "deals": 3.0,
+   "raised_usd_mn": 240.634,
+   "investors": 1.0
+  },
+  {
+   "raw": "Cloud Kitchen",
+   "clubbed": "Foodtech & QSR",
+   "deals": 3.0,
+   "raised_usd_mn": 50.7,
+   "investors": 2.0
+  },
+  {
+   "raw": "Social Networking Platform",
+   "clubbed": "Media & Content",
+   "deals": 3.0,
+   "raised_usd_mn": 2.22,
+   "investors": 0.0
+  },
+  {
+   "raw": "Consulting",
+   "clubbed": "Enterprise Services",
+   "deals": 3.0,
+   "raised_usd_mn": 11.7,
+   "investors": 0.0
+  },
+  {
+   "raw": "Neobank",
+   "clubbed": "Lending & Credit",
+   "deals": 3.0,
+   "raised_usd_mn": 7.2,
+   "investors": 0.0
+  },
+  {
+   "raw": "Wealthtech",
+   "clubbed": "Investment & Wealth Tech",
+   "deals": 2.0,
+   "raised_usd_mn": 2.4,
+   "investors": 0.0
+  },
+  {
+   "raw": "Electric MaaS",
+   "clubbed": "EV & Mobility",
+   "deals": 2.0,
+   "raised_usd_mn": 30.4,
+   "investors": 1.0
+  },
+  {
+   "raw": "HR Tech",
+   "clubbed": "Enterprise Services",
+   "deals": 2.0,
+   "raised_usd_mn": 50.8,
+   "investors": 1.0
+  },
+  {
+   "raw": "Astrology Services",
+   "clubbed": "Travel & Hospitality",
+   "deals": 2.0,
+   "raised_usd_mn": 1.35,
+   "investors": 0.0
+  },
+  {
+   "raw": "eDarshan Services",
+   "clubbed": "Travel & Hospitality",
+   "deals": 2.0,
+   "raised_usd_mn": 22.5,
+   "investors": 0.0
+  },
+  {
+   "raw": "Marketplace",
+   "clubbed": "B2C Ecommerce & Marketplaces",
+   "deals": 2.0,
+   "raised_usd_mn": 54.7,
+   "investors": 2.0
+  },
+  {
+   "raw": "Foodtech",
+   "clubbed": "Foodtech & QSR",
+   "deals": 2.0,
+   "raised_usd_mn": 4.8,
+   "investors": 1.0
+  },
+  {
+   "raw": "Marketing Agency",
+   "clubbed": "Enterprise Services",
+   "deals": 2.0,
+   "raised_usd_mn": 0.0,
+   "investors": 0.0
+  },
+  {
+   "raw": "Financial Services",
+   "clubbed": "Fintech SaaS",
+   "deals": 2.0,
+   "raised_usd_mn": 8.1,
+   "investors": 0.0
+  },
+  {
+   "raw": "Last Mile Delivery",
+   "clubbed": "Quick Commerce & Delivery",
+   "deals": 2.0,
+   "raised_usd_mn": 1.59,
+   "investors": 0.0
+  },
+  {
+   "raw": "Biotech",
+   "clubbed": "Healthtech",
+   "deals": 2.0,
+   "raised_usd_mn": 6.5,
+   "investors": 1.0
+  },
+  {
+   "raw": "Food Delivery",
+   "clubbed": "Quick Commerce & Delivery",
+   "deals": 1.0,
+   "raised_usd_mn": 38.0,
+   "investors": 0.0
+  },
+  {
+   "raw": "Procurement Services",
+   "clubbed": "Agritech",
+   "deals": 1.0,
+   "raised_usd_mn": 13.0,
+   "investors": 1.0
+  },
+  {
+   "raw": "Aerial Vehicles, Maritime Tech",
+   "clubbed": "Transport, Aerial & Maritime",
+   "deals": 1.0,
+   "raised_usd_mn": 1.4,
+   "investors": 1.0
+  },
+  {
+   "raw": "Regulation & Compliance Tech",
+   "clubbed": "Enterprise Services",
+   "deals": 1.0,
+   "raised_usd_mn": 4.0,
+   "investors": 1.0
+  },
+  {
+   "raw": "Inventory & Warehousing",
+   "clubbed": "Logistics & Supply Chain",
+   "deals": 1.0,
+   "raised_usd_mn": 45.0,
+   "investors": 1.0
+  },
+  {
+   "raw": "Ecommerce Enablers",
+   "clubbed": "B2C Ecommerce & Marketplaces",
+   "deals": 1.0,
+   "raised_usd_mn": 0.51,
+   "investors": 0.0
+  },
+  {
+   "raw": "Hospitality",
+   "clubbed": "Travel & Hospitality",
+   "deals": 1.0,
+   "raised_usd_mn": 5.6,
+   "investors": 0.0
+  },
+  {
+   "raw": "Climate Tech (Biotechnology)",
+   "clubbed": "Climate & Clean Tech",
+   "deals": 1.0,
+   "raised_usd_mn": 0.23,
+   "investors": 0.0
+  },
+  {
+   "raw": "Vertical SaaS (Ecommerce)",
+   "clubbed": "Vertical SaaS",
+   "deals": 1.0,
+   "raised_usd_mn": 8.0,
+   "investors": 0.0
+  },
+  {
+   "raw": "Vertical SaaS (Edtech)",
+   "clubbed": "Vertical SaaS",
+   "deals": 1.0,
+   "raised_usd_mn": 2.5,
+   "investors": 0.0
+  },
+  {
+   "raw": "D2C (Consumer Electronics)",
+   "clubbed": "D2C & Consumer Brands",
+   "deals": 1.0,
+   "raised_usd_mn": 0.46,
+   "investors": 0.0
+  },
+  {
+   "raw": "D2C (F&B)",
+   "clubbed": "D2C & Consumer Brands",
+   "deals": 1.0,
+   "raised_usd_mn": 0.45,
+   "investors": 0.0
+  },
+  {
+   "raw": "Home Decor",
+   "clubbed": "D2C & Consumer Brands",
+   "deals": 1.0,
+   "raised_usd_mn": 0.59,
+   "investors": 0.0
+  },
+  {
+   "raw": "FaaS,Market Linkage",
+   "clubbed": "Market Linkage",
+   "deals": 1.0,
+   "raised_usd_mn": 26.0,
+   "investors": 0.0
+  }
+ ],
+ "sector_aliases": [
+  {
+   "raw": "Healthcare",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Health Tech",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Healthcare Technology",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Digital Health",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Digital Healthcare",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Telemedicine",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Medtech",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Life Sciences",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Pharma",
+   "sector": "Healthtech"
+  },
+  {
+   "raw": "Financial Services",
+   "sector": "Fintech"
+  },
+  {
+   "raw": "Financial Technology",
+   "sector": "Fintech"
+  },
+  {
+   "raw": "Banking",
+   "sector": "Fintech"
+  },
+  {
+   "raw": "Insurance",
+   "sector": "Fintech"
+  },
+  {
+   "raw": "Insurtech",
+   "sector": "Fintech"
+  },
+  {
+   "raw": "E-commerce",
+   "sector": "Ecommerce"
+  },
+  {
+   "raw": "Retail",
+   "sector": "Ecommerce"
+  },
+  {
+   "raw": "D2C",
+   "sector": "Ecommerce"
+  },
+  {
+   "raw": "Education",
+   "sector": "Edtech"
+  },
+  {
+   "raw": "EdTech",
+   "sector": "Edtech"
+  },
+  {
+   "raw": "Agriculture",
+   "sector": "Agritech"
+  },
+  {
+   "raw": "Food & Beverage",
+   "sector": "Foodtech"
+  },
+  {
+   "raw": "Supply Chain",
+   "sector": "Logistics"
+  },
+  {
+   "raw": "Mobility",
+   "sector": "Logistics"
+  },
+  {
+   "raw": "SaaS",
+   "sector": "Enterprise Services"
+  },
+  {
+   "raw": "Enterprise Software",
+   "sector": "Enterprise Services"
+  },
+  {
+   "raw": "B2B SaaS",
+   "sector": "Enterprise Services"
+  },
+  {
+   "raw": "AI",
+   "sector": "Artificial Intelligence"
+  },
+  {
+   "raw": "Machine Learning",
+   "sector": "Artificial Intelligence"
+  },
+  {
+   "raw": "Climate Tech",
+   "sector": "Cleantech"
+  },
+  {
+   "raw": "Renewable Energy",
+   "sector": "Cleantech"
+  },
+  {
+   "raw": "Energy",
+   "sector": "Cleantech"
+  },
+  {
+   "raw": "Real Estate",
+   "sector": "Real Estate Tech"
+  },
+  {
+   "raw": "Proptech",
+   "sector": "Real Estate Tech"
+  },
+  {
+   "raw": "Travel",
+   "sector": "Travel Tech"
+  },
+  {
+   "raw": "Gaming",
+   "sector": "Media & Entertainment"
+  },
+  {
+   "raw": "Media",
+   "sector": "Media & Entertainment"
+  },
+  {
+   "raw": "IoT",
+   "sector": "Advanced Hardware & IoT"
+  },
+  {
+   "raw": "Hardware",
+   "sector": "Advanced Hardware & IoT"
+  },
+  {
+   "raw": "Robotics",
+   "sector": "Advanced Hardware & IoT"
+  },
+  {
+   "raw": "Blockchain",
+   "sector": "Web3"
+  },
+  {
+   "raw": "Crypto",
+   "sector": "Web3"
+  }
+ ],
+ "sub_sector_aliases": [
+  {
+   "raw": "Digital Health",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Digital Healthcare",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Telemedicine",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Teleconsultation",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Digital Healthcare / Teleconsultation",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Corporate Employee Health Benefits",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Employee Health Benefits",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Chronic Care Management",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Preventive Healthcare",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Healthcare",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Health Tech",
+   "clubbed": "Healthtech"
+  },
+  {
+   "raw": "Wellness",
+   "clubbed": "Fitness & Wellness"
+  },
+  {
+   "raw": "Diagnostics",
+   "clubbed": "Healthcare Services"
+  },
+  {
+   "raw": "Hospitals",
+   "clubbed": "Healthcare Services"
+  },
+  {
+   "raw": "Pharmacy",
+   "clubbed": "Healthcare Services"
+  },
+  {
+   "raw": "Life Sciences",
+   "clubbed": "Lifescience"
+  },
+  {
+   "raw": "Biotech",
+   "clubbed": "Lifescience"
+  },
+  {
+   "raw": "Medical Devices",
+   "clubbed": "Medtech"
+  }
+ ]
+}

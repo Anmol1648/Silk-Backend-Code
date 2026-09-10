@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<style>
+ .dg-card{border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:16px;background:#fff}
+ .dg-ok{color:#166534}.dg-warn{color:#a16207}.dg-err{color:#b91c1c}
+ table.dg{width:100%;border-collapse:collapse;font-size:13px}
+ table.dg th,table.dg td{text-align:left;padding:8px;border-bottom:1px solid #e5e5e5}
+</style>
+<div class="dg-card">
+  <h2 style="margin-top:0">Health —
+    <span class="{% if health.status == 'ok' %}dg-ok{% elif health.status == 'warning' %}dg-warn{% else %}dg-err{% endif %}">{{ health.status|upper }}</span>
+  </h2>
+  <table class="dg">
+    {% for c in health.checks %}
+    <tr>
+      <td style="width:200px"><strong>{{ c.name }}</strong></td>
+      <td class="{% if c.status == 'ok' %}dg-ok{% elif c.status == 'warning' %}dg-warn{% else %}dg-err{% endif %}">{{ c.status|upper }}</td>
+      <td>{{ c.detail }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+<div class="dg-card">
+  <h2 style="margin-top:0">Recent runs</h2>
+  <table class="dg">
+    <tr><th>When</th><th>Kind</th><th>Subject</th><th>Status</th><th>Duration</th><th>Correlation</th></tr>
+    {% for r in recent %}
+    <tr>
+      <td>{{ r.started_at|date:"d M H:i" }}</td><td>{{ r.kind }}</td>
+      <td>{{ r.subject|default:"—" }}</td><td>{{ r.status }}</td>
+      <td>{% if r.duration_ms %}{{ r.duration_ms }}ms{% else %}—{% endif %}</td>
+      <td><code style="font-size:11px">{{ r.correlation_id }}</code></td>
+    </tr>
+    {% empty %}<tr><td colspan="6">No runs recorded yet.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+﻿[Unit]
+Description=FundOS Celery beat (scheduler) â€” gyain / befundos
+After=network.target redis.service
+
+[Service]
+User=fundos
+Group=fundos
+EnvironmentFile=/etc/fundos/fundos.env
+WorkingDirectory=/d01/fundos/src
+ExecStart=/d01/fundos/app/venv/bin/celery -A fundos.celeryapp beat \
+  --loglevel=INFO \
+  --logfile=/d01/fundos/logs/celery-beat.log
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

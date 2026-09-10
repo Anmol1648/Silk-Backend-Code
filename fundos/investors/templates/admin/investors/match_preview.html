@@ -1,0 +1,50 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<style>
+  .mp-card{border:1px solid #e5e5e5;border-radius:8px;padding:16px;margin-bottom:16px;background:#fff}
+  .mp-ok{color:#166534;font-weight:600}.mp-bad{color:#b91c1c;font-weight:600}
+  table.mp{width:100%;border-collapse:collapse;font-size:13px}
+  table.mp th,table.mp td{text-align:left;padding:8px;border-bottom:1px solid #e5e5e5}
+  .mp-note{color:#737373;font-size:12px}
+</style>
+
+<div class="mp-card">
+  <form method="get">
+    Raise ($Mn) <input name="raise" value="{{ raise_size }}" style="width:70px">
+    Sub-sector <input name="subSector" value="{{ sub_name }}" style="width:130px">
+    From <input name="from" value="{{ date_from }}" style="width:110px">
+    To <input name="to" value="{{ date_to }}" style="width:110px">
+    <button type="submit" class="button default">Run preview</button>
+  </form>
+</div>
+
+{% if error %}<div class="mp-card"><p class="mp-bad">{{ error }}</p></div>{% endif %}
+
+{% if result %}
+<div class="mp-card">
+  <h2 style="margin-top:0">Result</h2>
+  <p><strong>{{ result.totalInvestors }}</strong> investors · <strong>{{ result.totalMatchedDeals }}</strong> matched deals<br>
+  Band ${{ result.band.minUsdMn }}–${{ result.band.maxUsdMn }}M (centre ${{ result.band.centreUsdMn }}M) · basis: {{ result.bandTestBasis }}</p>
+  {% if result.matchesReference %}
+    <p class="mp-ok">✓ Matches the source workbook's published counts (301 investors / 477 deals).</p>
+  {% else %}
+    <p class="mp-bad">✗ Does not match the reference counts of 301 / 477.</p>
+    <p class="mp-note">The reference holds only for the default parameters: sub-sector D2C, $5M raise, 2023-01-01 to 2026-06-05, against the full imported dataset. With other parameters a mismatch here is expected.</p>
+  {% endif %}
+</div>
+
+<div class="mp-card">
+  <h2 style="margin-top:0">Top matches</h2>
+  <table class="mp">
+    <tr><th>#</th><th>Investor</th><th>Tier</th><th>Match</th><th>Deals</th><th>Matched</th><th>RelScore</th></tr>
+    {% for r in result.results %}
+      <tr>
+        <td>{{ forloop.counter }}</td><td>{{ r.name }}</td><td>{{ r.tier }}</td>
+        <td>{{ r.matchPercent }}%</td><td>{{ r.trace.overallDeals }}</td>
+        <td>{{ r.trace.matchedDeals }}</td><td>{{ r.trace.relScore|floatformat:1 }}</td>
+      </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+{% endblock %}

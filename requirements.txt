@@ -1,0 +1,53 @@
+# FundOS backend — Stage 1-3 (Doc 6 stack)
+Django==4.2.11
+djangorestframework>=3.14
+django-filter>=23.5
+django-cors-headers>=4.3
+celery>=5.3
+redis>=5.0
+PyJWT>=2.8
+requests>=2.31
+rapidfuzz>=3.9         # investor identity resolution + sector normalisation.
+                       # Both call sites degrade to exact-match-only when it
+                       # is missing and only WARN, so an undeclared dependency
+                       # silently stopped near-miss aliases being queued.
+pypdf>=4.0            # legacy material text extraction (Doc 6 Appendix F)
+
+# Document extraction for the Company Profile pipeline.
+#
+# Before these, extraction handled a PDF's text layer, .txt and .csv, and
+# returned an empty string for DOCX/XLSX/PPTX — so a pitch deck and a financial
+# model contributed nothing to a profile, invisibly. MarkItDown covers the
+# office formats. Scanned pages and text baked into deck images are read by
+# sending the FILE to a document-capable model (see
+# fundos/profile/pipeline/document_ai.py), which replaced the local Tesseract /
+# EasyOCR engines — so there is no OCR binary to install any more.
+#
+# All four are optional at runtime: a missing package degrades that one file to
+# "could not be read", with the reason recorded on the document row, and never
+# fails a generation run.
+# The EXTRAS ARE NOT OPTIONAL, despite the note above. Bare `markitdown`
+# installs the converter classes but not the libraries they read with, so an
+# .xlsx financial model raises MissingDependencyException, recovers 0
+# characters, and category B (Financials) scores blank on every company —
+# with nothing on the scorecard saying the model was never read. That is the
+# exact failure this block was written to prevent, reintroduced one layer
+# down. Pin the extras so the converters have what they need.
+markitdown[docx,pptx,xlsx,xls,pdf]>=0.0.1a2   # native text/tables
+pymupdf>=1.24         # PDF inspection (page counts, structure)
+pillow>=10.0          # image handling
+
+# Export layer (Gaps G4/G14 — Doc 6 Appendix F stack)
+reportlab>=4.2        # PDF (platypus) — teaser/IM/reports, watermarking
+python-pptx>=1.0.2    # pitch deck / teaser PPTX; also reads embedded slide
+                      # images for the OCR path above
+openpyxl>=3.1.2       # financial model XLSX with LIVE formulas
+XlsxWriter>=3.2.0     # fast styled writes
+python-docx>=1.1      # teaser/IM DOCX
+clamd>=1.0            # virus scanning (Gap G8) — REQUIRED in uat/prod
+
+# Optional — enable per environment
+# boto3>=1.34         # S3/OCI object storage backends
+# openai>=1.30        # only if calling OpenAI-native SDK paths
+anthropic>=0.39      # Claude provider (llm/adapter _run_anthropic)
+# psycopg2-binary     # PostgreSQL in uat/prod (dev uses sqlite)

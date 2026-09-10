@@ -1,0 +1,7 @@
+{% extends "admin/change_list.html" %}
+{% block object-tools %}
+<ul class="object-tools">
+  <li><a href="{% url 'admin:investors_refresh_console' %}" class="addlink">Open refresh console</a></li>
+</ul>
+{{ block.super }}
+{% endblock %}

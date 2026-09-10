@@ -1,0 +1,153 @@
+[2026-09-04 09:30:05,408: INFO/MainProcess] Task profile.generate[064e7c51-6509-493d-8eb9-269359d5b1fa] received
+[2026-09-04 09:30:29,778: INFO/ForkPoolWorker-1] Task fundos.readiness.tasks.scan_and_analyse_material[840a46a8-00dd-42ba-9044-80bb9c60b735] succeeded in 28.1571785248816s: 'ok'
+[2026-09-04 09:30:41,226: INFO/ForkPoolWorker-3] Task fundos.readiness.tasks.scan_and_analyse_material[e98af28c-2844-40a2-8005-7292a9630b99] succeeded in 35.99489483889192s: 'ok'
+[2026-09-04 09:30:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[8d106e98-3558-490b-bc26-8582577b4467] received
+[2026-09-04 09:30:48,739: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[8d106e98-3558-490b-bc26-8582577b4467] succeeded in 0.013871698640286922s: 0
+[2026-09-04 09:34:38,120: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[299ac620-b86c-4d24-8fb2-71bb277be8aa] received
+[2026-09-04 09:34:38,124: INFO/ForkPoolWorker-2] Task profile.generate[064e7c51-6509-493d-8eb9-269359d5b1fa] succeeded in 272.7138299308717s: {'generated': ['company_profile', 'founders', 'products_services', 'customers_markets', 'competitive_advantages', 'business_model', 'revenue_model', 'company_metrics', 'financial_summary', 'funding_history', 'competitors', 'news', 'investors_cap_table', 'company_story', 'industry_research', 'investment_thesis'], 'skipped': [], 'needsInput': [], 'sourceFailures': [], 'completenessPct': 100.0, 'mode': 'pipeline', 'dossier': {'storageUri': 'profiles/62eef4b7-4f50-42b3-b61d-69fc711fe9a5/runs/3525da21-86e1-415f-bbb9-3ff53c5b1df6/consolidated.md', 'characters': 848649}, 'research': {'batches_total': 10, 'batches_finished': 10, 'batches_succeeded': 10, 'batches_failed': [], 'batch_errors': {}, 'questions_total': 100, 'searches': 211, 'text_chars': 271065, 'concurrency': 5}, 'documents': {'files_total': 2, 'files_converted': 2, 'files_ocr_triggered': 0, 'ocr_units_processed': 0, 'ocr_chars': 0, 'text_chars': 575423, 'ocr_engines': ['tesseract'], 'ocr_enabled': True, 'documents': [{...}, {...}], 'duration_seconds': 23..., ...}
+[2026-09-04 09:34:38,133: INFO/ForkPoolWorker-1] [ALERT_ENGINE] event 'fundos.generation.completed' matched 0 alert(s)
+[2026-09-04 09:34:38,134: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.process_event_alert[299ac620-b86c-4d24-8fb2-71bb277be8aa] succeeded in 0.013012218289077282s: 0
+[2026-09-04 09:35:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[668c84c4-ba44-40f7-ad6a-6dd6197807c9] received
+[2026-09-04 09:35:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[668c84c4-ba44-40f7-ad6a-6dd6197807c9] succeeded in 0.01345600001513958s: 0
+[2026-09-04 09:40:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[b24d463f-a187-4eb6-a14c-6127670e3a80] received
+[2026-09-04 09:40:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[b24d463f-a187-4eb6-a14c-6127670e3a80] succeeded in 0.01344898622483015s: 0
+[2026-09-04 09:45:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[59625c8e-2aa2-4076-a839-0b60df1646d0] received
+[2026-09-04 09:45:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[59625c8e-2aa2-4076-a839-0b60df1646d0] succeeded in 0.013295616023242474s: 0
+[2026-09-04 09:46:03,447: INFO/MainProcess] Task fundos.readiness.tasks.scan_and_analyse_material[0be12fc0-14fc-4d8e-b230-cb32d2448ea4] received
+[2026-09-04 09:46:03,873: INFO/MainProcess] Task fundos.readiness.tasks.scan_and_analyse_material[35a51f19-09d3-4f57-98a6-e04c97df4ec9] received
+[2026-09-04 09:46:04,195: INFO/MainProcess] Task profile.generate[9876a096-f096-4e46-ac94-346bed10590f] received
+[2026-09-04 09:46:08,939: ERROR/ForkPoolWorker-1] MATERIALS: critique failed for 7a91c2d6-13fa-4b12-b582-1eda90143c40: LLM role 'material_critique' unavailable: gemini 400 for model gemini-2.5-flash: API key not valid. Please pass a valid API key.
+[2026-09-04 09:46:08,947: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[32afcffa-0586-4069-a71b-8761a6323a83] received
+[2026-09-04 09:46:08,974: INFO/ForkPoolWorker-4] [ALERT_ENGINE] event 'fundos.generation.failed' matched 0 alert(s)
+[2026-09-04 09:46:08,980: INFO/ForkPoolWorker-4] Task fundos.core.alerting.tasks.process_event_alert[32afcffa-0586-4069-a71b-8761a6323a83] succeeded in 0.032484778203070164s: 0
+[2026-09-04 09:46:09,020: INFO/ForkPoolWorker-1] Task fundos.readiness.tasks.scan_and_analyse_material[0be12fc0-14fc-4d8e-b230-cb32d2448ea4] succeeded in 5.572260874323547s: 'ok'
+[2026-09-04 09:46:09,227: ERROR/ForkPoolWorker-3] MATERIALS: critique failed for 71c4395d-ea63-42bd-b9ff-e07d7fac2b6c: LLM role 'material_critique' unavailable: gemini 400 for model gemini-2.5-flash: API key not valid. Please pass a valid API key.
+[2026-09-04 09:46:09,234: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[67b8fc0d-5174-4b84-a59a-4c5d2ff02d6e] received
+[2026-09-04 09:46:09,249: INFO/ForkPoolWorker-1] [ALERT_ENGINE] event 'fundos.generation.failed' matched 0 alert(s)
+[2026-09-04 09:46:09,250: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.process_event_alert[67b8fc0d-5174-4b84-a59a-4c5d2ff02d6e] succeeded in 0.015435853973031044s: 0
+[2026-09-04 09:46:09,300: INFO/ForkPoolWorker-3] Task fundos.readiness.tasks.scan_and_analyse_material[35a51f19-09d3-4f57-98a6-e04c97df4ec9] succeeded in 5.42434499412775s: 'ok'
+[2026-09-04 09:46:09,366: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[78037453-9ea9-471c-99ea-dea1aecc65d5] received
+[2026-09-04 09:46:09,368: INFO/ForkPoolWorker-2] Task profile.generate[9876a096-f096-4e46-ac94-346bed10590f] succeeded in 5.1716851610690355s: {'generated': [], 'skipped': [], 'needsInput': [], 'sourceFailures': [{'source': 'synthesizing', 'error': 'LLM role \'profile_synthesis\' unavailable: gemini 400 for model gemini-2.5-flash: API key not valid. Please pass a valid API key.'}], 'completenessPct': 0.0, 'mode': 'failed', 'error': 'LLM role \'profile_synthesis\' unavailable: gemini 400 for model gemini-2.5-flash: API key not valid. Please pass a valid API key.', 'runId': '7f54c10d-4b73-4c41-b830-a42c3d6a406e', 'assessmentInputs': {'asked': 61, 'written': 0, 'low_confidence': 0, 'bands': 0, 'benchmarks': 0, 'missing': 0, 'sub_sector_method': '', 'unsourced_rejected': 0, 'unknown_key_rejected': 0, 'unparseable_band': 0, 'dossier_sourced': 0, 'mode': 'full', 'error': 'LLM role \'assessment_inputs\' unavailable: gemini 400 for model gemini-2.5-flash: API key not valid. Please pass a valid API key.'}, 'llmCalls': 12}
+[2026-09-04 09:46:09,378: INFO/ForkPoolWorker-1] [ALERT_ENGINE] event 'fundos.generation.completed' matched 0 alert(s)
+[2026-09-04 09:46:09,379: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.process_event_alert[78037453-9ea9-471c-99ea-dea1aecc65d5] succeeded in 0.011969911865890026s: 0
+[2026-09-04 09:50:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[9dcff778-98fe-4f9b-812b-a6bde84865d9] received
+[2026-09-04 09:50:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[9dcff778-98fe-4f9b-812b-a6bde84865d9] succeeded in 0.013277551159262657s: 0
+[2026-09-04 09:55:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[32485e96-d284-465f-94ae-7d1e5b06c25a] received
+[2026-09-04 09:55:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[32485e96-d284-465f-94ae-7d1e5b06c25a] succeeded in 0.013311625458300114s: 0
+[2026-09-04 10:00:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[98823cf4-5de6-444c-8d67-024e9fc8669b] received
+[2026-09-04 10:00:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[98823cf4-5de6-444c-8d67-024e9fc8669b] succeeded in 0.01340256817638874s: 0
+[2026-09-04 10:05:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[ee7e226b-3853-42e1-808e-2f99ed301324] received
+[2026-09-04 10:05:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[ee7e226b-3853-42e1-808e-2f99ed301324] succeeded in 0.013288162648677826s: 0
+[2026-09-04 10:10:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[a701b371-e83c-41c7-a5cd-2dc538ed4e18] received
+[2026-09-04 10:10:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[a701b371-e83c-41c7-a5cd-2dc538ed4e18] succeeded in 0.013672258704900742s: 0
+[2026-09-04 10:15:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[b94e1c18-a8a9-413f-b6f0-8628215f51ff] received
+[2026-09-04 10:15:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[b94e1c18-a8a9-413f-b6f0-8628215f51ff] succeeded in 0.013273494318127632s: 0
+[2026-09-04 10:20:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[eae9505f-8341-4cd9-8ed9-c7cff0f81fa4] received
+[2026-09-04 10:20:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[eae9505f-8341-4cd9-8ed9-c7cff0f81fa4] succeeded in 0.013118388131260872s: 0
+[2026-09-04 10:25:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[a26d3da1-cb5b-4022-96dc-3093678a82b0] received
+[2026-09-04 10:25:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[a26d3da1-cb5b-4022-96dc-3093678a82b0] succeeded in 0.013191256672143936s: 0
+[2026-09-04 10:28:15,629: INFO/MainProcess] Task assessment.generate[704015ef-4c74-49e8-a06f-f8fc28540b47] received
+[2026-09-04 10:28:30,223: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[28048b1b-e17f-4f39-91c1-69ccc6494ec8] received
+[2026-09-04 10:28:30,225: INFO/ForkPoolWorker-1] Task assessment.generate[704015ef-4c74-49e8-a06f-f8fc28540b47] succeeded in 14.594369086436927s: '636559ea-4101-49db-9c6a-4109f5d86799'
+[2026-09-04 10:28:30,235: INFO/ForkPoolWorker-3] [ALERT_ENGINE] event 'fundos.generation.completed' matched 0 alert(s)
+[2026-09-04 10:28:30,236: INFO/ForkPoolWorker-3] Task fundos.core.alerting.tasks.process_event_alert[28048b1b-e17f-4f39-91c1-69ccc6494ec8] succeeded in 0.012271374464035034s: 0
+[2026-09-04 10:30:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[686e2a29-84c5-4b60-915e-ae4890c733e4] received
+[2026-09-04 10:30:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[686e2a29-84c5-4b60-915e-ae4890c733e4] succeeded in 0.013268022798001766s: 0
+[2026-09-04 10:33:37,719: INFO/MainProcess] Task assessment.generate[b45f6a86-28e2-4ad1-9ee7-aa304f236939] received
+[2026-09-04 10:33:56,475: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[f2bd94d1-71da-429d-9628-1afe3c81b18b] received
+[2026-09-04 10:33:56,477: INFO/ForkPoolWorker-1] Task assessment.generate[b45f6a86-28e2-4ad1-9ee7-aa304f236939] succeeded in 18.75726464856416s: '04e8f292-be85-4649-90bb-c08dd52875e6'
+[2026-09-04 10:33:56,487: INFO/ForkPoolWorker-3] [ALERT_ENGINE] event 'fundos.generation.completed' matched 0 alert(s)
+[2026-09-04 10:33:56,488: INFO/ForkPoolWorker-3] Task fundos.core.alerting.tasks.process_event_alert[f2bd94d1-71da-429d-9628-1afe3c81b18b] succeeded in 0.011349446140229702s: 0
+[2026-09-04 10:35:37,583: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2026-09-04 10:35:37,587: INFO/MainProcess] mingle: searching for neighbors
+[2026-09-04 10:35:38,598: INFO/MainProcess] mingle: all alone
+[2026-09-04 10:35:38,612: INFO/MainProcess] celery@befundos.gyain.com ready.
+[2026-09-04 10:35:48,733: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[856d379c-35ba-459a-8409-18d00fabd103] received
+[2026-09-04 10:35:48,760: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[856d379c-35ba-459a-8409-18d00fabd103] succeeded in 0.02529972232878208s: 0
+[2026-09-04 10:37:51,726: INFO/MainProcess] Task fundos.readiness.tasks.scan_and_analyse_material[667ea118-66b0-436f-91c4-2a639ecbacef] received
+[2026-09-04 10:37:52,351: INFO/MainProcess] Task fundos.readiness.tasks.scan_and_analyse_material[8dcae85c-8f32-4dc1-afdd-8d38d9dfbf79] received
+[2026-09-04 10:37:52,520: INFO/MainProcess] Task profile.generate[6f9d288d-f018-4307-9872-ed53c734a3e7] received
+[2026-09-04 10:37:57,235: INFO/ForkPoolWorker-3] Task fundos.readiness.tasks.scan_and_analyse_material[8dcae85c-8f32-4dc1-afdd-8d38d9dfbf79] succeeded in 4.879890911281109s: 'ok'
+[2026-09-04 10:38:01,640: INFO/ForkPoolWorker-1] Task fundos.readiness.tasks.scan_and_analyse_material[667ea118-66b0-436f-91c4-2a639ecbacef] succeeded in 9.912499254569411s: 'ok'
+[2026-09-04 10:40:48,725: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[b6eb72c1-aa24-4343-8a08-a809de0dc5ce] received
+[2026-09-04 10:40:48,748: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[b6eb72c1-aa24-4343-8a08-a809de0dc5ce] succeeded in 0.021850711666047573s: 0
+[2026-09-04 10:41:23,198: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[1e0fb717-fb73-47d3-b2dc-fbca23af3cb3] received
+[2026-09-04 10:41:23,203: INFO/ForkPoolWorker-2] Task profile.generate[6f9d288d-f018-4307-9872-ed53c734a3e7] succeeded in 210.67826240044087s: {'generated': ['company_profile', 'founders', 'products_services', 'customers_markets', 'competitive_advantages', 'business_model', 'revenue_model', 'company_metrics', 'financial_summary', 'funding_history', 'competitors', 'news', 'investors_cap_table', 'company_story', 'industry_research', 'investment_thesis'], 'skipped': [], 'needsInput': [], 'sourceFailures': [], 'completenessPct': 100.0, 'mode': 'pipeline', 'dossier': {'storageUri': 'profiles/f9e8c99b-cc3a-4621-aee1-93e674667ba6/runs/856ed594-365b-4c2a-b162-83e40e08b624/consolidated.md', 'characters': 279090}, 'research': {'batches_total': 10, 'batches_finished': 10, 'batches_succeeded': 10, 'batches_failed': [], 'batch_errors': {}, 'questions_total': 100, 'searches': 196, 'text_chars': 204666, 'concurrency': 5}, 'documents': {'files_total': 2, 'files_converted': 2, 'files_ocr_triggered': 0, 'ocr_units_processed': 0, 'ocr_chars': 0, 'text_chars': 72198, 'ocr_engines': ['tesseract'], 'ocr_enabled': True, 'documents': [{...}, {...}], 'duration_seconds': 2.2..., ...}
+[2026-09-04 10:41:23,212: INFO/ForkPoolWorker-1] [ALERT_ENGINE] event 'fundos.generation.completed' matched 0 alert(s)
+[2026-09-04 10:41:23,213: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.process_event_alert[1e0fb717-fb73-47d3-b2dc-fbca23af3cb3] succeeded in 0.013416414149105549s: 0
+[2026-09-04 10:45:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[81ca099d-353e-4f72-a5e4-41eeb5fe08aa] received
+[2026-09-04 10:45:48,739: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[81ca099d-353e-4f72-a5e4-41eeb5fe08aa] succeeded in 0.013479415327310562s: 0
+[2026-09-04 10:50:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[0cda99d8-67bd-4ab3-9dea-ec4c53a309bb] received
+[2026-09-04 10:50:48,739: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[0cda99d8-67bd-4ab3-9dea-ec4c53a309bb] succeeded in 0.013393229804933071s: 0
+[2026-09-04 10:55:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[7f1ce9c7-85af-4ca4-a803-1556760706de] received
+[2026-09-04 10:55:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[7f1ce9c7-85af-4ca4-a803-1556760706de] succeeded in 0.013280065730214119s: 0
+[2026-09-04 11:00:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[3cb029ab-0a7c-43c0-915f-289e31c10524] received
+[2026-09-04 11:00:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[3cb029ab-0a7c-43c0-915f-289e31c10524] succeeded in 0.013329559937119484s: 0
+[2026-09-04 11:05:48,724: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[26d29016-1cd2-4dd3-b45f-f427ad363413] received
+[2026-09-04 11:05:48,738: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[26d29016-1cd2-4dd3-b45f-f427ad363413] succeeded in 0.013340129517018795s: 0
+[2026-09-04 11:06:31,090: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2026-09-04 11:06:31,099: INFO/MainProcess] mingle: searching for neighbors
+[2026-09-04 11:06:32,119: INFO/MainProcess] mingle: all alone
+[2026-09-04 11:06:32,132: INFO/MainProcess] celery@befundos.gyain.com ready.
+[2026-09-04 11:07:36,880: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2026-09-04 11:07:36,884: INFO/MainProcess] mingle: searching for neighbors
+[2026-09-04 11:07:37,894: INFO/MainProcess] mingle: all alone
+[2026-09-04 11:07:37,908: INFO/MainProcess] celery@befundos.gyain.com ready.
+[2026-09-04 11:10:48,734: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[fae799fe-e7e8-4a11-a49d-fbe6f7e7553c] received
+[2026-09-04 11:10:48,760: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[fae799fe-e7e8-4a11-a49d-fbe6f7e7553c] succeeded in 0.025396384298801422s: 0
+[2026-09-04 11:12:33,215: INFO/MainProcess] Task fundos.readiness.tasks.scan_and_analyse_material[7d73b559-d4ef-4994-a39a-f964d275e440] received
+[2026-09-04 11:12:35,828: INFO/MainProcess] Task fundos.readiness.tasks.scan_and_analyse_material[1fe7b722-0490-448a-bf7d-43044063bf5d] received
+[2026-09-04 11:12:36,079: INFO/MainProcess] Task profile.generate[919f9438-17c8-4040-979c-780ef35e2fd1] received
+[2026-09-04 11:12:37,359: INFO/ForkPoolWorker-1] Task fundos.readiness.tasks.scan_and_analyse_material[7d73b559-d4ef-4994-a39a-f964d275e440] succeeded in 4.142867720685899s: 'ok'
+[2026-09-04 11:13:01,392: INFO/ForkPoolWorker-3] Task fundos.readiness.tasks.scan_and_analyse_material[1fe7b722-0490-448a-bf7d-43044063bf5d] succeeded in 25.563072262331843s: 'ok'
+[2026-09-04 11:15:48,725: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[75c53d31-8855-4a68-ae14-ae1fb7f53acd] received
+[2026-09-04 11:15:48,739: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[75c53d31-8855-4a68-ae14-ae1fb7f53acd] succeeded in 0.013604462146759033s: 0
+[2026-09-04 11:17:58,755: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[6558230c-8a8f-4a65-a2c7-9ababb1a4437] received
+[2026-09-04 11:17:58,760: INFO/ForkPoolWorker-2] Task profile.generate[919f9438-17c8-4040-979c-780ef35e2fd1] succeeded in 322.675336596556s: {'generated': ['company_profile', 'founders', 'products_services', 'customers_markets', 'competitive_advantages', 'business_model', 'revenue_model', 'company_metrics', 'financial_summary', 'funding_history', 'competitors', 'news', 'investors_cap_table', 'company_story', 'industry_research', 'investment_thesis'], 'skipped': [], 'needsInput': [], 'sourceFailures': [], 'completenessPct': 100.0, 'mode': 'pipeline', 'dossier': {'storageUri': 'profiles/7c9ae77f-f67d-409e-8af9-1288f92a67bf/runs/6dbe0fb8-b25d-4660-8f85-1fd9e7785a44/consolidated.md', 'characters': 836049}, 'research': {'batches_total': 10, 'batches_finished': 10, 'batches_succeeded': 10, 'batches_failed': [], 'batch_errors': {}, 'questions_total': 100, 'searches': 234, 'text_chars': 258465, 'concurrency': 5}, 'documents': {'files_total': 2, 'files_converted': 2, 'files_ocr_triggered': 0, 'ocr_units_processed': 0, 'ocr_chars': 0, 'text_chars': 575423, 'ocr_engines': ['tesseract'], 'ocr_enabled': True, 'documents': [{...}, {...}], 'duration_seconds': 21..., ...}
+[2026-09-04 11:17:58,761: WARNING/ForkPoolWorker-2] [ALERT_ENGINE] slow task 'profile.generate' ran 323s (limit 300s)
+[2026-09-04 11:17:58,765: INFO/MainProcess] Task fundos.core.alerting.tasks.process_event_alert[292c472a-162d-464e-b670-8da95f25c3ec] received
+[2026-09-04 11:17:58,771: INFO/ForkPoolWorker-1] [ALERT_ENGINE] event 'fundos.generation.completed' matched 0 alert(s)
+[2026-09-04 11:17:58,773: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.process_event_alert[6558230c-8a8f-4a65-a2c7-9ababb1a4437] succeeded in 0.016287139616906643s: 0
+[2026-09-04 11:17:58,781: INFO/ForkPoolWorker-3] [ALERT_ENGINE] event 'celery.task.slow' matched 0 alert(s)
+[2026-09-04 11:17:58,782: INFO/ForkPoolWorker-3] Task fundos.core.alerting.tasks.process_event_alert[292c472a-162d-464e-b670-8da95f25c3ec] succeeded in 0.015231256373226643s: 0
+[2026-09-04 11:20:48,725: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[5b691d2e-4ec9-4bd4-a412-062c8df1225b] received
+[2026-09-04 11:20:48,748: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[5b691d2e-4ec9-4bd4-a412-062c8df1225b] succeeded in 0.021592202596366405s: 0
+[2026-09-04 11:25:48,725: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[62ddfca3-8620-49a4-9148-b95825463c18] received
+[2026-09-04 11:25:48,739: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[62ddfca3-8620-49a4-9148-b95825463c18] succeeded in 0.01335045974701643s: 0
+[2026-09-04 11:30:48,725: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[d1a01f84-d46f-438b-9f21-0d6288e53c6b] received
+[2026-09-04 11:30:48,739: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[d1a01f84-d46f-438b-9f21-0d6288e53c6b] succeeded in 0.013291587121784687s: 0
+[2026-09-04 11:38:17,079: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2026-09-04 11:38:17,087: INFO/MainProcess] mingle: searching for neighbors
+[2026-09-04 11:38:18,103: INFO/MainProcess] mingle: all alone
+[2026-09-04 11:38:18,117: INFO/MainProcess] celery@befundos.gyain.com ready.
+[2026-09-04 11:38:18,119: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[b0415a8b-de3a-4f69-a0cb-b966fb217e21] received
+[2026-09-04 11:38:18,146: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[b0415a8b-de3a-4f69-a0cb-b966fb217e21] succeeded in 0.025624338537454605s: 0
+[2026-09-04 11:39:29,495: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2026-09-04 11:39:29,503: INFO/MainProcess] mingle: searching for neighbors
+[2026-09-04 11:39:30,516: INFO/MainProcess] mingle: all alone
+[2026-09-04 11:39:30,528: INFO/MainProcess] celery@befundos.gyain.com ready.
+[2026-09-04 11:43:16,432: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[11239b6e-67b5-41b3-bf6d-3bc85d0765d3] received
+[2026-09-04 11:43:16,458: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[11239b6e-67b5-41b3-bf6d-3bc85d0765d3] succeeded in 0.025017348118126392s: 0
+[2026-09-04 11:48:16,423: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[e1e5bcb9-b938-4859-b3f4-af55f980c6fb] received
+[2026-09-04 11:48:16,438: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[e1e5bcb9-b938-4859-b3f4-af55f980c6fb] succeeded in 0.01435545738786459s: 0
+[2026-09-04 11:51:37,434: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2026-09-04 11:51:37,443: INFO/MainProcess] mingle: searching for neighbors
+[2026-09-04 11:51:38,463: INFO/MainProcess] mingle: all alone
+[2026-09-04 11:51:38,477: INFO/MainProcess] celery@befundos.gyain.com ready.
+[2026-09-04 11:53:16,433: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[3281c96b-57b7-40c9-9d91-71b94b5fafec] received
+[2026-09-04 11:53:16,459: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[3281c96b-57b7-40c9-9d91-71b94b5fafec] succeeded in 0.02564022783190012s: 0
+[2026-09-04 11:58:16,423: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[5d95e715-fb56-406b-95b2-69aa4a1211b1] received
+[2026-09-04 11:58:16,439: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[5d95e715-fb56-406b-95b2-69aa4a1211b1] succeeded in 0.014287606813013554s: 0
+[2026-09-04 12:02:26,026: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2026-09-04 12:02:26,041: INFO/MainProcess] mingle: searching for neighbors
+[2026-09-04 12:02:27,061: INFO/MainProcess] mingle: all alone
+[2026-09-04 12:02:27,073: INFO/MainProcess] celery@befundos.gyain.com ready.
+[2026-09-04 12:03:16,433: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[77d62499-8418-4de7-bae6-2c721d9b76e9] received
+[2026-09-04 12:03:16,459: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[77d62499-8418-4de7-bae6-2c721d9b76e9] succeeded in 0.0254040714353323s: 0
+[2026-09-04 12:06:51,902: INFO/MainProcess] Task fundos.readiness.tasks.scan_and_analyse_material[18eb27cd-4aec-4924-b9d4-0cdd0a82737c] received
+[2026-09-04 12:06:53,817: INFO/MainProcess] Task fundos.readiness.tasks.scan_and_analyse_material[1be82c69-da29-42fb-aafa-a6344d9e4edb] received
+[2026-09-04 12:06:53,953: INFO/MainProcess] Task profile.generate[c24cba08-1310-4af2-afe6-3aa1971e7185] received
+[2026-09-04 12:07:00,825: INFO/ForkPoolWorker-1] Task fundos.readiness.tasks.scan_and_analyse_material[18eb27cd-4aec-4924-b9d4-0cdd0a82737c] succeeded in 8.921814464963973s: 'ok'
+[2026-09-04 12:07:22,225: INFO/ForkPoolWorker-3] Task fundos.readiness.tasks.scan_and_analyse_material[1be82c69-da29-42fb-aafa-a6344d9e4edb] succeeded in 28.406713381409645s: 'ok'
+[2026-09-04 12:08:16,424: INFO/MainProcess] Task fundos.core.alerting.tasks.evaluate_alerts[268a9e13-cffd-4da2-b744-930a1c6eeea6] received
+[2026-09-04 12:08:16,442: INFO/ForkPoolWorker-1] Task fundos.core.alerting.tasks.evaluate_alerts[268a9e13-cffd-4da2-b744-930a1c6eeea6] succeeded in 0.017776605673134327s: 0

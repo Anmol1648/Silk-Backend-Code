@@ -1,0 +1,23 @@
+﻿[Unit]
+Description=FundOS API (gunicorn) â€” gyain / befundos
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+User=fundos
+Group=fundos
+EnvironmentFile=/etc/fundos/fundos.env
+WorkingDirectory=/d01/fundos/src
+# Bind to the node's private IP (10.130.0.34), not 127.0.0.1
+ExecStart=/d01/fundos/app/venv/bin/gunicorn fundos.wsgi:application \
+  --bind 10.130.0.34:8001 --workers 4 --threads 2 --timeout 120 \
+  --access-logfile /var/log/fundos/gunicorn-access.log \
+  --error-logfile /var/log/fundos/gunicorn-error.log
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/d01/fundos-data /d01/fundos/logs /d01/fundos/src
+
+[Install]
+WantedBy=multi-user.target
