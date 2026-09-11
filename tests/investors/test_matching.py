@@ -412,3 +412,58 @@ class AggregateTests(TestCase):
         self.assertEqual(inv.overall_deals, 3)
         # Mean of 4 and 6 — the zero is excluded, not averaged in as zero.
         self.assertEqual(inv.avg_ticket_usd_mn, Decimal("5.0000"))
+
+class TheQueueSurvivesAMissingScorer(TestCase):
+    """A near miss nobody is told about is the failure this module exists to
+    prevent. `rapidfuzz` was absent on one machine and `resolve` returned no
+    match, no near miss and no queued candidate: a name one letter off an
+    existing investor became a second firm silently."""
+
+    def _without_rapidfuzz(self, raw):
+        import sys
+        from unittest import mock
+
+        with mock.patch.dict(sys.modules, {"rapidfuzz": None}):
+            return identity.resolve(raw)
+
+    def setUp(self):
+        Investor.objects.create(
+            name="Blume Ventures",
+            normalised_name=identity.normalise_name("Blume Ventures"))
+
+    def test_a_near_miss_is_still_queued(self):
+        from fundos.investors.models import InvestorAliasCandidate
+
+        self._without_rapidfuzz("Blume Venture Partners")
+        self.assertTrue(InvestorAliasCandidate.objects.filter(
+            raw_name="Blume Venture Partners", status="pending").exists())
+
+    def test_the_fallback_never_auto_merges(self):
+        """Merging is the irreversible half of the decision, and the library
+        that was trusted to make it is not installed."""
+        _investor, action = self._without_rapidfuzz("Blume Ventures Fund")
+        self.assertEqual(action, "created")
+
+    def test_an_exact_match_needs_no_scorer_at_all(self):
+        _investor, action = self._without_rapidfuzz("Blume Ventures LLP")
+        self.assertEqual(action, "exact")
+
+    def test_an_unrelated_name_is_not_queued(self):
+        from fundos.investors.models import InvestorAliasCandidate
+
+        self._without_rapidfuzz("Tiger Global Management")
+        self.assertFalse(InvestorAliasCandidate.objects.filter(
+            raw_name="Tiger Global Management").exists())
+
+    def test_the_fallback_scores_on_the_same_scale(self):
+        self.assertEqual(identity._token_sort_ratio("accel", "accel"), 100)
+        self.assertEqual(identity._token_sort_ratio("", "accel"), 0)
+        self.assertGreater(
+            identity._token_sort_ratio("blume ventures",
+                                       "blume venture partners"),
+            identity.REVIEW_FLOOR)
+
+    def test_word_order_is_not_identity(self):
+        self.assertEqual(
+            identity._token_sort_ratio("capital sequoia", "sequoia capital"),
+            100)

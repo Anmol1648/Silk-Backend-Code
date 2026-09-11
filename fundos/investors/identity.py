@@ -56,6 +56,73 @@ def normalise_name(raw):
     return s
 
 
+#: Below this, two names have nothing to do with each other and queueing the
+#: pair would only give a human noise to clear.
+REVIEW_FLOOR = 60
+
+
+def _token_sort_ratio(a, b):
+    """A ratio in 0-100 with no third-party dependency.
+
+    `difflib` is in the standard library, so this exists on every machine.
+    Tokens are sorted first for the same reason rapidfuzz sorts them: word
+    order is not identity.
+    """
+    import difflib
+
+    left = " ".join(sorted(str(a or "").split()))
+    right = " ".join(sorted(str(b or "").split()))
+    if not left or not right:
+        return 0.0
+    return difflib.SequenceMatcher(None, left, right).ratio() * 100
+
+
+def _rank(key, candidates):
+    """Score `key` against every known investor.
+
+    :returns: ``(best, best_score, runners, scorer)``.
+
+    The scorer is named because it decides what may be done with the score.
+    `rapidfuzz` was absent on a development box and this function returned
+    nothing at all: no match, no near miss, and no candidate queued -- so a
+    name one letter off an existing investor was created as a second firm
+    with nobody told. A near miss nobody is told about is the failure this
+    whole module exists to prevent, so the fallback keeps the QUEUE working
+    even where it is not trusted to merge.
+    """
+    if not candidates:
+        return None, 0.0, [], "none"
+
+    pool = [c[2] for c in candidates]
+    try:
+        from rapidfuzz import fuzz, process
+
+        hits = [(idx, float(score)) for _alias, score, idx in
+                process.extract(key, pool, scorer=fuzz.token_sort_ratio,
+                                limit=4)]
+        scorer = "rapidfuzz"
+    except ImportError:
+        logger.warning("IDENTITY: rapidfuzz unavailable — scoring with the "
+                       "standard library instead. Near misses are still "
+                       "queued for review; nothing is auto-merged on this "
+                       "scorer.")
+        scored = sorted(((i, _token_sort_ratio(key, name))
+                         for i, name in enumerate(pool)),
+                        key=lambda pair: pair[1], reverse=True)
+        hits = scored[:4]
+        scorer = "difflib"
+
+    best, best_score, runners = None, 0.0, []
+    for idx, score in hits:
+        cid, cname, _ = candidates[idx]
+        if best is None:
+            best, best_score = candidates[idx], score
+        else:
+            runners.append({"investorId": str(cid), "name": cname,
+                            "score": round(score, 2)})
+    return best, best_score, runners, scorer
+
+
 def resolve(raw_name, *, tenant_id=None, create_if_missing=True):
     """Resolve a raw investor name to an Investor.
 
@@ -85,24 +152,13 @@ def resolve(raw_name, *, tenant_id=None, create_if_missing=True):
         return exact, "exact"
 
     candidates = list(qs.values_list("id", "name", "normalised_name"))
-    best, best_score, runners = None, 0.0, []
-    if candidates:
-        try:
-            from rapidfuzz import fuzz, process
-            pool = [c[2] for c in candidates]
-            hits = process.extract(key, pool, scorer=fuzz.token_sort_ratio,
-                                   limit=4)
-            for alias, score, idx in hits:
-                cid, cname, _ = candidates[idx]
-                if best is None:
-                    best, best_score = candidates[idx], float(score)
-                else:
-                    runners.append({"investorId": str(cid), "name": cname,
-                                    "score": round(float(score), 2)})
-        except ImportError:
-            logger.warning("IDENTITY: rapidfuzz unavailable — exact match only.")
+    best, best_score, runners, scorer = _rank(key, candidates)
 
-    if best and best_score >= AUTO_MERGE_THRESHOLD:
+    # A FALLBACK SCORER MAY QUEUE BUT MAY NOT MERGE. Merging is the
+    # irreversible half of this decision, and it was made by a library that
+    # is not installed here; a stand-in agreeing with it is not something
+    # this module can check.
+    if best and best_score >= AUTO_MERGE_THRESHOLD and scorer == "rapidfuzz":
         inv = qs.get(id=best[0])
         _remember_alias(inv, clean)
         logger.info("IDENTITY: auto-merged %r into %r at %.1f",
@@ -118,7 +174,7 @@ def resolve(raw_name, *, tenant_id=None, create_if_missing=True):
     # Near miss below the threshold: queue it. The new investor still exists
     # so the refresh completes and the data is usable; the queue records that
     # this one deserves a second look.
-    if best and best_score > 60:
+    if best and best_score > REVIEW_FLOOR:
         cand, created = InvestorAliasCandidate.objects.get_or_create(
             raw_name=clean[:255],
             defaults={"candidate_id": best[0],
