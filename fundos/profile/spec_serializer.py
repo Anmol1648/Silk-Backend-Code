@@ -261,26 +261,51 @@ def _data_company_profile(sec, ctx):
         "currency_id": s.get("currency_id", profile.home_currency or ""),
     }
     # Req 1: summary figures for the top of the Funding & Valuation panel.
-    # An editor-supplied value always wins over the derived one — a founder
-    # who corrected a total should not see it recomputed away.
+    #
+    # THE COMPANY'S OWN FUNDING TABLE IS THE PRIORITY SOURCE for the total.
+    # A stated total reaches `structured` from research — a press round-up,
+    # an aggregator, a figure in a deck — and it disagreed with the rounds
+    # the same profile lists. Preferring it meant the panel showed one
+    # number while the table underneath it added to another, with nothing
+    # saying so.
+    #
+    # The stated figure is not discarded: it is carried beside the derived
+    # one and the gap is named, because a table missing a round and a web
+    # figure counting debt look identical from here and only a reader can
+    # tell them apart.
+    #
+    # With no rounds recorded there is nothing to prefer, so a stated total
+    # stands alone — which is also how an editor-entered total survives on a
+    # profile whose history has not been filled in.
     derived = _funding_summary(ctx)
     for k, v in derived.items():
-        data[k] = s[k] if k in s and s[k] not in (None, "") else v
+        stated = s.get(k)
+        if k in _FUNDING_TABLE_WINS and v not in (None, ""):
+            data[k] = v
+            continue
+        data[k] = stated if stated not in (None, "") else v
+
+    gap = _funding_total_gap(s.get("total_funding_raised_usd_mn"),
+                             derived.get("total_funding_raised_usd_mn"))
+    data["total_funding_raised_reported_usd_mn"] = gap[0]
+    data["total_funding_raised_gap"] = gap[1]
 
     # Req 2: display-formatted funding fields (CURRENCY:AMOUNT:SCALE).
     # An explicit founder-entered string always wins: it carries the currency
     # and scale they actually chose, which the USD figure has already lost.
     #
-    # Otherwise the display is derived from the USD figure rather than left
-    # blank. The conversion used to run one way only — a display string was
-    # parsed INTO `_usd_mn` — so a figure derived from funding history (6.27)
-    # arrived with an empty display beside it, and the screen showed nothing
-    # next to a number the API was holding all along.
+    # Next comes the figure as the rounds themselves report it — ₹52.25 Cr
+    # when every round was raised in crore. Only when neither exists is the
+    # display derived from the USD figure, rather than left blank: the
+    # conversion used to run one way only — a display string was parsed INTO
+    # `_usd_mn` — so a figure derived from funding history (6.27) arrived
+    # with an empty display beside it, and the screen showed nothing next to
+    # a number the API was holding all along.
     #
-    # Rendered as USD millions because that is exactly what the stored value
-    # is: no FX is applied and nothing is inferred about the founder's
-    # preferred currency. `_parse_display_to_usd_mn` reads it back to the
-    # same number, so the pair cannot drift.
+    # That fallback renders as USD millions because that is exactly what the
+    # stored value is: no FX is applied and nothing is inferred about the
+    # founder's preferred currency. `_parse_display_to_usd_mn` reads it back
+    # to the same number, so the pair cannot drift.
     for display_key, usd_key in (
             ("total_funding_raised_display", "total_funding_raised_usd_mn"),
             ("latest_pre_money_display", "latest_pre_money_usd_mn"),
@@ -289,8 +314,79 @@ def _data_company_profile(sec, ctx):
         if explicit:
             data[display_key] = explicit
             continue
-        data[display_key] = _usd_mn_as_display(data.get(usd_key))
+        data[display_key] = (derived.get(display_key)
+                             or _usd_mn_as_display(data.get(usd_key)))
     return data
+
+
+#: Keys whose value the funding rows themselves settle. A figure derived from
+#: the company's own table is preferred over one stated in `structured`,
+#: which is where research puts a number it read somewhere else.
+_FUNDING_TABLE_WINS = frozenset({
+    "total_funding_raised_usd_mn",
+    "total_funding_raised_amount",
+    "total_funding_raised_currency",
+    "total_funding_raised_denomination",
+    "total_funding_raised_basis",
+})
+
+#: How far apart two totals may be before the difference is worth showing.
+#: Rounding, an undisclosed round size and a stale rate all move a total by a
+#: little; 5% is past all three.
+_FUNDING_GAP_TOLERANCE = 0.05
+
+
+def _funding_total_gap(stated, derived):
+    """The stated total and a sentence about how it differs, or (None, "").
+
+    Says nothing when the two agree, when only one exists, or when the
+    stated value is not a number — a gap line on every profile would be
+    noise, and this one is meant to be read.
+    """
+    reported = _num(stated)
+    if reported is None or derived in (None, ""):
+        return (reported, "")
+    try:
+        table = float(derived)
+    except (TypeError, ValueError):            # pragma: no cover - defensive
+        return (reported, "")
+    if table <= 0:
+        return (reported, "")
+    if abs(reported - table) <= _FUNDING_GAP_TOLERANCE * table:
+        return (reported, "")
+    direction = "more" if reported > table else "less"
+    return (reported,
+            f"Research states US${reported:,.4g} Mn raised — "
+            f"US${abs(reported - table):,.4g} Mn {direction} than the "
+            f"rounds recorded here add up to (US${table:,.4g} Mn). "
+            f"Both are shown; neither has been "
+            f"changed to match the other.")
+
+
+#: The display contract is CURRENCY:AMOUNT:SCALE, and its scale tokens are
+#: not the storage ones: millions is "M" here and "Mn" on the row.
+_DISPLAY_SCALES = {"": "", "K": "K", "L": "L", "Mn": "M", "Cr": "Cr",
+                   "Bn": "B"}
+
+
+def _reported_display(amount, currency, denomination):
+    """A figure as its source wrote it, in the display contract's shape.
+
+    "" when there is no figure — an absent amount must stay absent rather
+    than render as zero. `_parse_display_to_usd_mn` reads every string this
+    returns, so the display and the USD figure beside it cannot drift.
+    """
+    if amount in (None, ""):
+        return ""
+    try:
+        value = float(amount)
+    except (TypeError, ValueError):
+        return ""
+    scale = _DISPLAY_SCALES.get(denomination or "")
+    if scale is None:
+        return ""
+    text = f"{value:.4f}".rstrip("0").rstrip(".") or "0"
+    return f"{(currency or 'USD').upper()}:{text}:{scale}"
 
 
 def _usd_mn_as_display(value):
@@ -651,27 +747,95 @@ def _money_display(row):
 def _funding_summary(ctx):
     """Req 1. Summary figures for the top of the Funding & Valuation panel.
 
+    THE ROUNDS ARE THE SOURCE. The total is a sum of the USD companions the
+    rounds themselves carry, not of `amount_value` — which, since a round
+    keeps the currency and scale its source used, may be 20 (₹20 crore)
+    sitting beside 5 (US$5 Mn). Adding those gives 25 of nothing.
+
+    A round whose currency has no rate is COUNTED AS MISSING rather than
+    added in as if it were dollars, and `total_funding_raised_basis` says how
+    many rounds the figure covers, so a total that is short says so instead
+    of looking complete.
+
     Every key is always present; a figure that cannot be derived is null
     rather than absent or zero — zero would render as a real number.
     """
-    rounds = [r for r in ctx["funding_rounds"]]
-    total = None
-    amounts = [_f(r.amount_value) for r in rounds]
-    amounts = [a for a in amounts if a is not None]
-    if amounts:
-        total = round(sum(amounts), 4)
+    from fundos.core.services import money
+
+    rounds = list(ctx["funding_rounds"])
+    with_amount = [r for r in rounds if _f(r.amount_value) is not None
+                   or _f(getattr(r, "amount_usd_mn", None)) is not None]
+
+    converted, currencies, denominations = [], set(), set()
+    for r in with_amount:
+        usd, _rate = money.reported_usd_mn(
+            _f(r.amount_value),
+            getattr(r, "amount_ccy", "") or "",
+            getattr(r, "amount_denomination", "") or "",
+            derived=_f(getattr(r, "amount_usd_mn", None)))
+        if usd is not None:
+            converted.append(usd)
+        currencies.add((getattr(r, "amount_ccy", "") or "USD").upper())
+        denominations.add(getattr(r, "amount_denomination", "") or "Mn")
+
+    total = round(sum(converted), 4) if converted else None
+
+    # When every round was reported in one currency at one scale, the sum is
+    # sayable in the company's own terms too — ₹52 Cr rather than only its
+    # dollar equivalent.
+    reported_total = reported_ccy = reported_denom = None
+    if with_amount and len(currencies) == 1 and len(denominations) == 1:
+        amounts = [_f(r.amount_value) for r in with_amount]
+        if all(a is not None for a in amounts):
+            reported_total = round(sum(amounts), 4)
+            reported_ccy = next(iter(currencies))
+            reported_denom = next(iter(denominations))
 
     dated = [r for r in rounds if r.announced_date]
     latest = max(dated, key=lambda r: r.announced_date) if dated else None
-    return {
+
+    out = {
         "total_funding_raised_usd_mn": total,
+        "total_funding_raised_amount": reported_total,
+        "total_funding_raised_currency": reported_ccy or "",
+        "total_funding_raised_denomination": reported_denom or "",
+        "total_funding_raised_display": _reported_display(
+            reported_total, reported_ccy, reported_denom),
+        "total_funding_raised_basis": _total_basis(len(with_amount),
+                                                   len(converted)),
         "last_funding_round_date": (latest.announced_date.isoformat()
                                     if latest else None),
-        "latest_pre_money_usd_mn": (_f(latest.pre_money_value)
-                                    if latest else None),
-        "latest_post_money_usd_mn": (
-            _f(getattr(latest, "post_money_value", None)) if latest else None),
     }
+
+    # Pre- and post-money were stored in `valuation_ccy` under column names
+    # that asserted USD millions. The figure is left exactly as reported and
+    # the USD companion derived beside it, the same way an amount is.
+    for key, attr in (("latest_pre_money", "pre_money_value"),
+                      ("latest_post_money", "post_money_value")):
+        value = _f(getattr(latest, attr, None)) if latest else None
+        ccy = (getattr(latest, "valuation_ccy", "") or "USD") if latest else ""
+        usd, _rate = money.reported_usd_mn(value, ccy, "Mn")
+        out[f"{key}_usd_mn"] = usd
+        out[f"{key}_amount"] = value
+        out[f"{key}_currency"] = ccy if value is not None else ""
+        out[f"{key}_denomination"] = "Mn" if value is not None else ""
+        out[f"{key}_display"] = _reported_display(value, ccy, "Mn")
+    return out
+
+
+def _total_basis(counted, converted):
+    """One sentence naming what the total covers, or "" when it covers all.
+
+    Generic by construction: it counts rounds, and names no company, currency
+    or source.
+    """
+    if not counted:
+        return ""
+    if converted == counted:
+        return f"company funding history: {counted} round(s)"
+    return (f"company funding history: {converted} of {counted} round(s) — "
+            f"{counted - converted} could not be expressed in USD and are "
+            f"NOT included in this total")
 
 
 def _data_competitors(sec, ctx):

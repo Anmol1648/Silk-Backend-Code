@@ -197,3 +197,33 @@ def block(amount, currency, denomination, *, rate=None, as_of=None):
         out["fxAsOf"] = str(as_of) if as_of else ""
         out["fxBasis"] = "derived"
     return out
+
+
+def reported_usd_mn(amount, currency, denomination, *, derived=None,
+                    rate=None):
+    """The USD-millions companion for a figure stored as it was reported.
+
+    Three columns predate the money fields and carried their scale in their
+    NAME — `amount_usd_mn`, `revenue_m`, `pre_money_value`. A row written
+    before the scale had anywhere to go states no denomination, and a blank
+    read as whole units turns US$5 Mn into US$0.000005 Mn: the same defect
+    the dashboard total had when it divided by a million a second time. So a
+    blank scale here means MILLIONS, which is what those names always meant.
+
+    A blank currency means USD for the same reason: the columns could hold
+    nothing else, so that is what a row that never named one contains.
+
+    :param derived: a USD companion already stored beside the figure. It was
+        computed when the figure was written, at a rate recorded with it, so
+        it is preferred over re-deriving one at today's rate.
+    :returns: ``(value, rate_used)``; ``(None, None)`` when the figure is
+        missing or its currency cannot be converted.
+    """
+    stored = _decimal(derived)
+    if stored is not None:
+        return float(stored), None
+    return to_usd_mn(amount,
+                     normalise_currency(currency) or (currency or "").upper()
+                     or "USD",
+                     normalise_denomination(denomination) or "Mn",
+                     rate)

@@ -37,6 +37,22 @@ def _to_usd_mn(amount):
     return round(float(amount), 4)
 
 
+def _round_usd_mn(row):
+    """A funding round in USD millions, or 0.0 when it cannot be expressed.
+
+    A round is stored in the currency and scale its source used, so
+    `amount_value` alone is 20 (₹20 crore) sitting beside 5 (US$5 Mn).
+    """
+    from fundos.core.services import money
+
+    usd, _rate = money.reported_usd_mn(
+        row.amount_value,
+        getattr(row, "amount_ccy", "") or "",
+        getattr(row, "amount_denomination", "") or "",
+        derived=getattr(row, "amount_usd_mn", None))
+    return usd if usd is not None else 0.0
+
+
 def company_summaries(company_ids):
     """Return {company_id(str): {sector, lastRaise, totalFundingReceivedUsdMn,
     attachmentLinks}} for the given company ids.
@@ -90,8 +106,11 @@ def company_summaries(company_ids):
                 "date": (latest.announced_date.isoformat()
                          if latest.announced_date else ""),
             }
-        total_usd_mn = round(sum(
-            _to_usd_mn(r.amount_value) for r in rounds), 4)
+        # The same rule the profile panel applies, so the card and the page
+        # cannot report different totals for the same rounds: each round's
+        # USD companion, and a round whose currency has no rate left out
+        # rather than added in as though it were dollars.
+        total_usd_mn = round(sum(_round_usd_mn(r) for r in rounds), 4)
 
         out[str(cid)] = {
             "sector": sector_by_profile.get(profile.id, "")
