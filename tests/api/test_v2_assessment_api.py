@@ -144,7 +144,10 @@ class V2AssessmentAPITests(Phase1Base):
         self.assertEqual(len(citations), 2)
         self.assertEqual(citations[0]["source_type"], "document")
         self.assertEqual(citations[0]["source"], "TyrePlex Investor Deck Detailed June26 OS.pdf")
-        self.assertEqual(citations[0]["locator"], "page 2")
+        # A locator is said the way its file type says it: a PDF has Pages,
+        # a deck has Slides, a workbook has Sheets. "page 2" as stored, "Page
+        # 2" as shown.
+        self.assertEqual(citations[0]["locator"], "Page 2")
         self.assertEqual(citations[1]["source_type"], "web")
         self.assertEqual(citations[1]["source"], "Company Research")
 

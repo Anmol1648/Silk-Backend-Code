@@ -21,11 +21,67 @@ except ImportError:
     v2_ref = None
     v2_engine = None
 
+import os
 import re
 
 from fundos.assessment import hierarchy as H
 
 logger = logging.getLogger(__name__)
+
+#: What a locator is called inside each file type. A deck has slides, a PDF
+#: has pages, a workbook has sheets; saying "page 20" about a PowerPoint is
+#: the kind of small wrongness that tells a reader nobody checked.
+_LOCATOR_WORD = {".ppt": "Slide", ".pptx": "Slide", ".pdf": "Page",
+                 ".doc": "Page", ".docx": "Page",
+                 ".xls": "Sheet", ".xlsx": "Sheet", ".csv": "Sheet"}
+
+#: A source naming a FILE ends in an extension; one naming a topic does not.
+_FILENAME_RE = re.compile(r"\.[A-Za-z0-9]{2,5}\s*$")
+
+#: The merged dossier is the file we BUILT from the deck and the web
+#: research. Citing it is citing the library rather than the book: 44 stored
+#: rows name it, and none of them can be turned to.
+_CONTAINER_RE = re.compile(
+    r"consolidated research dossier|^document_extracts$", re.IGNORECASE)
+
+
+def _document_category_filename(assessment, category):
+    """The company's uploaded file in this category, when there is one.
+
+    Extraction stores the CATEGORY -- "Company Presentation, slide 20" -- and
+    a category is not a document: a reader cannot open "Company Presentation",
+    and two uploads in it are indistinguishable. The category is an exact
+    ProfileDocument label though, so this is a lookup, not a guess. Returns ""
+    when the company has none or several, because naming the wrong upload
+    reads as precision and sends a reader to the wrong file.
+    """
+    try:
+        from fundos.profile.models import ProfileDocument
+
+        company_id = getattr(getattr(assessment, "deal", None),
+                             "company_id", None)
+        if not company_id or not category:
+            return ""
+        wanted = category.strip().casefold()
+        names = {d.filename for d in ProfileDocument.objects.filter(
+            profile__company_id=company_id).exclude(filename="")
+            if d.get_category_display().casefold() == wanted}
+        return names.pop() if len(names) == 1 else ""
+    except Exception:                       # pragma: no cover - never fatal
+        return ""
+
+
+def _locator_in(filename, locator):
+    """The locator said the way that file type says it."""
+    text = (locator or "").strip()
+    word = _LOCATOR_WORD.get(os.path.splitext(filename or "")[1].lower())
+    if not text or not word:
+        return text
+    number = re.search(r"\d+", text)
+    if number and re.match(r"^(slide|page|p\.)\s*\d+$", text, re.IGNORECASE):
+        return f"{word} {number.group()}"
+    return text
+
 
 def _sanitize_source_title(raw_source, default_channel=""):
     if not raw_source:
@@ -58,7 +114,16 @@ def _sanitize_source_title(raw_source, default_channel=""):
 
     # If title is a generic section topic without file extension or channel context, add default channel prefix
     is_file = any(ext in title.lower() for ext in [".pdf", ".pptx", ".ppt", ".xlsx", ".csv", ".docx", "http://", "https://"])
-    has_channel = any(kw in title.lower() for kw in ["web research", "company deck", "pitch deck", "dossier", "interview", "report", "company research"])
+    # A DOCUMENT CATEGORY is channel context too. Without these, "Company
+    # Presentation" read as a bare topic and got a channel prefixed onto it,
+    # producing "Company Research - Company Presentation" -- and the badge was
+    # then decided from that string, which is how a deck's slide 20 came to be
+    # served under a globe icon.
+    has_channel = any(kw in title.lower() for kw in [
+        "web research", "company deck", "pitch deck", "dossier", "interview",
+        "report", "company research",
+        "company presentation", "financial model", "annual report",
+        "teaser", "information memorandum", "company documents"])
 
     if not is_file and not has_channel and default_channel:
         title = f"{default_channel} \u2014 {title}"
@@ -449,31 +514,70 @@ def build_v2_parameter_evidence(pv, cfg, node_data=None, assessment=None,
         source_type = (pv.source_type if pv else "") or "Company Deck"
         if detail:
             justification = (pv.justification if pv else "") or ""
-            channel = "Web Research" if ("web" in source_type.lower() or "research" in source_type.lower()) else ("Company Deck" if "deck" in source_type.lower() else "Company Research")
-            parsed_items = _parse_multiple_sources(detail, default_quote=justification, default_channel=channel)
+            # NO DEFAULT CHANNEL.
+            #
+            # It used to be computed from `source_type`, which only ever holds
+            # "document" or "profile" -- so the ternary's first two branches
+            # were unreachable and every citation got "Company Research"
+            # prefixed onto it. "Company Presentation, slide 20" became
+            # "Company Research - Company Presentation", and the badge was
+            # then decided from that string: "research" matched, so a deck's
+            # slide 20 was served under a globe icon.
+            #
+            # A source we cannot name is left unnamed and dropped below. A
+            # bucket label that reads like evidence is worse than a blank.
+            # The channel names WEB RESEARCH and nothing else. It used to be
+            # picked by a ternary on `source_type`, which only ever holds
+            # "document" or "profile" -- so its first two branches were
+            # unreachable and every citation got "Company Research". Document
+            # categories are now recognised as channel context by the
+            # sanitizer, so this reaches only genuine research topics.
+            parsed_items = _parse_multiple_sources(
+                detail, default_quote=justification,
+                default_channel="Web Research")
 
             for item in parsed_items:
-                src_title = (item["source"] or "").lower()
-                if item.get("url") or "web" in src_title or "search" in src_title or "research" in src_title:
-                    stype = "web"
-                    cit_tier = 3
-                elif any(kw in src_title for kw in ["deck", "ppt", "pdf", "xlsx", "model", "teaser", "csv", "docx"]):
-                    stype = "document"
-                    cit_tier = 1 if ("model" in src_title or "xlsx" in src_title) else 2
-                else:
-                    stype = source_type
-                    cit_tier = pv.source_tier if (pv and pv.source_tier) else 2
+                raw = (item.get("source") or "").strip()
+                locator = (item.get("locator") or "").strip()
+                if not raw or _CONTAINER_RE.search(raw):
+                    continue
 
-                cit = {
+                # A category IS an exact ProfileDocument label, so resolving
+                # it to the company's file is a lookup rather than a guess.
+                filename = (raw if _FILENAME_RE.search(raw) else
+                            _document_category_filename(assessment, raw))
+                if filename:
+                    citations.append({
+                        "source": filename,
+                        "locator": _locator_in(filename, locator),
+                        "quote": item["quote"],
+                        "source_type": "document",
+                        "source_rank": 1,
+                        "source_tier": 1 if _LOCATOR_WORD.get(
+                            os.path.splitext(filename)[1].lower()
+                        ) == "Sheet" else 2,
+                        "retrieved_on": str(pv.as_of) if (
+                            pv and getattr(pv, "as_of", None)) else "",
+                    })
+                    continue
+
+                # Not a file we hold. Typed from the source string itself --
+                # never from a name this code invented a line earlier.
+                src_title = raw.lower()
+                is_web = bool(item.get("url")) or any(
+                    kw in src_title for kw in ("web", "search", "research",
+                                               "batch"))
+                citations.append({
                     "source": item["source"],
-                    "locator": item["locator"],
+                    "locator": locator,
                     "quote": item["quote"],
-                    "source_type": stype,
-                    "source_rank": 1 if stype == "document" else 2,
-                    "source_tier": cit_tier,
-                    "retrieved_on": str(pv.as_of) if (pv and hasattr(pv, "as_of") and pv.as_of) else ""
-                }
-                citations.append(cit)
+                    "source_type": "web" if is_web else "document",
+                    "source_rank": 2 if is_web else 1,
+                    "source_tier": 3 if is_web else (
+                        pv.source_tier if (pv and pv.source_tier) else 2),
+                    "retrieved_on": str(pv.as_of) if (
+                        pv and getattr(pv, "as_of", None)) else "",
+                })
 
     # No citation carries a link. A URL is how a machine reaches a page, not
     # how a reader is told where a fact came from — and the ones this system
