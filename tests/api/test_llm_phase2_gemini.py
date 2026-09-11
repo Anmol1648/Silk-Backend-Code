@@ -23,8 +23,9 @@ class GeminiCapabilityTranslation(TestCase):
     def setUp(self):
         from fundos.llm.models import (LLMConfigProfile, LLMEndpoint,
                                        LLMRoleBinding)
-        import os
-        os.environ["GOOGLE_AI_API_KEY"] = "test"
+        # Restored afterwards — see set_env.
+        from tests.conftest_helpers import set_env
+        set_env(self, GOOGLE_AI_API_KEY="test")
         self.ep = LLMEndpoint.objects.create(
             code="GEMINI", provider_kind="gemini",
             base_url="https://generativelanguage.googleapis.com",

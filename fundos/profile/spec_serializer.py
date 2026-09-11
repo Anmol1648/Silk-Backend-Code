@@ -34,6 +34,8 @@ section's ``data`` (§10.2).
 """
 from decimal import Decimal
 
+from fundos.profile import suggestions
+
 
 # Internal section key -> external (spec §7) section key. Only differs for
 # the renamed overview section; every other key is already spec-aligned.
@@ -1592,6 +1594,7 @@ def _readiness_breakdown(sections_dict):
         data = sec.get("data", {})
         cf = set(sec.get("confirmed_fields") or [])
         weight = _SECTION_WEIGHTS.get(key, 1.0)
+        blank = []
 
         if isinstance(data, dict):
             # COUNT WHAT THE SCREEN SHOWS, not what the payload carries.
@@ -1626,14 +1629,17 @@ def _readiness_breakdown(sections_dict):
                 breakdown.append({
                     "sectionKey": key, "fields": field_keys,
                     "populated": populated, "confirmed": confirmed,
-                    "weight": weight,
+                    "weight": weight, "blankFields": [],
                 })
                 continue
 
             field_keys = declared or list(data.keys())
-            populated = sum(
-                1 for k in field_keys
-                if data.get(k) not in (None, "", [], {}))
+            # WHICH fields are blank, not only how many. Naming them is what
+            # turns "2 missing" into something a founder can act on without
+            # hunting through the form for the two.
+            blank = [k for k in field_keys
+                     if data.get(k) in (None, "", [], {})]
+            populated = len(field_keys) - len(blank)
             confirmed = len(cf & set(field_keys))
         elif isinstance(data, list):
             # One object is one part. A founder is a single unit with a
@@ -1653,6 +1659,9 @@ def _readiness_breakdown(sections_dict):
             "populated": populated,
             "confirmed": confirmed,
             "weight": weight,
+            # Empty for a list section: its gap is a row that does not exist
+            # yet, and a row has no name until it does.
+            "blankFields": blank,
         })
     return breakdown
 
@@ -1720,7 +1729,7 @@ def serialize_profile(profile, company, *, default_deal_id=None,
                       ai_mocked=False):
     """Full §6 top-level record with the §8 sections object."""
     sections = build_sections(profile)
-    breakdown = _readiness_breakdown(sections)
+    breakdown = suggestions.attach(_readiness_breakdown(sections))
     score = _readiness_score(sections)
     return {
         "companyId": str(company.id),

@@ -18,8 +18,10 @@ class ClaudeCapabilityTranslation(TestCase):
     """Phase 3: capability payload → real Anthropic params."""
 
     def setUp(self):
-        import os
-        os.environ["ANTHROPIC_API_KEY"] = "test"
+        # Restored afterwards — see set_env: a key left in the environment
+        # changes what every later test in the process sees.
+        from tests.conftest_helpers import set_env
+        set_env(self, ANTHROPIC_API_KEY="test")
         from fundos.llm.models import LLMEndpoint
         self.ep = LLMEndpoint.objects.create(
             code="ANTHROPIC", provider_kind="anthropic",

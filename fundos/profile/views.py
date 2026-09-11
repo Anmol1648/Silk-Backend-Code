@@ -17,6 +17,10 @@ from rest_framework.views import APIView
 
 from fundos.core.exceptions import DomainValidationError, NotFoundInDeal
 from fundos.core.services.audit import audit
+# One definition of how a field and a section are NAMED for a reader, shared
+# with the chat suggestions so the same field is never shown under two names.
+from fundos.profile.labels import humanize as _humanize
+from fundos.profile.labels import section_label as _section_label
 
 logger = logging.getLogger(__name__)
 
@@ -516,8 +520,11 @@ class ProfileSectionView(APIView):
             build_sections, _readiness_score, _readiness_stage,
             _readiness_breakdown, _readiness_totals,
         )
+        from fundos.profile import suggestions
         sections = build_sections(profile)
-        breakdown = _readiness_breakdown(sections)
+        # The same per-section prompts the profile GET returns, so the chat
+        # beside a freshly-saved section offers what that save left undone.
+        breakdown = suggestions.attach(_readiness_breakdown(sections))
         score = _readiness_score(sections)
         result["score"] = score
         result["readiness_stage"] = _readiness_stage(score)
@@ -1028,43 +1035,6 @@ def _short_locator(locator):
     if len(text) <= _LOCATOR_IN_TITLE:
         return text
     return text[:_LOCATOR_IN_TITLE].rstrip(" ,;:-") + "…"
-
-
-#: Leading "8.2 " on a section's spec reference. The number is our filing
-#: system, not the reader's.
-_SECTION_REF_NUMBER = re.compile(r"^\d+(?:\.\d+)*\s+")
-
-#: Tokens that are shouted rather than capitalised, so a humanised field name
-#: reads as someone would say it: "USP", not "Usp".
-_ALWAYS_UPPER = {
-    "usp", "kpi", "kpis", "arr", "mrr", "gmv", "cac", "ltv", "roi", "roe",
-    "ebitda", "pat", "pbt", "capex", "opex", "tam", "sam", "som", "ipo",
-    "esop", "b2b", "b2c", "d2c", "hq", "ceo", "cto", "coo", "cfo", "url",
-    "id", "usd", "inr", "eur", "gbp", "fy", "mn", "bn", "cr", "yoy", "cagr",
-}
-
-
-def _section_label(wire_key):
-    """The section's name as a reader would say it: "Founders & Key People"."""
-    from fundos.profile import schema as profile_schema
-
-    spec = profile_schema.sections_by_key().get(wire_key) or {}
-    ref = str(spec.get("ref") or "")
-    return _SECTION_REF_NUMBER.sub("", ref).strip() or wire_key
-
-
-def _humanize(field):
-    """`description_of_business` -> `Description of business`."""
-    words = str(field or "").replace("_", " ").split()
-    out = []
-    for position, word in enumerate(words):
-        if word.lower() in _ALWAYS_UPPER:
-            out.append(word.upper())
-        elif position == 0:
-            out.append(word[:1].upper() + word[1:])
-        else:
-            out.append(word)
-    return " ".join(out)
 
 
 def _field_label(profile, wire_key, address):

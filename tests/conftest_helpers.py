@@ -66,3 +66,28 @@ def auth_headers(user):
     from fundos.core.auth import issue_tokens
     access, _ = issue_tokens(user)
     return {"HTTP_AUTHORIZATION": f"Bearer {access}"}
+
+def set_env(case, **variables):
+    """Set environment variables for one test and put them back afterwards.
+
+    `os.environ` is process-wide and a test suite is one process: a test that
+    sets a provider key and never removes it changes what EVERY later test
+    sees. That is how a seeding test came to resolve its tier onto a vendor
+    no test in that file had configured -- the key was left behind by a file
+    that had run earlier, so the failure appeared and disappeared with the
+    order tests happened to run in.
+
+    Restores the previous value, or removes the variable when there was
+    none. Use it instead of assigning to `os.environ` directly.
+    """
+    for name, value in variables.items():
+        previous = os.environ.get(name)
+        if value is None:
+            os.environ.pop(name, None)
+        else:
+            os.environ[name] = value
+        if previous is None:
+            case.addCleanup(os.environ.pop, name, None)
+        else:
+            case.addCleanup(os.environ.__setitem__, name, previous)
+

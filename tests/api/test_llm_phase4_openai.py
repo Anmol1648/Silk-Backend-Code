@@ -7,8 +7,10 @@ class OpenAICapabilityTranslation(TestCase):
     """Phase 4: capability payload → real OpenAI params."""
 
     def setUp(self):
-        import os
-        os.environ["OPENAI_API_KEY"] = "test"
+        # Restored afterwards: os.environ is process-wide, and a key left
+        # behind here decides what a seeding test in another file resolves to.
+        from tests.conftest_helpers import set_env
+        set_env(self, OPENAI_API_KEY="test")
         from fundos.llm.models import LLMEndpoint
         self.ep = LLMEndpoint.objects.create(
             code="OPENAI", provider_kind="openai_chat",

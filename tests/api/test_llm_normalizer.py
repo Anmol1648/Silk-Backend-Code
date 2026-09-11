@@ -75,8 +75,8 @@ class LLMNormalizer(TestCase):
         subject. Section regeneration is the surviving caller of these roles
         and is where the normalizer still matters.
         """
-        import os
-        os.environ["OPENAI_API_KEY"] = "sk-test-key"
+        from tests.conftest_helpers import set_env
+        set_env(self, OPENAI_API_KEY="sk-test-key")
         from fundos.profile.services import (get_or_create_profile,
                                              regenerate_section)
         profile = get_or_create_profile(self.company,
@@ -107,8 +107,8 @@ class LLMNormalizer(TestCase):
     def test_narrative_prose_under_wrong_key_recovers(self):
         # A narrative section whose model returns prose under "text" (not
         # "content") must still save that prose, not empty.
-        import os
-        os.environ["OPENAI_API_KEY"] = "sk-test-key"
+        from tests.conftest_helpers import set_env
+        set_env(self, OPENAI_API_KEY="sk-test-key")
         from fundos.llm.adapter import llm_generate
         with patch("fundos.llm.adapter._dispatch",
                    side_effect=self._fake_dispatch("drift")):
