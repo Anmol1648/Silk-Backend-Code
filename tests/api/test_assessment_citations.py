@@ -189,3 +189,79 @@ class TheInventedNamesAreGone(TestCase):
                          'else "Company Document"'):
             self.assertNotIn(invented, source,
                              f"{invented} is still produced")
+
+
+class TheExtractionIsToldWhatTheSourcesAreCalled(TestCase):
+    """The write side of the same defect.
+
+    44 stored rows cite "Consolidated research dossier" — the merged file we
+    BUILT from the deck and the research, which is the library rather than the
+    book. The code comment beside that fallback says why it exists and names
+    its own cause:
+
+        "The model had read the evidence; it just had no filename to quote,
+         because what it was given is a merged corpus rather than a set of
+         files."
+
+    The dossier IS assembled from headings — `### <filename>` per upload,
+    `## Batch N: <topic>` per research batch — and every line sits under one.
+    That vocabulary existed; the prompt never carried it.
+    """
+
+    DOSSIER = """# Consolidated research dossier: Zyla
+
+## Batch 2: Founders & Leadership
+
+# Source 2: Company Documents
+
+### Project Orah Teaser_vff.pptx
+
+### Project Orah_Financial Model_vf.xlsx
+"""
+
+    def _labels(self, dossier=None):
+        from fundos.profile.assessment_extraction import _citable_sources
+        return _citable_sources(
+            {"dossier": self.DOSSIER if dossier is None else dossier})
+
+    def test_the_uploaded_files_are_offered_first(self):
+        self.assertEqual(self._labels()[:2],
+                         ["Project Orah Teaser_vff.pptx",
+                          "Project Orah_Financial Model_vf.xlsx"])
+
+    def test_the_research_batches_are_offered_too(self):
+        self.assertIn("Batch 2: Founders & Leadership", self._labels())
+
+    def test_no_dossier_offers_nothing_rather_than_failing(self):
+        """With no list the prompt carries none and the existing fallback
+        still applies — this adds a vocabulary, it does not remove a net."""
+        self.assertEqual(self._labels(""), [])
+        from fundos.profile.assessment_extraction import _citable_sources
+        self.assertEqual(_citable_sources({}), [])
+        self.assertEqual(_citable_sources(None), [])
+
+    def test_the_prompt_points_at_the_list(self):
+        from fundos.profile.assessment_extraction import EXTRACTION_SYSTEM
+
+        self.assertIn("citable_sources", EXTRACTION_SYSTEM)
+        self.assertIn("copy one of those strings EXACTLY", EXTRACTION_SYSTEM)
+
+    def test_the_prompt_says_documents_are_preferred(self):
+        from fundos.profile.assessment_extraction import EXTRACTION_SYSTEM
+
+        self.assertIn("PREFER AN UPLOADED DOCUMENT", EXTRACTION_SYSTEM)
+
+    def test_the_prompt_explains_why_the_dossier_is_not_a_source(self):
+        from fundos.profile.assessment_extraction import EXTRACTION_SYSTEM
+
+        self.assertIn("names the container", EXTRACTION_SYSTEM)
+
+    def test_the_fallback_is_still_there(self):
+        """Deliberately unchanged. Removing it once cost 22 parameters —
+        every qualitative anchor — and it is only safe to remove after a run
+        shows the model naming real sources."""
+        from fundos.profile.assessment_extraction import (DOSSIER_SOURCE,
+                                                          DOSSIER_TIER)
+
+        self.assertEqual(DOSSIER_SOURCE, "Consolidated research dossier")
+        self.assertEqual(DOSSIER_TIER, 3)

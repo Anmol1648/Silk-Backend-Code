@@ -142,14 +142,21 @@ EXTRACTION_SYSTEM = (
     "authoritative source available for revenue, burn, runway, headcount and "
     "the cap table — never skip a parameter merely because its evidence has "
     "no web address.\n"
-    "- For anything read in `dossier`, quote the HEADING of the section it "
-    "came from as `sourceDoc` — the dossier is organised under headings that "
-    "name each source, so \"Source 2: Uploaded documents — Financial Model\" "
-    "is a precise and checkable citation. If you genuinely cannot identify "
-    "the section, still answer and put \"dossier\" in `sourceDoc`. An answer "
-    "you found in the evidence must never be dropped for want of a label — "
-    "silence is read downstream as 'this company has no such figure', which "
-    "is a different and worse claim than 'read here'.\n"
+    "- `citable_sources` LISTS EVERY SOURCE THE DOSSIER WAS BUILT FROM, "
+    "uploaded documents first. For anything read in `dossier`, copy one of "
+    "those strings EXACTLY into `sourceDoc` and add the place inside it, "
+    "e.g. \"<filename>, slide 12\". The dossier is a MERGED corpus: it is "
+    "assembled from those sources and is not itself one, so citing \"the "
+    "dossier\" names the container rather than the origin and cannot be "
+    "turned to.\n"
+    "- PREFER AN UPLOADED DOCUMENT over web research wherever both say the "
+    "same thing. The company's own deck and financial model are what a "
+    "reader trusts.\n"
+    "- If you genuinely cannot identify which source a figure came from, "
+    "still answer and put \"dossier\" in `sourceDoc`. An answer you found in "
+    "the evidence must never be dropped for want of a label — silence is "
+    "read downstream as 'this company has no such figure', which is a "
+    "different and worse claim than 'read here'.\n"
     "- confidence is your own: 0.9+ when a source states it directly, 0.7 "
     "when you derived it from stated figures, below 0.6 when it is a weak "
     "inference.\n\n"
@@ -1134,6 +1141,22 @@ def _persist(profile, rows):
     return written
 
 
+def _citable_sources(payloads):
+    """Every source the dossier was built from, uploaded documents first.
+
+    Returns [] when the dossier is absent or nameless — the prompt then
+    carries no list and the existing fallback still applies. This adds a
+    vocabulary; it does not remove a safety net.
+    """
+    try:
+        from fundos.profile.pipeline.dossier import source_labels
+
+        labels, _documents = source_labels((payloads or {}).get("dossier", ""))
+        return labels
+    except Exception:                       # pragma: no cover - never fatal
+        return []
+
+
 def _ask(profile, payloads, numeric, anchors, user=None):
     """Three concurrent batch calls, carrying the workbook's guidance per parameter.
 
@@ -1171,6 +1194,15 @@ def _ask(profile, payloads, numeric, anchors, user=None):
         "research": (payloads or {}).get("research", {}),
         "founders": (payloads or {}).get("founders", []),
         "dossier": (payloads or {}).get("dossier", "")[:MAX_DOSSIER_CHARS],
+        # The vocabulary a citation may name, harvested from the dossier's own
+        # headings, uploaded documents first.
+        #
+        # Without it the model had nothing to quote: what it is handed is
+        # 370,000 characters of merged prose, not a set of files, so it named
+        # the container — 44 stored rows cite "Consolidated research dossier",
+        # which is the library rather than the book. The same list fixed the
+        # profile side, where the deck went from 0 citations to 38.
+        "citable_sources": _citable_sources(payloads),
     }
     try:
         from fundos.profile.services import judgment_context
