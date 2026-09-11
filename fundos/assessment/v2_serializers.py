@@ -42,7 +42,14 @@ _FILENAME_RE = re.compile(r"\.[A-Za-z0-9]{2,5}\s*$")
 #: research. Citing it is citing the library rather than the book: 44 stored
 #: rows name it, and none of them can be turned to.
 _CONTAINER_RE = re.compile(
-    r"consolidated research dossier|^document_extracts$", re.IGNORECASE)
+    r"consolidated research dossier"
+    # "Dossier - point 3" is the same container with an index on it, and a
+    # live Zyla run cited it on every parameter -- served as source_type
+    # "document" at tier 1, the strongest evidence label in the system, for
+    # the weakest possible source. Matching only the full phrase let it
+    # through.
+    r"|^\s*dossier\b"
+    r"|^document_extracts$", re.IGNORECASE)
 
 
 def _document_category_filename(assessment, category):
@@ -539,12 +546,19 @@ def build_v2_parameter_evidence(pv, cfg, node_data=None, assessment=None,
             for item in parsed_items:
                 raw = (item.get("source") or "").strip()
                 locator = (item.get("locator") or "").strip()
-                if not raw or _CONTAINER_RE.search(raw):
-                    continue
-
+                # A FILENAME IS NEVER THE CONTAINER, whatever it is called.
+                # The container pattern matches a leading "dossier", and a
+                # company genuinely named "Dossier Analytics" would otherwise
+                # have its own PDF discarded as the merged corpus. Asking
+                # "is this a file?" first makes that impossible.
+                #
                 # A category IS an exact ProfileDocument label, so resolving
                 # it to the company's file is a lookup rather than a guess.
-                filename = (raw if _FILENAME_RE.search(raw) else
+                is_file = bool(raw) and bool(_FILENAME_RE.search(raw))
+                if not raw or (not is_file and _CONTAINER_RE.search(raw)):
+                    continue
+
+                filename = (raw if is_file else
                             _document_category_filename(assessment, raw))
                 if filename:
                     citations.append({
@@ -1812,7 +1826,18 @@ def build_v2_parameter_detail(assessment, ref):
     param_evidence = build_v2_parameter_evidence(
         pv, cfg, node_data, assessment, cat_labels=cat_labels)
 
-    rubric_key = ref
+    # LOOK UP BY INPUT KEY, NOT BY REF.
+    #
+    # The reference tables are keyed by input key -- TEAM_FDR_EXP,
+    # ANC_FDR_EDU -- and this passed the spec ref, "A.1.d". No ref is ever a
+    # key there, so every lookup missed and this endpoint returned
+    # `"rubric": null, "anchor": null` for every parameter in every
+    # assessment, while `build_v2_parameter_evidence` a thousand lines up
+    # looked the same tables up by key and returned them fine. One endpoint
+    # worked and one never had, which is why it read as environment-specific.
+    #
+    # `ref` is still right for the dictionary, which IS keyed by ref.
+    rubric_key = getattr(cfg, "input_key", "") or ref
     v2_rubric = v2_ref.rubric_for(rubric_key) if v2_ref else None
     v2_anchor = v2_ref.anchor_for(rubric_key) if v2_ref else None
     v2_dict = v2_ref.dictionary().get(ref) if v2_ref else None

@@ -265,3 +265,75 @@ class TheExtractionIsToldWhatTheSourcesAreCalled(TestCase):
 
         self.assertEqual(DOSSIER_SOURCE, "Consolidated research dossier")
         self.assertEqual(DOSSIER_TIER, 3)
+
+
+class TheContainerIsCaughtInEveryFormItTakes(TestCase):
+    """A live Zyla run cited "Dossier - point 3" on every parameter.
+
+    It is the same merged corpus with an index on it, and it was served as
+    source_type "document" at tier 1 -- the strongest evidence label in the
+    system, on the weakest possible source. The pattern matched only the full
+    phrase "Consolidated research dossier", so the short form went straight
+    through wearing it.
+    """
+
+    def test_the_indexed_form_is_caught(self):
+        for text in ("Dossier — point 3", "Dossier — point 8", "dossier"):
+            self.assertTrue(_CONTAINER_RE.search(text), text)
+
+    def test_the_long_form_is_still_caught(self):
+        self.assertTrue(_CONTAINER_RE.search("Consolidated research dossier"))
+
+    def test_a_company_named_dossier_keeps_its_own_file(self):
+        """The pattern matches a leading "dossier"; a real upload from a
+        company called Dossier Analytics must not be discarded as the merged
+        corpus. Asking "is this a file?" first makes that impossible."""
+        from fundos.assessment.v2_serializers import _FILENAME_RE
+
+        name = "Dossier Analytics Ltd.pdf"
+        self.assertTrue(_FILENAME_RE.search(name),
+                        "the filename test must win over the container test")
+
+    def test_a_real_source_is_untouched(self):
+        for text in ("Company Presentation", "Project Orah Teaser_vff.pptx",
+                     "Web Research — Founders & Leadership"):
+            self.assertFalse(_CONTAINER_RE.search(text), text)
+
+
+class TheReferenceIsLookedUpByInputKey(TestCase):
+    """`build_v2_parameter_detail` passed the spec ref -- "A.1.d" -- to
+    tables keyed by input key. No ref is ever a key there, so every lookup
+    missed and that endpoint returned `"rubric": null, "anchor": null` for
+    every parameter in every assessment, while the tree endpoint looked the
+    same tables up by key and returned them fine."""
+
+    def _reference(self):
+        from fundos.assessment import v2_serializers
+
+        if v2_serializers.v2_ref is None:
+            self.skipTest("the V2 reference package is not on this machine")
+        return v2_serializers.v2_ref
+
+    def test_an_input_key_finds_its_rubric(self):
+        reference = self._reference()
+        self.assertTrue(reference.rubric_for("TEAM_FDR_EXP"))
+
+    def test_an_input_key_finds_its_anchor(self):
+        reference = self._reference()
+        self.assertTrue(reference.anchor_for("ANC_FDR_EDU"))
+
+    def test_a_spec_ref_finds_neither(self):
+        """The key that was being passed. Pinned so the two builders cannot
+        drift apart again."""
+        reference = self._reference()
+        self.assertFalse(reference.rubric_for("A.1.d"))
+        self.assertFalse(reference.anchor_for("A.1.a"))
+
+    def test_the_detail_builder_uses_the_input_key(self):
+        import inspect
+
+        from fundos.assessment import v2_serializers
+
+        source = inspect.getsource(v2_serializers.build_v2_parameter_detail)
+        self.assertIn('rubric_key = getattr(cfg, "input_key", "") or ref',
+                      source)
