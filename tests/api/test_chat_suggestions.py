@@ -191,3 +191,55 @@ class TheyRideOnTheReadinessBreakdown(TestCase):
         for row in self._breakdown():
             self.assertLessEqual(row["populated"], row["fields"])
             self.assertLessEqual(row["confirmed"], row["fields"])
+
+class TheChatGetsThemBackWithEveryAnswer(TestCase):
+    """The chat lives at /profile/qa and nowhere else. Without them on the
+    answer it would re-fetch the whole profile after every reply just to
+    refresh its chips -- a second round trip for something the endpoint has
+    already computed, and a window in which the chips are one answer stale."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command("seed_platform_config", verbosity=0)
+
+    def setUp(self):
+        tenant = Tenant.objects.create(name=f"T-{uuid.uuid4().hex[:8]}")
+        self.user = User.objects.create_user(
+            email=f"{uuid.uuid4().hex[:8]}@example.com", tenant_id=tenant.id,
+            name="Asking User")
+        company = Company.objects.create(
+            tenant_id=tenant.id, name="Answering Co", created_by=self.user)
+        Membership.objects.create(
+            tenant_id=tenant.id, user=self.user, scope_type="company",
+            scope_id=company.id, role="founder", status="active")
+        self.profile = get_or_create_profile(company, user=self.user)
+
+    def _ask(self, answer=None):
+        from unittest.mock import patch
+
+        from fundos.profile.services import answer_profile_question
+
+        payload = ({"answer": "Because the deck says so."}
+                   if answer is None else answer)
+        # The service imports it from the adapter at call time, so that is
+        # the name to patch.
+        with patch("fundos.llm.adapter.llm_generate", return_value=payload):
+            return answer_profile_question(self.profile, "What is missing?",
+                                           user=self.user)
+
+    def test_the_answer_carries_the_breakdown(self):
+        self.assertIn("readinessBreakdown", self._ask())
+
+    def test_every_row_carries_its_suggestions(self):
+        for row in self._ask()["readinessBreakdown"]:
+            self.assertIn("suggestions", row)
+
+    def test_the_answer_itself_is_untouched(self):
+        result = self._ask()
+        self.assertEqual(result["answer"], "Because the deck says so.")
+
+    def test_a_response_that_is_not_an_object_is_left_alone(self):
+        """A role may return a bare string; attaching to it would crash the
+        endpoint over a convenience."""
+        self.assertEqual(self._ask(answer="just text"), "just text")

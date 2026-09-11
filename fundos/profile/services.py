@@ -3227,7 +3227,7 @@ def answer_profile_question(profile, question, user=None):
     which the tenant's SIMPLE tier routes to a cheap, tools-off model.
     """
     from fundos.llm.adapter import llm_generate
-    from fundos.profile import spec_serializer
+    from fundos.profile import spec_serializer, suggestions
 
     dossier = spec_serializer.build_sections(profile)
     result = llm_generate(
@@ -3236,4 +3236,15 @@ def answer_profile_question(profile, question, user=None):
                  "profile": dossier, "question": question},
         section_context={"question": question},
         user=user, calling_context="profile.qa")
+
+    # WHAT TO ASK NEXT, from the same dossier this answer was grounded in.
+    #
+    # The chat lives at this endpoint and nowhere else. Without this it would
+    # have to re-fetch the whole profile after every reply just to refresh
+    # its chips -- a second round trip for something already computed here,
+    # and a window in which the chips describe a state one answer out of
+    # date. The dossier is already built; the suggestions are a walk over it.
+    if isinstance(result, dict):
+        result["readinessBreakdown"] = suggestions.attach(
+            spec_serializer._readiness_breakdown(dossier))
     return result
