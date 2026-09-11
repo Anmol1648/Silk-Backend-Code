@@ -317,6 +317,15 @@ def resolve_sector(label):
     return None
 
 
+#: WRatio must reach this before a pairing is considered at all.
+_FUZZY_ACCEPT = 85
+
+#: And the words themselves must agree this much. WRatio rewards a
+#: coincidental substring; token_sort_ratio does not, and the pair of them
+#: is what separates a typo from a different industry.
+_FUZZY_AGREEMENT = 70
+
+
 def resolve_sub_sector(label):
     """Map a free-text sub-sector label onto a clubbed benchmark group.
 
@@ -397,10 +406,42 @@ def resolve_sub_sector(label):
         return None, "unresolved"
 
     labels = [c[0] for c in candidates]
+
+    # TWO SCORERS, BOTH MUST AGREE.
+    #
+    # `WRatio` alone, at 85, mapped "Digital Health" onto "Edtech" on a live
+    # Zyla run. WRatio is deliberately generous -- it tries partial and
+    # token-sorted alignments and rescales them -- which is right for
+    # correcting a typo and wrong for a JOIN KEY that decides a fifth of a
+    # rating. The two strings share almost nothing a reader would call a
+    # meaning, and the company was scored against education-technology peers
+    # with every appearance of correctness.
+    #
+    # `token_sort_ratio` compares the words themselves with no partial
+    # credit, so it does not reward a coincidental substring. Requiring both
+    # keeps "Digital Healthcare" -> "Healthtech" and refuses "Digital
+    # Health" -> "Edtech".
+    #
+    # An unresolved sub-sector is a visible gap that redistributes its
+    # weight. A wrongly resolved one scores, silently, against the wrong
+    # industry -- so the bar is set where a miss is cheaper than a
+    # mismatch.
     best = process.extractOne(text, labels, scorer=fuzz.WRatio)
-    if best and best[1] >= 85:
-        return candidates[labels.index(best[0])][1], f"fuzzy:{int(best[1])}"
-    return None, "unresolved"
+    if not best or best[1] < _FUZZY_ACCEPT:
+        return None, "unresolved"
+
+    agreement = fuzz.token_sort_ratio(text.lower(), str(best[0]).lower())
+    if agreement < _FUZZY_AGREEMENT:
+        logger.warning(
+            "ASSESSMENT INPUTS: sub-sector %r looked like %r to WRatio "
+            "(%d) but the words themselves agree only %d%%, so it is left "
+            "UNRESOLVED. A wrong benchmark group scores against the wrong "
+            "industry; a blank one redistributes its weight. Add a "
+            "SectorMapping row if this pairing is genuinely right.",
+            text, best[0], int(best[1]), int(agreement))
+        return None, "unresolved"
+
+    return candidates[labels.index(best[0])][1], f"fuzzy:{int(best[1])}"
 
 
 #: Why a benchmark percentile could not be supplied. The distinction is the

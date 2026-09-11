@@ -1226,9 +1226,26 @@ def executive_summary(assessment):
     if assessment.capital_raised_usd_mn is not None:
         tags.append({"label": f"Raise: USD {assessment.capital_raised_usd_mn}M",
                      "color": "green"})
-    if assessment.rating_band:
-        tags.append({"label": f"Rating: {assessment.rating_band}",
-                     "color": "amber"})
+    # DERIVE THE RATING, DO NOT READ THE STORED COLUMN.
+    #
+    # `rating_band` is written when an assessment is scored and not cleared
+    # when it is rescored, so a re-run left the tag showing the PREVIOUS
+    # run's verdict. A live Zyla payload carried "deal_rating": "Average"
+    # (computed from 6.08) beside a tag reading "Rating: Challenging" -- two
+    # different answers to the same question, in one response, with no way
+    # for a reader to tell which was current.
+    #
+    # The ladder is the single definition, so deriving it here cannot drift
+    # from the summary. The stored column is the fallback for an assessment
+    # that has a band but no score.
+    from fundos.engines.deal_assessment import rating_for_score
+
+    rating_label = ""
+    if assessment.overall_score is not None:
+        rating_label = rating_for_score(assessment.overall_score) or ""
+    rating_label = rating_label or assessment.rating_band
+    if rating_label:
+        tags.append({"label": f"Rating: {rating_label}", "color": "amber"})
 
     return {
         "companyName": company.name,

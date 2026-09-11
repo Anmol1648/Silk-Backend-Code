@@ -501,6 +501,32 @@ if _ROLE_SET_CONFLICT:                                      # pragma: no cover
 
 # Applied to any role with no entry in the table below. Output is the
 # expensive direction, so the fallback is deliberately modest.
+#: What each model will actually return, whatever we ask for. A request above
+#: this is not a bigger answer, it is a ceiling the model ignores — and a
+#: trace that then blames a configured limit the administrator cannot raise.
+_PROVIDER_OUTPUT_CAPS = {
+    "gemini-2.5-flash": 65536,
+    "gemini-2.5-pro": 65536,
+    "gemini-2.0-flash": 8192,
+}
+
+#: Used when the model is not in the table above. Deliberately absent rather
+#: than guessed: clamping to a number we invented would cut answers short on
+#: a model that could have finished.
+_DEFAULT_OUTPUT_CAP = None
+
+
+def _provider_output_cap(model_name):
+    """The model's own output limit, or None when it is not recorded."""
+    key = str(model_name or "").strip().lower()
+    if key in _PROVIDER_OUTPUT_CAPS:
+        return _PROVIDER_OUTPUT_CAPS[key]
+    for known, cap in _PROVIDER_OUTPUT_CAPS.items():
+        if key.startswith(known):
+            return cap
+    return _DEFAULT_OUTPUT_CAP
+
+
 DEFAULT_MAX_OUTPUT_TOKENS = 2048
 
 # Per-role output ceilings — the budget each role was DESIGNED for, and the
@@ -1226,12 +1252,24 @@ def llm_generate(role: str, system: str = None, prompt: str = None,
                     "MAX_TOKENS", "LENGTH", "MAX_OUTPUT_TOKENS")
                 _note = ""
                 if _truncated:
+                    # The remedy used to lead with "raise max output tokens
+                    # on the role binding". A binding value can only LOWER
+                    # the role ceiling -- `min(binding, role_cap)` -- so that
+                    # was advice an administrator could follow and see no
+                    # effect. And the ceiling is usually the model's own: a
+                    # profile_synthesis run asked Gemini for 102,400 tokens
+                    # against a hard 65,536 and stopped four short of it.
                     _note = ("response was CUT OFF at the output ceiling"
                              + (f" after spending {_thoughts} tokens on "
                                 "thinking" if _thoughts else "")
-                             + " — raise max output tokens on the role "
-                               "binding, or lower the thinking budget on the "
-                               "config profile")
+                             + " — this is usually the MODEL's own output "
+                               "limit rather than a configured one, and a "
+                               "binding can only lower the role ceiling, "
+                               "never raise it. Lower the thinking budget on "
+                               "the config profile to leave more room for the "
+                               "answer, or ask for less in one call. The "
+                               "prefix is salvaged and the missing sections "
+                               "are re-asked for")
                 elif not _filled:
                     _note = ("model returned a valid but entirely EMPTY "
                              "response")
@@ -2521,6 +2559,29 @@ def _run_gemini(endpoint, system, prompt, model, temperature, max_tokens,
         # back as a repaired fragment while still reporting a healthy call.
         if thinking_budget > 0:
             generation_config["maxOutputTokens"] = thinking_budget + max_tokens
+        # ASK FOR NO MORE THAN THE MODEL CAN RETURN.
+        #
+        # `profile_synthesis` carries a role ceiling of 98,304, and with a
+        # 4,096 thinking budget the request asked Gemini for 102,400 output
+        # tokens. gemini-2.5-flash stops at 65,536. A live run produced
+        # 61,436 completion + 4,095 thinking = 65,531 and came back
+        # MAX_TOKENS: four tokens short of the hard limit, having been
+        # promised half as much again.
+        #
+        # Clamping does not lengthen the answer -- the model was always going
+        # to stop there. It makes the REQUEST honest, so the trace reports a
+        # ceiling that exists and the remedy it suggests is one an
+        # administrator can actually act on.
+        requested = generation_config.get("maxOutputTokens")
+        cap = _provider_output_cap(model)
+        if requested and cap and requested > cap:
+            logger.warning(
+                "LLM: asked %s for %s output tokens; it returns at most %s. "
+                "Clamping. A response near that ceiling is TRUNCATED, not "
+                "complete — the salvage recovers the prefix and synthesis "
+                "re-asks for what is missing.",
+                model, requested, cap)
+            generation_config["maxOutputTokens"] = cap
         generation_config["thinkingConfig"] = {
             "thinkingBudget": thinking_budget}
     else:

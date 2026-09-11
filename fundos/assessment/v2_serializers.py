@@ -127,6 +127,12 @@ def _trace_from_config(input_key, value, stage, unit=""):
     return trace
 
 
+#: The most an UNCITED row may claim. A judgement drawn from absence can be
+#: reasonable; it cannot be certain, and 1.0 beside an empty citation list
+#: reads as proof.
+_UNCITED_CONFIDENCE_CAP = 0.6
+
+
 def _rubric_from_config(input_key):
     """The scoring rubric, read from the DATABASE rather than a directory.
 
@@ -913,6 +919,29 @@ def build_v2_parameter_evidence(pv, cfg, node_data=None, assessment=None,
         "excluded": is_excluded,
         "exclusionReason": ex_reason
     }
+
+    # A ROW WITH NO CITATION CANNOT CLAIM A SOURCED TIER.
+    #
+    # "Verified" means a named document says so and "Management" means the
+    # company does. Both are claims about a SOURCE, and a row that ends with
+    # an empty citation list has none. A live Zyla assessment carried four
+    # Leadership seats scored Poor 3.0 at tier "Management", confidence 1.0,
+    # citations [] -- on the reasoning "No mention of a full-time product or
+    # technology leader is found in the provided documents, so the seat is
+    # assumed vacant." That is an inference from absence, presented as
+    # something the company told us, at total confidence. It carried Team
+    # from 8.73 down to 6.87.
+    #
+    # The BAND is left alone: reading a deck and concluding a seat is unfilled
+    # is a legitimate judgement, and scoring is not this layer's business.
+    # What changes is the label, so a reader can see the row rests on
+    # reasoning rather than on a source. Confidence is capped for the same
+    # reason -- 1.0 asserts certainty no evidence underwrites.
+    if not citations and tier_str in ("Verified", "Management"):
+        tier_str = "Estimate"
+        if conf_val is not None and conf_val > _UNCITED_CONFIDENCE_CAP:
+            conf_val = _UNCITED_CONFIDENCE_CAP
+            conf_str = "medium"
 
     # Clean Evidence Object
     evidence_obj = {
