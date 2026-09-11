@@ -52,6 +52,81 @@ _CONTAINER_RE = re.compile(
     r"|^document_extracts$", re.IGNORECASE)
 
 
+def _trace_from_config(input_key, value, stage, unit=""):
+    """The scoring trace, rebuilt from the DATABASE rather than a directory.
+
+    `v2_engine` is imported from "Fundraising Strategy V2.0" alongside
+    `v2_ref`, and is not deployed either -- so `band_for` is unreachable on
+    the server and numeric rows carry `trace: {}`. Anchor rows have traces
+    because those are built inline a few lines above; only the numeric branch
+    reached outside. A live Zyla assessment showed exactly that split: every
+    anchor traced, `TEAM_FDR_EXP` empty.
+
+    The cut-points are in `ConfigRubric`, which is where the engine that
+    produced the band read them from, so the trace is reconstructed from the
+    same numbers rather than approximated.
+    """
+    from fundos.assessment.models import ConfigRubric
+
+    if value is None or not input_key:
+        return None
+    row = (ConfigRubric.objects.filter(input_key=input_key, stage=stage,
+                                       is_active=True).first()
+           or ConfigRubric.objects.filter(input_key=input_key,
+                                          is_active=True).first())
+    if row is None:
+        return None
+
+    def _f(number):
+        return float(number) if number is not None else None
+
+    ranged = row.ideal_min is not None or row.ideal_max is not None
+    trace = {
+        "method": "range" if ranged else "monotonic",
+        "value": value,
+        "unit": unit or row.unit or "",
+        "stage": stage,
+        "direction": row.direction or ("Range" if ranged else ""),
+        "rationale": row.rationale or "",
+    }
+
+    if ranged:
+        good = (_f(row.good_tolerance_pct) or 0) / 100
+        fair = (_f(row.fair_tolerance_pct) or 0) / 100
+        low, high = _f(row.ideal_min), _f(row.ideal_max)
+        trace["thresholds"] = {"ideal_min": low, "ideal_max": high}
+        trace["inputs"] = {
+            "value": value, "ideal": [low, high],
+            "good_band": [low * (1 - good) if low is not None else None,
+                          high * (1 + good) if high is not None else None],
+            "fair_band": [low * (1 - fair) if low is not None else None,
+                          high * (1 + fair) if high is not None else None]}
+        trace["explanation"] = (
+            f"{value}{trace['unit']} measured against the ideal band of "
+            f"{low} to {high} at {stage}.")
+        return trace
+
+    cuts = {"excellent": _f(row.cut_excellent), "good": _f(row.cut_good),
+            "fair": _f(row.cut_fair)}
+    trace["thresholds"] = cuts
+    trace["inputs"] = {"value": value, **cuts}
+    lower = (row.direction or "").strip().lower() == "lower"
+    cleared = next((name for name, cut in (("Excellent", cuts["excellent"]),
+                                           ("Good", cuts["good"]),
+                                           ("Fair", cuts["fair"]))
+                    if cut is not None
+                    and (value <= cut if lower else value >= cut)), None)
+    trace["matched_cut_point"] = cuts.get((cleared or "").lower())
+    trace["operator"] = "<=" if lower else ">="
+    trace["explanation"] = (
+        f"{value}{trace['unit']} clears the {cleared} cut-point of "
+        f"{'at most' if lower else 'at least'} "
+        f"{trace['matched_cut_point']}{trace['unit']} at {stage}."
+        if cleared else
+        f"{value}{trace['unit']} clears no cut-point at {stage}.")
+    return trace
+
+
 def _rubric_from_config(input_key):
     """The scoring rubric, read from the DATABASE rather than a directory.
 
@@ -772,10 +847,18 @@ def build_v2_parameter_evidence(pv, cfg, node_data=None, assessment=None,
                 f"band was established for this evidence, so the row is held "
                 f"unscored and its weight redistributes to its siblings."),
         }
-    elif v2_engine and raw_num is not None and key:
+    elif raw_num is not None and key:
         try:
-            _, trace_obj = v2_engine.band_for(key, raw_num, stage_str)
-            trace_data = trace_obj.as_dict()
+            if v2_engine:
+                _, trace_obj = v2_engine.band_for(key, raw_num, stage_str)
+                trace_data = trace_obj.as_dict()
+            else:
+                # The engine is not deployed; the cut-points are in the
+                # database it read them from.
+                trace_data = _trace_from_config(key, raw_num, stage_str,
+                                                unit) or {}
+            if not trace_data:
+                raise ValueError("no trace")
         except Exception:
             trace_data = {
                 "value": raw_num,

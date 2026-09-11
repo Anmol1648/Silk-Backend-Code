@@ -572,3 +572,107 @@ class TheRubricComesFromTheDatabaseNotADirectory(TestCase):
     def test_a_spec_ref_is_still_not_a_key(self):
         """Pinned: the lookup is by input key, in the database too."""
         self.assertIsNone(self.v2._rubric_for("A.1.d"))
+
+
+class TheNumericTraceComesFromTheDatabaseToo(TestCase):
+    """`v2_engine` ships in the same undeployed reference folder as `v2_ref`.
+
+    Anchor rows carry traces because those are built inline; only the NUMERIC
+    branch reached outside for `band_for`. A live Zyla assessment showed
+    exactly that split -- every anchor traced, `TEAM_FDR_EXP` empty.
+
+    The cut-points are in ConfigRubric, which is where the engine that
+    produced the band read them from, so the trace is rebuilt from the same
+    numbers rather than approximated.
+    """
+
+    def setUp(self):
+        call_command("seed_initial_data", verbosity=0)
+        from fundos.assessment import v2_serializers
+
+        # Reproduce the server: the engine is not importable.
+        self._saved = v2_serializers.v2_engine
+        v2_serializers.v2_engine = None
+        self.v2 = v2_serializers
+        self._seed()
+
+    def tearDown(self):
+        self.v2.v2_engine = self._saved
+
+    def _seed(self):
+        from decimal import Decimal
+
+        from fundos.assessment.models import ConfigRubric
+
+        ConfigRubric.objects.get_or_create(
+            input_key="TEAM_FDR_EXP", stage="Series A", tenant_id=None,
+            defaults={"ref_code": "A.1.d", "is_active": True,
+                      "metric_name": "Founder Years of Experience",
+                      "unit": "Years", "direction": "Higher",
+                      "cut_excellent": Decimal(10), "cut_good": Decimal(6),
+                      "cut_fair": Decimal(3),
+                      "rationale": "Deep domain time predicts judgement."})
+        ConfigRubric.objects.get_or_create(
+            input_key="DD_RAISE_MULT", stage="Series A", tenant_id=None,
+            defaults={"ref_code": "D.1", "is_active": True,
+                      "metric_name": "Current Raise / Last Raise",
+                      "unit": "x", "direction": "Range",
+                      "ideal_min": Decimal("1.5"), "ideal_max": Decimal(3),
+                      "good_tolerance_pct": Decimal(25),
+                      "fair_tolerance_pct": Decimal(50),
+                      "rationale": "A sensible step-up shows progress."})
+
+    def _trace(self, key, value, unit=""):
+        return self.v2._trace_from_config(key, value, "Series A", unit)
+
+    def test_a_numeric_row_gets_a_trace_without_the_engine(self):
+        self.assertIsNotNone(self._trace("TEAM_FDR_EXP", 15.0, "Years"))
+
+    def test_the_trace_names_the_cut_point_that_was_cleared(self):
+        trace = self._trace("TEAM_FDR_EXP", 15.0, "Years")
+        self.assertEqual(trace["matched_cut_point"], 10.0)
+        self.assertIn("Excellent", trace["explanation"])
+
+    def test_a_value_below_every_cut_point_says_so(self):
+        trace = self._trace("TEAM_FDR_EXP", 1.0, "Years")
+        self.assertIsNone(trace["matched_cut_point"])
+        self.assertIn("clears no cut-point", trace["explanation"])
+
+    def test_a_range_parameter_traces_its_band_not_its_cuts(self):
+        trace = self._trace("DD_RAISE_MULT", 1.5, "x")
+        self.assertEqual(trace["method"], "range")
+        self.assertEqual(trace["thresholds"],
+                         {"ideal_min": 1.5, "ideal_max": 3.0})
+
+    def test_the_tolerance_bands_are_widened_from_the_ideal(self):
+        bands = self._trace("DD_RAISE_MULT", 1.5, "x")["inputs"]
+        self.assertEqual(bands["good_band"], [1.125, 3.75])
+        self.assertEqual(bands["fair_band"], [0.75, 4.5])
+
+    def test_a_lower_is_better_parameter_reads_the_other_way(self):
+        from decimal import Decimal
+
+        from fundos.assessment.models import ConfigRubric
+
+        ConfigRubric.objects.create(
+            input_key="FIN_BURN", stage="Series A", tenant_id=None,
+            ref_code="B.9", is_active=True, metric_name="Monthly Burn",
+            unit="x", direction="Lower", cut_excellent=Decimal(2),
+            cut_good=Decimal(4), cut_fair=Decimal(6))
+        trace = self._trace("FIN_BURN", 1.0, "x")
+        self.assertEqual(trace["operator"], "<=")
+        self.assertIn("at most", trace["explanation"])
+
+    def test_the_rationale_travels_with_the_trace(self):
+        self.assertTrue(self._trace("TEAM_FDR_EXP", 15.0)["rationale"])
+
+    def test_no_rubric_row_means_no_trace_rather_than_a_guess(self):
+        self.assertIsNone(self._trace("NO_SUCH_PARAMETER", 5.0))
+
+    def test_no_value_means_no_trace(self):
+        self.assertIsNone(self._trace("TEAM_FDR_EXP", None))
+
+    def test_another_stage_falls_back_rather_than_returning_nothing(self):
+        """A rubric held for one stage still explains the number."""
+        trace = self.v2._trace_from_config("TEAM_FDR_EXP", 15.0, "Growth")
+        self.assertIsNotNone(trace)
