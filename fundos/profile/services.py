@@ -3227,7 +3227,7 @@ def answer_profile_question(profile, question, user=None):
     which the tenant's SIMPLE tier routes to a cheap, tools-off model.
     """
     from fundos.llm.adapter import llm_generate
-    from fundos.profile import spec_serializer, suggestions
+    from fundos.profile import proposals, spec_serializer, suggestions
 
     dossier = spec_serializer.build_sections(profile)
     result = llm_generate(
@@ -3247,4 +3247,10 @@ def answer_profile_question(profile, question, user=None):
     if isinstance(result, dict):
         result["readinessBreakdown"] = suggestions.attach(
             spec_serializer._readiness_breakdown(dossier))
+        # A CHANGE THE CHAT SUGGESTS, NOT ONE IT MAKES. Every entry is
+        # checked against the schema and given the profile's own current
+        # text, so the diff a founder is shown is a real one and a card
+        # they click Apply on cannot fail.
+        result["proposedChanges"] = proposals.validate(
+            profile, result.get("proposedChanges"))
     return result

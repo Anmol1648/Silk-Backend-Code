@@ -866,13 +866,26 @@ DEFAULT_PROMPTS = {
             "plainly and name what is missing. Never invent or estimate "
             "numbers; quote figures exactly as they appear, with their currency "
             "and period.\n\n"
+            "When the question asks for a CHANGE to the profile - reword "
+            "this, make it shorter, fix that sentence - do not only "
+            "describe the change. Put the exact replacement text in "
+            "`proposedChanges`, one entry per field, using the field's own "
+            "key from the dossier. A person reviews and applies it; you "
+            "never change anything yourself. Propose a change ONLY to a "
+            "plain text field, and only when you have the replacement text "
+            "in full - not a description of what to write. Leave the array "
+            "empty when the question is not asking for an edit.\n\n"
             'Return JSON: {"answer": str, "citations": [str], "answered": '
-            'bool, "missing": [str]}'
+            'bool, "missing": [str], "proposedChanges": [{"sectionKey": '
+            'str, "field": str, "proposedValue": str, "reason": str}]}'
         ),
         "user": "Answer this question about the company: {question}",
         "context_keys": ["company", "profile", "question"],
         "notes": ("Grounded Q&A over an already-retrieved profile. No web "
-                  "search - SIMPLE tier. 'citations' name dossier sections."),
+                  "search - SIMPLE tier. 'citations' name dossier sections. "
+                  "'proposedChanges' are suggestions a person applies; the "
+                  "server validates every one against the schema and drops "
+                  "any naming a field that does not exist."),
     },
 
     # ---------------- Field regen default (fixes empty-prompt bug) -------

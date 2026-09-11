@@ -63,6 +63,10 @@ urlpatterns = [
     path(f"{COMPANY}/profile/deep-generate",
          profile.ProfileDeepGenerateView.as_view()),
     path(f"{COMPANY}/profile/qa", profile.ProfileQAView.as_view()),
+    # A change the chat proposed, applied by a person. GET lists which
+    # fields it may propose against.
+    path(f"{COMPANY}/profile/proposals/apply",
+         profile.ProfileProposalApplyView.as_view()),
     # Generation runs. A profile build is a long, multi-stage job with real
     # sub-progress; before these routes the only signal a client had was the
     # profile's status flipping, which cannot tell "still researching" from

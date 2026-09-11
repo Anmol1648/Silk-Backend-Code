@@ -534,6 +534,71 @@ class ProfileSectionView(APIView):
         return Response(result)
 
 
+class ProfileProposalApplyView(APIView):
+    """POST — apply one change the chat proposed.
+
+    The chat proposes; a person clicks; this writes. It exists as its own
+    endpoint rather than leaving the client to PATCH the section, because a
+    section PATCH replaces the WHOLE section: a client assembling that body
+    from a proposal would send back every other field as it stood when the
+    chat answered, and quietly undo anything edited in between.
+
+    GET lists what the chat is allowed to propose against, so a client can
+    show the right affordance without guessing.
+    """
+
+    def get(self, request, company_id):
+        from fundos.profile.proposals import editable_fields
+
+        _company_or_404(request, company_id)
+        fields = {}
+        for section_key, field in sorted(editable_fields()):
+            fields.setdefault(section_key, []).append(field)
+        return Response({"editableFields": fields})
+
+    def post(self, request, company_id):
+        from fundos.profile.proposals import ProposalError, apply
+        from fundos.profile.services import get_or_create_profile
+
+        company = _company_or_404(request, company_id)
+        profile = get_or_create_profile(company, user=request.user)
+
+        section_key = (request.data or {}).get("sectionKey", "")
+        field = (request.data or {}).get("field", "")
+        value = (request.data or {}).get("value", "")
+
+        try:
+            applied = apply(profile, section_key, field, value,
+                            user=request.user,
+                            question=(request.data or {}).get("question", ""))
+        except ProposalError as exc:
+            raise DomainValidationError({"field": str(exc)})
+
+        audit("profile.proposal_applied", actor=request.user,
+              entity="company_profile_section", entity_id=profile.id,
+              tenant_id=company.tenant_id,
+              meta={"sectionKey": section_key, "field": field})
+
+        # The same three numbers and the same chips the chat already reads,
+        # recomputed against what this write just changed.
+        from fundos.profile import suggestions
+        from fundos.profile.spec_serializer import (
+            build_sections, _readiness_breakdown, _readiness_score,
+            _readiness_stage, _readiness_totals,
+        )
+        profile.refresh_from_db()
+        sections = build_sections(profile)
+        breakdown = suggestions.attach(_readiness_breakdown(sections))
+        score = _readiness_score(sections)
+        applied.update({
+            "score": score,
+            "readiness_stage": _readiness_stage(score),
+            "readinessBreakdown": breakdown,
+            "readinessTotals": _readiness_totals(breakdown),
+        })
+        return Response(applied)
+
+
 class ProfileSectionRegenerateView(APIView):
     """POST — regenerate one section with AI."""
 
