@@ -97,17 +97,20 @@ class DiscoveryFiltersView(DealScopedAPIView):
 
     @staticmethod
     def _default_raise(deal):
-        """Prefer the approved Stage 2 raise; fall back to the ask on the deal."""
-        try:
-            from fundos.strategy.models import RaiseScenario
-            sc = (RaiseScenario.objects.filter(deal=deal, is_selected=True)
-                  .first())
-            if sc and getattr(sc, "raise_amount_usd_mn", None):
-                return sc.raise_amount_usd_mn, "stage2_selected_scenario"
-        except Exception:
-            pass
-        amount = getattr(deal, "target_raise_usd_mn", None)
-        return amount, "deal_target" if amount else "none"
+        """The ask, and where it came from.
+
+        Both branches named fields that do not exist -- `RaiseScenario` holds
+        `raise_value`, and `Deal` has no raise column at all -- so this
+        always returned ("none") however much the founder had entered. One
+        resolver now answers for every consumer of the figure.
+        """
+        from fundos.profile.current_raise import for_company
+
+        company_id = getattr(deal, "company_id", None)
+        if not company_id:
+            return None, "none"
+        amount, basis = for_company(company_id)
+        return amount, (basis or "none")
 
     @staticmethod
     def _default_sectors(deal):

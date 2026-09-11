@@ -1131,6 +1131,17 @@ def category_extremes(categories):
             f"{weakest['name']} {weakest['score']:.1f}")
 
 
+def _current_raise_mn(assessment):
+    """The ask in US$ millions, from wherever it was actually entered."""
+    from fundos.profile.current_raise import for_company
+
+    company_id = getattr(getattr(assessment, "deal", None), "company_id", None)
+    if not company_id:
+        return None
+    amount, _basis = for_company(company_id)
+    return float(amount) if amount is not None else None
+
+
 def _money(value, ccy="USD", unit=""):
     """Render a money figure for the summary strip, or "" when unknown.
 
@@ -1168,11 +1179,12 @@ def deal_terms(assessment):
                 ask = _money(row.target_raise_value, row.target_raise_ccy)
         except Exception as exc:      # never break the scorecard over a label
             logger.debug("PHASE1: deal targets unavailable: %s", exc)
+    raise_mn = _current_raise_mn(assessment)
     if not ask:
-        ask = _money(assessment.capital_raised_usd_mn, "USD", "M")
+        ask = _money(raise_mn, "USD", "M")
     return {
         "ask_amount": ask,
-        "capital_raised": _money(assessment.capital_raised_usd_mn, "USD", "M"),
+        "capital_raised": _money(raise_mn, "USD", "M"),
     }
 
 
@@ -1223,9 +1235,11 @@ def executive_summary(assessment):
     if assessment.deal_stage:
         tags.append({"label": f"Stage: {assessment.deal_stage}",
                      "color": "purple"})
-    if assessment.capital_raised_usd_mn is not None:
-        tags.append({"label": f"Raise: USD {assessment.capital_raised_usd_mn}M",
-                     "color": "green"})
+    # The stored column is written by nothing; the founder's figure lives in
+    # the deal's headline terms. One resolver answers for every consumer.
+    raise_mn = _current_raise_mn(assessment)
+    if raise_mn is not None:
+        tags.append({"label": f"Raise: USD {raise_mn:g}M", "color": "green"})
     # DERIVE THE RATING, DO NOT READ THE STORED COLUMN.
     #
     # `rating_band` is written when an assessment is scored and not cleared

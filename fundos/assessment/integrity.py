@@ -600,7 +600,11 @@ def _ask_against_cohort(ctx):
     than a Very Good company asking the median, and the scorecard alone will
     never say so.
     """
-    ask = ctx.assessment.capital_raised_usd_mn
+    from fundos.profile.current_raise import for_company
+
+    company_id = getattr(getattr(ctx.assessment, "deal", None),
+                         "company_id", None)
+    ask, _basis = for_company(company_id) if company_id else (None, "")
     if ask is None or float(ask) <= 0:
         return []
     sector, sub, loaded = ctx.cohorts()

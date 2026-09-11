@@ -1145,17 +1145,19 @@ def _derived_rows(profile):
 def _current_raise(profile):
     """The amount being raised now, in US$ millions, or None.
 
-    None is a real answer: a company that has not told us what it is raising
-    cannot have its ask scored, and inventing one from the last close is how
-    two rows came to flatter a deal by a full band each.
-    """
-    from fundos.assessment.models import Assessment
+    It read one column -- `Assessment.capital_raised_usd_mn` -- which four
+    things read and nothing writes, so both derived rows were blank on every
+    company while the founder's own figure sat in the deal's headline terms.
+    See :mod:`fundos.profile.current_raise` for the order of preference.
 
-    row = (Assessment.objects
-           .filter(deal__company_id=profile.company_id)
-           .exclude(capital_raised_usd_mn=None)
-           .order_by("-created_at").first())
-    return row.capital_raised_usd_mn if row else None
+    None is still a real answer: a company that has not told us what it is
+    raising cannot have its ask scored, and inventing one from the last close
+    is how two rows came to flatter a deal by a full band each.
+    """
+    from fundos.profile.current_raise import for_company
+
+    amount, _basis = for_company(profile.company_id)
+    return amount
 
 
 def _persist(profile, rows):
