@@ -137,7 +137,7 @@ _LIST_ROW_TEMPLATES = {
     "customers_markets": {"id": "", "market": "", "customer_type": "",
                           "geography": ""},
     "competitive_advantages": {"id": "", "title": "", "description": ""},
-    "revenue_model": {"id": "", "stream": "", "share_percent": 0},
+    "revenue_model": {"id": "", "stream": "", "share_percent": None},
     "company_metrics": {"id": "", "metric": "", "value": "", "unit": ""},
     # Req 1: `status` removed; post_money_usd_mn and lead_investors added.
     "funding_history": {"id": "", "date": "", "round": "",
@@ -575,7 +575,11 @@ def _data_revenue_model(sec, ctx):
         "id": _item_id(it),
         # Storage uses {label, pct}; the spec output uses {stream, share_percent}.
         "stream": it.get("stream", it.get("label", "")),
-        "share_percent": _f(it.get("share_percent", it.get("pct", 0))) or 0,
+        # `or 0` turned every unstated share into a stated zero, and a
+        # stream reported as earning 0% of revenue is a claim about the
+        # business. Null means the split was never given; 0 means it was.
+        "share_percent": _num(_first_present(it, "share_percent", "pct",
+                                             default=None)),
     } for it in items]
     return _with_template("revenue_model", rows)
 

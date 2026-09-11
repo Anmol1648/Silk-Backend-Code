@@ -158,7 +158,16 @@ SHIPPED_SECTIONS = [
         "kind": "array",
         "fields": {
             "stream": "string - revenue stream name",
-            "share_percent": "number - percentage of total revenue; streams should sum to ~100",
+            # NULL AND ZERO ARE DIFFERENT ANSWERS. A source that names the
+            # revenue streams without breaking the split down has said
+            # nothing about the shares, and every stream reported at 0%
+            # reads as a business earning nothing from any of them.
+            "share_percent": (
+                "number|null - percentage of total revenue. Give a number "
+                "ONLY if a source states or clearly implies the split; the "
+                "stated shares should sum to ~100. Use null when the split "
+                "is not given -- 0 means a stream that genuinely earns "
+                "nothing, which is a claim, not a blank"),
         },
     },
     {

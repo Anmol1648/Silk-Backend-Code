@@ -860,7 +860,11 @@ def update_section_from_data(profile, section_key, data, *, user=None,
             clean = {}
             for f in allowed:
                 if f in ("share_percent",):
-                    clean[f] = _num_or_zero(row.get(f))
+                    # A SHARE NOBODY STATED IS NOT A SHARE OF ZERO. Coerced
+                    # to 0, every stream on a profile whose source never
+                    # broke the revenue down read as "earns nothing", which
+                    # is a finding -- and one the source never made.
+                    clean[f] = _num_or_none(row.get(f))
                 else:
                     clean[f] = row.get(f, "")
             items.append(clean)
@@ -902,6 +906,12 @@ def update_section_from_data(profile, section_key, data, *, user=None,
 def _num_or_zero(v):
     d = _as_decimal(v)
     return float(d) if d is not None else 0
+
+
+def _num_or_none(v):
+    """A number, or None when there is no number. Zero survives as zero."""
+    d = _as_decimal(v)
+    return float(d) if d is not None else None
 
 
 def _object_has_data(structured):
