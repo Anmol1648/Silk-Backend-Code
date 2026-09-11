@@ -1085,6 +1085,74 @@ def _isolated_enrich(instance, row, field_map, extra_spec, section_key):
         return False
 
 
+#: Fields whose value describes ONE company. Two rows carrying an identical
+#: one are not two findings about two companies; the second is a copy of the
+#: first, and copying is how a profile came to list two rivals with the same
+#: revenue and the same sentence of description.
+_IDENTIFYING_TEXT = ("description", "background", "summary", "headline")
+
+
+def _dedupe_entity_rows(section_key, rows):
+    """One row per name, and no row asserting another row's facts.
+
+    Two things go wrong in a generated list, and neither is specific to any
+    company or sector:
+
+    1. The same name appears twice. The later row is merged into the first,
+       filling what the first left blank, so nothing researched is lost and
+       the reader sees one entry per company.
+
+    2. Two DIFFERENT names carry an identical description. A description is
+       about one company; the same words under two names means the second was
+       copied, and the figures copied with it are then asserted about a
+       company nobody looked up. The row stays -- the competitor is real --
+       but the copied text and any figure identical to the row it was copied
+       from are dropped rather than presented as findings.
+
+    A row is never deleted for being a duplicate of something, only merged
+    into the row it duplicates.
+    """
+    out, by_name, by_text = [], {}, {}
+    for row in rows:
+        key = _norm_name(row.get("name"))
+        target = by_name.get(key) if key else None
+        if target is not None:
+            for field, value in row.items():
+                if target.get(field) in (None, "", [], {}) and value not in (
+                        None, "", [], {}):
+                    target[field] = value
+            continue
+
+        row = dict(row)
+        text = next((_norm_name(row.get(f)) for f in _IDENTIFYING_TEXT
+                     if _norm_name(row.get(f))), "")
+        source_row = by_text.get(text) if text else None
+        if source_row is not None:
+            _logger.info(
+                "SECTION %s: %r repeats the description given for %r — the "
+                "copied text and the figures identical to it are dropped "
+                "rather than asserted about a second company.",
+                section_key, row.get("name"), source_row.get("name"))
+            for field in _IDENTIFYING_TEXT:
+                if _norm_name(row.get(field)) == text:
+                    row.pop(field, None)
+            # Dropped by removing the KEY, not by writing a null: the writer
+            # skips a field the payload does not carry, and a null would set
+            # a column that cannot hold one.
+            for field, value in list(row.items()):
+                if (field not in ("name", "website")
+                        and value not in (None, "", [], {})
+                        and source_row.get(field) == value):
+                    row.pop(field, None)
+        elif text:
+            by_text[text] = row
+
+        if key:
+            by_name[key] = row
+        out.append(row)
+    return out
+
+
 def _replace_entity_rows(profile, section_key, internal_key, rows, *,
                          user=None, source="founder", update_section_row=True,
                          route=None):
@@ -1114,7 +1182,9 @@ def _replace_entity_rows(profile, section_key, internal_key, rows, *,
                         if wire == "name"), "name")
     extra_spec = spec.get("extra") or {}
 
-    rows = [r for r in (rows or []) if isinstance(r, dict)]
+    rows = _dedupe_entity_rows(section_key,
+                               [r for r in (rows or [])
+                                if isinstance(r, dict)])
 
     existing = Model.objects.filter(profile=profile)
     if source == "ai_research":

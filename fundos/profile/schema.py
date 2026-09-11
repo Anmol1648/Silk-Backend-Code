@@ -43,6 +43,7 @@ uniform envelope is what lets a client render all 17 sections generically
 rather than needing bespoke handling for each.
 """
 import logging
+import re
 
 from django.utils import timezone
 
@@ -1010,6 +1011,124 @@ def _coerce_sources(value, *, notes=None, key="", allowed=None):
     return out
 
 
+#: "13x", "13 X", "~2.5x" -- a multiple, stated on its own.
+_MULTIPLE_RE = re.compile(
+    r"^\s*(?:~|approx\.?|about|nearly|over)?\s*"
+    r"(\d+(?:\.\d+)?)\s*(?:x|X|×)\s*$")
+
+#: A metric whose value is a multiple of something measured over time. CAGR
+#: is deliberately absent: it is a rate, and comparing it against a multiple
+#: would flag every correctly-stated one.
+_GROWTH_WORDS = ("growth", "grew", "increase", "multiple", "expansion",
+                 "scaled", "growth multiple")
+
+_YEAR_RE = re.compile(r"(?:FY)?\s*(\d{2,4})", re.I)
+
+
+def _fiscal_year(text):
+    """2024 from "FY 2024", "FY24", "2024". None when there is no year."""
+    match = _YEAR_RE.search(str(text or ""))
+    if not match:
+        return None
+    year = int(match.group(1))
+    if year < 100:
+        year += 2000
+    return year if 1900 <= year <= 2100 else None
+
+
+def _revenue_by_year(profile):
+    """{year: revenue} from the financial rows, in the row's own currency.
+
+    Only the ratio of two rows is ever taken, so the currency cancels --
+    provided both rows state the same one, which is why a mixed-currency
+    series is excluded rather than silently divided across currencies.
+    """
+    section = (profile.get("sections") or {}).get("financial_summary") or {}
+    rows = (section.get("data") or {}).get("financials")
+    if not isinstance(rows, list):
+        return {}
+    series, currencies = {}, set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        value = row.get("revenue")
+        if value is None:
+            value = row.get("revenue_m")
+        year = _fiscal_year(row.get("financial_year"))
+        if year is None or value is None:
+            continue
+        try:
+            series[year] = float(value)
+        except (TypeError, ValueError):
+            continue
+        currencies.add((row.get("currency") or "", row.get("denomination")
+                        or ""))
+    return series if len(currencies) <= 1 else {}
+
+
+def _implied_multiple(series, years):
+    """What the series itself says the growth multiple over `years` was."""
+    known = sorted(y for y in series if series[y] is not None)
+    if len(known) < 2:
+        return None, None, None
+    wanted = sorted(y for y in years if y in series)
+    first, last = (wanted[0], wanted[-1]) if len(wanted) >= 2 else (known[0],
+                                                                   known[-1])
+    start, end = series.get(first), series.get(last)
+    if not start or start <= 0 or end is None or last <= first:
+        return None, None, None
+    return round(end / start, 2), first, last
+
+
+def _reconcile_metrics_with_series(profile, notes=None):
+    """A growth multiple must agree with the revenue series beside it.
+
+    One profile stated a 13x growth metric while its own revenue rows, over
+    the same years, show about 7x. Both were on the same screen. The number
+    that can be checked is the one that stays: the multiple is recomputed
+    from the rows, and the figure the model asserted is reported rather than
+    quietly replaced.
+
+    Only a metric that IS a bare multiple is touched, and only when the rows
+    can produce one to compare it against. A metric nothing can check is left
+    exactly as it was -- withholding it would hide the company's own claim
+    behind our inability to verify it.
+    """
+    section = (profile.get("sections") or {}).get("company_metrics") or {}
+    rows = section.get("data")
+    if not isinstance(rows, list):
+        return
+    series = _revenue_by_year(profile)
+    if len(series) < 2:
+        return
+
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        match = _MULTIPLE_RE.match(str(row.get("value") or ""))
+        label = str(row.get("metric") or "").lower()
+        if not match or not any(word in label for word in _GROWTH_WORDS):
+            continue
+        stated = float(match.group(1))
+        years = [y for y in (_fiscal_year(t) for t in
+                             _YEAR_RE.findall(f"{label} {row.get('unit')}"))
+                 if y is not None]
+        implied, first, last = _implied_multiple(series, years)
+        if implied is None:
+            continue
+        # Rounding, a restated year and an off-by-one period all move a
+        # multiple a little; a fifth of the figure is past all of them.
+        if abs(stated - implied) <= 0.2 * implied:
+            continue
+        row["value"] = f"{implied:g}x"
+        if notes is not None:
+            notes.append(
+                f"company_metrics: {row.get('metric') or 'a growth metric'} "
+                f"was stated as {stated:g}x, but the revenue rows for "
+                f"FY{first}-FY{last} in this same profile imply {implied:g}x "
+                f"— the figure derived from the rows is shown")
+
+
 def normalize_profile(raw, active=None, notes=None, allowed_sources=None):
     """Coerce a model response into the canonical envelope.
 
@@ -1140,6 +1259,10 @@ def normalize_profile(raw, active=None, notes=None, allowed_sources=None):
             "sources": _coerce_sources(value, notes=notes, key=key,
                                        allowed=allowed_sources),
         }
+
+    # Cross-section, so it runs once every section has been read: a metric is
+    # checked against the financial rows in the same payload.
+    _reconcile_metrics_with_series(profile, notes)
 
     return profile
 
