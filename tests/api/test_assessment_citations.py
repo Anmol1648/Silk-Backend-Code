@@ -28,10 +28,12 @@ guess.
 """
 from django.core.management import call_command
 from django.test import TestCase
+from rest_framework import status
 
 from fundos.assessment.v2_serializers import (_CONTAINER_RE, _FILENAME_RE,
                                               _locator_in,
                                               _sanitize_source_title)
+from tests.api.test_fundraising_phase1 import Phase1Base
 from tests.conftest_helpers import make_world
 
 
@@ -337,3 +339,122 @@ class TheReferenceIsLookedUpByInputKey(TestCase):
         source = inspect.getsource(v2_serializers.build_v2_parameter_detail)
         self.assertIn('rubric_key = getattr(cfg, "input_key", "") or ref',
                       source)
+
+
+class TheParameterDetailEndpointEndToEnd(Phase1Base):
+    """Through the real endpoint, not the helpers.
+
+    Every other test here exercises a function. These go over HTTP, because
+    the two defects this file is about were BOTH invisible at the unit level:
+    the rubric lookup was correct in one builder and wrong in another, and
+    the container citation only surfaced as tier 1 once it had been through
+    the serializer.
+    """
+
+    KEY = "TEAM_FDR_EXP"
+
+    def _detail(self, key=None):
+        url = (f"/api/v1/companies/{self.company.id}/assessment/parameters/"
+               f"{key or self.KEY}")
+        response = self.client.get(url, **self.headers)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response.data
+
+    def _store(self, detail, justification="Fifteen years in the sector."):
+        from fundos.assessment.models import ParameterValue
+
+        ParameterValue.objects.update_or_create(
+            assessment=self.assessment, input_key=self.KEY,
+            defaults={"source_detail": detail,
+                      "justification": justification,
+                      "source_type": "document"})
+
+    def _reference_loaded(self):
+        from fundos.assessment import v2_serializers
+        return v2_serializers.v2_ref is not None
+
+    # -- the rubric lookup ------------------------------------------------
+    def test_a_numeric_parameter_carries_its_rubric(self):
+        """It returned null for every parameter in every assessment, because
+        the spec ref was passed to a table keyed by input key."""
+        if not self._reference_loaded():
+            self.skipTest("the V2 reference package is not on this machine")
+        body = self._detail()
+        self.assertIsNotNone(body.get("rubric"),
+                             "the rubric lookup is missing again")
+
+    def test_an_anchor_parameter_carries_its_bands(self):
+        if not self._reference_loaded():
+            self.skipTest("the V2 reference package is not on this machine")
+        body = self._detail("ANC_FDR_EDU")
+        self.assertIsNotNone(body.get("anchor"),
+                             "the anchor lookup is missing again")
+
+    def test_the_stage_is_reported(self):
+        self.assertIn("stage", self._detail())
+
+    def test_the_parameter_block_is_always_present(self):
+        self.assertIn("parameter", self._detail())
+
+    # -- citations --------------------------------------------------------
+    def test_the_merged_dossier_is_not_served_as_a_source(self):
+        """A live run cited "Dossier - point 3" on every parameter, served as
+        a tier 1 document."""
+        self._store("Dossier — point 3")
+        citations = self._detail()["parameter"]["evidence"]["citations"]
+        for citation in citations:
+            self.assertNotIn("dossier", (citation["source"] or "").lower(),
+                             "the container reached the reader")
+
+    def test_the_container_never_claims_to_be_a_verified_document(self):
+        self._store("Consolidated research dossier")
+        for citation in self._detail()["parameter"]["evidence"]["citations"]:
+            self.assertFalse(
+                citation["source_type"] == "document"
+                and citation.get("source_tier") == 1
+                and "dossier" in (citation["source"] or "").lower())
+
+    def test_a_named_file_survives_with_its_locator(self):
+        self._store("Project Orah_Financial Model_vf.xlsx, Summary!B4")
+        citation = self._detail()["parameter"]["evidence"]["citations"][0]
+        self.assertEqual(citation["source"],
+                         "Project Orah_Financial Model_vf.xlsx")
+        self.assertIn("Summary", citation["locator"])
+        self.assertEqual(citation["source_type"], "document")
+
+    def test_a_research_batch_is_served_as_web(self):
+        self._store("Source 1: Batch 2: Founders & Leadership")
+        citation = self._detail()["parameter"]["evidence"]["citations"][0]
+        self.assertEqual(citation["source_type"], "web")
+        self.assertIn("Founders & Leadership", citation["source"])
+
+    def test_no_citation_is_named_company_research(self):
+        """The reported defect, over the wire."""
+        for detail in ("Company Presentation, slide 20",
+                       "Source 1: Batch 2: Founders & Leadership",
+                       "Dossier — point 3"):
+            self._store(detail)
+            for citation in self._detail()["parameter"]["evidence"][
+                    "citations"]:
+                self.assertNotIn(citation["source"],
+                                 ("Company Research", "Company Deck",
+                                  "Company Document"), detail)
+
+    def test_a_slide_locator_is_never_served_as_web(self):
+        """A globe over slide 20 is impossible."""
+        self._store("Company Presentation, slide 20")
+        for citation in self._detail()["parameter"]["evidence"]["citations"]:
+            if "slide" in (citation.get("locator") or "").lower():
+                self.assertEqual(citation["source_type"], "document")
+
+    def test_no_citation_carries_a_link(self):
+        self._store("Project Orah Teaser_vff.pptx, slide 4")
+        for citation in self._detail()["parameter"]["evidence"]["citations"]:
+            self.assertFalse(citation.get("url"))
+
+    def test_an_unparameterised_key_is_not_a_crash(self):
+        response = self.client.get(
+            f"/api/v1/companies/{self.company.id}/assessment/parameters/"
+            f"NO_SUCH_KEY", **self.headers)
+        self.assertIn(response.status_code,
+                      (status.HTTP_200_OK, status.HTTP_404_NOT_FOUND))
