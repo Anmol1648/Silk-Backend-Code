@@ -229,3 +229,129 @@ class TheModelIsToldToReportNotConvert(TestCase):
         denomination = (spec.get("fields") or {}).get("denomination", "")
         self.assertIn("Cr", denomination)
         self.assertIn("crore", denomination)
+
+
+class AFinancialRowKeepsWhatItsSourceSaid(TestCase):
+    """`financial_summary` is the other half of the same failure: a figure
+    converted at an invented rate and then labelled with the currency it was
+    converted FROM. The normaliser gives every row a currency and a scale,
+    derives the USD companion beside them, and converts nothing."""
+
+    def _rows(self, rows, notes=None):
+        from fundos.profile.schema import _normalise_financial_rows
+
+        data = {"financials": rows}
+        _normalise_financial_rows(data, notes)
+        return data["financials"]
+
+    def test_a_row_reported_in_crore_stays_in_crore(self):
+        row = self._rows([{"year": "FY2025", "revenue": 56.9,
+                           "currency": "INR", "denomination": "Cr"}])[0]
+        self.assertEqual(row["revenue"], 56.9)
+        self.assertEqual(row["currency"], "INR")
+        self.assertEqual(row["denomination"], "Cr")
+
+    def test_the_display_string_carries_both_labels(self):
+        row = self._rows([{"revenue": 56.9, "currency": "INR",
+                           "denomination": "Cr"}])[0]
+        self.assertIn("56.9", row["revenue_display"])
+        self.assertIn("Cr", row["revenue_display"])
+
+    def test_the_usd_companion_is_derived_and_the_rate_recorded(self):
+        row = self._rows([{"revenue": 56.9, "currency": "INR",
+                           "denomination": "Cr"}])[0]
+        self.assertIsNotNone(row["revenue_usd_mn"])
+        self.assertNotEqual(row["revenue_usd_mn"], row["revenue"])
+        self.assertTrue(row["fx_rate"])
+
+    def test_a_legacy_row_is_read_as_the_millions_it_always_meant(self):
+        """`revenue_m` with no denomination. Reading the blank as whole units
+        would turn US$415.8M into US$0.0M."""
+        row = self._rows([{"year": "FY2031", "revenue_m": 415.8,
+                           "currency": "USD"}])[0]
+        self.assertEqual(row["denomination"], "Mn")
+        self.assertEqual(row["revenue_usd_mn"], 415.8)
+        self.assertIn("415.8", row["revenue_display"])
+
+    def test_the_legacy_key_keeps_meaning_millions_of_its_currency(self):
+        row = self._rows([{"revenue": 56.9, "currency": "INR",
+                           "denomination": "Cr"}])[0]
+        self.assertEqual(row["revenue_m"], row["revenue"])
+
+    def test_every_figure_on_the_row_is_given_the_same_treatment(self):
+        row = self._rows([{"revenue": 100, "ebitda": -20, "pat": -25,
+                           "currency": "INR", "denomination": "Cr"}])[0]
+        for key in ("revenue", "ebitda", "pat"):
+            self.assertIn(f"{key}_display", row)
+            self.assertIn(f"{key}_usd_mn", row)
+
+    def test_a_blank_figure_stays_blank(self):
+        """Zero and unknown are different answers."""
+        row = self._rows([{"revenue": None, "currency": "INR",
+                           "denomination": "Cr"}])[0]
+        self.assertIsNone(row["revenue"])
+        self.assertIsNone(row["revenue_usd_mn"])
+
+    def test_a_currency_with_no_recorded_rate_leaves_the_companion_blank(self):
+        """Passing the number through as if it were USD is the misread this
+        whole change exists to stop."""
+        row = self._rows([{"revenue": 40, "currency": "ZWL",
+                           "denomination": "Mn"}])[0]
+        self.assertEqual(row["revenue"], 40)
+        self.assertIsNone(row["revenue_usd_mn"])
+
+    def test_mixed_currencies_across_the_series_are_flagged(self):
+        notes = []
+        self._rows([{"revenue": 10, "currency": "INR", "denomination": "Cr"},
+                    {"revenue": 20, "currency": "USD", "denomination": "Mn"}],
+                   notes)
+        self.assertTrue(any("more than one currency" in n for n in notes))
+
+    def test_one_currency_throughout_is_not_flagged(self):
+        notes = []
+        self._rows([{"revenue": 10, "currency": "INR", "denomination": "Cr"},
+                    {"revenue": 20, "currency": "INR", "denomination": "Cr"}],
+                   notes)
+        self.assertEqual(notes, [])
+
+    def test_nothing_is_converted_between_currencies(self):
+        """The reported figure is returned untouched, whatever the rate."""
+        for denomination in ("", "K", "L", "Mn", "Cr", "Bn"):
+            row = self._rows([{"revenue": 7.5, "currency": "INR",
+                               "denomination": denomination}])[0]
+            self.assertEqual(row["revenue"], 7.5, denomination)
+
+    def test_a_payload_with_no_financials_is_left_alone(self):
+        from fundos.profile.schema import _normalise_financial_rows
+
+        for value in (None, "", [], {}, "FY25"):
+            data = {"financials": value}
+            _normalise_financial_rows(data, [])
+            self.assertEqual(data["financials"], value)
+
+    def test_a_non_row_entry_does_not_break_the_series(self):
+        rows = self._rows([{"revenue": 10, "currency": "INR",
+                            "denomination": "Cr"}, "FY25", None])
+        self.assertEqual(rows[0]["denomination"], "Cr")
+        self.assertEqual(rows[1], "FY25")
+
+
+class TheModelIsAskedForTheFiguresCurrency(TestCase):
+
+    def _spec(self):
+        from fundos.profile.schema import SHIPPED_SECTIONS
+
+        section = next(s for s in SHIPPED_SECTIONS
+                       if s["key"] == "financial_summary")
+        return str(section["fields"]["financials"])
+
+    def test_the_spec_asks_for_the_currency_of_these_figures(self):
+        self.assertIn("currency", self._spec())
+
+    def test_the_spec_asks_for_the_scale_as_written(self):
+        spec = self._spec()
+        self.assertIn("denomination", spec)
+        self.assertIn("Cr", spec)
+
+    def test_the_spec_forbids_converting(self):
+        self.assertIn("NEVER convert", self._spec())

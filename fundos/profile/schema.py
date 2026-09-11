@@ -178,11 +178,30 @@ SHIPPED_SECTIONS = [
         "ref": "8.9 Financial Summary",
         "kind": "object",
         "fields": {
+            # REPORT THE FIGURES AS THE SOURCE STATES THEM.
+            #
+            # `revenue_m` meant "millions of `currency`" and nothing enforced
+            # it. A run converted INR 56.9 crore to 6.828 USD millions and
+            # then labelled the row `"currency": "INR"`. Read as written,
+            # FY2031's 415.8 means 415.8 million rupees -- about $5M. It
+            # means $415.8M. An 83x misread on the row a reader cares most
+            # about, and the exchange rate that produced it was invented in a
+            # sentence and discarded.
+            #
+            # `denomination` is what closes it: a company reporting in crore
+            # can now say so instead of being forced through a conversion to
+            # fit the field name.
             "financials": (
-                "array of objects with: financial_year (string, e.g. 'FY 2024'), "
-                "is_estimate (boolean), revenue_m (number|null), ebitda_m (number|null), "
-                "pat_m (number|null), yoy_revenue_growth_pct (number|null), "
-                "ev_revenue_multiple (number|null), currency (string ISO code)"),
+                "array of objects with: financial_year (string, e.g. "
+                "'FY 2024'), is_estimate (boolean), revenue (number|null), "
+                "ebitda (number|null), pat (number|null), currency (string "
+                "ISO code of THESE figures: INR, USD, EUR, GBP), "
+                "denomination (string - the scale as written: Cr (crore), L "
+                "(lakh), Mn, Bn, or \"\" for whole units), "
+                "yoy_revenue_growth_pct (number|null), "
+                "ev_revenue_multiple (number|null). NEVER convert between "
+                "currencies -- state the figure and the currency the source "
+                "used"),
             "observations": "array of strings - concise financial observations",
         },
     },
@@ -607,6 +626,79 @@ def taxonomy_block():
         + listed + "\n")
 
 
+#: The figures a financial row carries, and the legacy key each was written
+#: under. The old names encoded the scale -- `_m` for millions -- which is
+#: exactly the assumption that let a converted figure be labelled with the
+#: currency it was converted FROM.
+_FINANCIAL_FIGURES = (("revenue", "revenue_m"),
+                      ("ebitda", "ebitda_m"),
+                      ("pat", "pat_m"))
+
+
+def _normalise_financial_rows(data, notes=None):
+    """Give every financial row its currency and its scale, as reported.
+
+    A run converted INR 56.9 crore to 6.828 USD millions and then wrote
+    `"currency": "INR"` beside it. Read as written, FY2031's 415.8 means 415.8
+    million rupees -- about $5M. It means $415.8M: an 83x misread on the row a
+    reader cares most about, and the rate that produced it was invented in a
+    sentence and discarded.
+
+    Both shapes are accepted, because existing profiles hold the old one. A
+    legacy row states no scale, so it is read as MILLIONS -- which is what
+    `revenue_m` always meant. Reading that blank as whole units would turn
+    US$6.8M into US$0.0M, the same defect the funding-history migration had
+    to correct.
+
+    Never converts. The USD companion is derived beside the reported figure,
+    with the rate recorded, so a wrong rate is a correctable error rather
+    than a permanent one.
+    """
+    from fundos.core.services import money
+
+    rows = data.get("financials")
+    if not isinstance(rows, list):
+        return
+
+    converted = 0
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        currency = (money.normalise_currency(row.get("currency"))
+                    or str(row.get("currency") or "").upper())
+        stated = money.normalise_denomination(row.get("denomination"))
+        legacy = not row.get("denomination") and any(
+            row.get(old) is not None for _new, old in _FINANCIAL_FIGURES)
+        denomination = stated or ("Mn" if legacy else "")
+
+        row["currency"] = currency
+        row["denomination"] = denomination
+        for new_key, old_key in _FINANCIAL_FIGURES:
+            value = row.get(new_key)
+            if value is None:
+                value = row.get(old_key)
+            row[new_key] = value
+            # The `_m` keys stay populated for every existing consumer. They
+            # now mean what they always claimed: millions of `currency`.
+            row[old_key] = value
+            row[f"{new_key}_display"] = money.display(value, currency,
+                                                      denomination)
+            usd, rate = money.to_usd_mn(value, currency, denomination)
+            row[f"{new_key}_usd_mn"] = usd
+            if rate is not None:
+                row["fx_rate"] = rate
+        converted += 1
+
+    if converted and notes is not None:
+        currencies = sorted({str(r.get("currency") or "")
+                             for r in rows if isinstance(r, dict)} - {""})
+        if len(currencies) > 1:
+            notes.append(
+                f"financial_summary: rows state more than one currency "
+                f"({', '.join(currencies)}) — a series is only comparable "
+                f"within one")
+
+
 def _canonicalise_sub_sector(data, notes=None):
     """Point `sub_sector` at a real benchmark group where one is recognisable.
 
@@ -1024,6 +1116,12 @@ def normalize_profile(raw, active=None, notes=None, allowed_sources=None):
         # rating.
         if key == "company_profile" and isinstance(data, dict):
             _canonicalise_sub_sector(data, notes)
+
+        # Financial rows carry the currency and scale the SOURCE used, so a
+        # company reporting in crore is not forced through a conversion to
+        # fit a field name.
+        if key == "financial_summary" and isinstance(data, dict):
+            _normalise_financial_rows(data, notes)
 
         profile["sections"][key] = {
             "sectionKey": key,
