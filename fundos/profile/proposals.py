@@ -63,8 +63,13 @@ def editable_fields():
             continue
         key = section["key"]
         for field, spec in (section.get("fields") or {}).items():
-            if not str(spec or "").strip().lower().startswith(
-                    _TEXT_SPEC_PREFIX):
+            text = str(spec or "").strip().lower()
+            if not text.startswith(_TEXT_SPEC_PREFIX):
+                continue
+            # "string|null - YYYY-MM-DD" is a DATE, not prose. The pipe is
+            # how every optional scalar in the schema is written, and a chat
+            # rewriting one into "March 2025" breaks the column it lands in.
+            if "|" in text.split(" ", 1)[0]:
                 continue
             if (key, field) in CONTROLLED_FIELDS:
                 continue

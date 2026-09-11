@@ -33,11 +33,14 @@ def _named(fields):
     rest = len(fields) - len(shown)
     if not shown:
         return ""
+    # Only ONE "and" in the sentence. Joining the names with "and" and then
+    # appending "and N more" produced "A, B and C and 1 more", which reads
+    # as four things where three are named.
+    if rest:
+        return ", ".join(shown) + f" and {rest} more"
     if len(shown) == 1:
-        head = shown[0]
-    else:
-        head = ", ".join(shown[:-1]) + f" and {shown[-1]}"
-    return head + (f" and {rest} more" if rest else "")
+        return shown[0]
+    return ", ".join(shown[:-1]) + f" and {shown[-1]}"
 
 
 def for_section(key, *, fields, populated, confirmed, blank_fields=None):
