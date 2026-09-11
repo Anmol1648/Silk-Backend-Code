@@ -52,6 +52,95 @@ _CONTAINER_RE = re.compile(
     r"|^document_extracts$", re.IGNORECASE)
 
 
+def _rubric_from_config(input_key):
+    """The scoring rubric, read from the DATABASE rather than a directory.
+
+    `v2_ref` is imported from "Fundraising Strategy V2.0", a reference folder
+    that sits OUTSIDE src/ and is not deployed -- it was never meant to be.
+    The import fails on the server, the failure is swallowed, and every
+    rubric and anchor comes back null across the whole product. Live proof:
+    /api/v1/assessment/reference answers 503 "V2 reference layer unavailable",
+    and 0 of 55 terminals on a real assessment carry either.
+
+    The same data is already in `ConfigRubric`, imported from the workbook --
+    which is how the engine BANDS these values in the first place. A
+    parameter cannot score "Excellent" without its thresholds, and prod's
+    scorecard is full of bands, so the rows are there. Reading them here
+    removes the outside dependency instead of shipping a reference folder to
+    production.
+    """
+    from fundos.assessment.models import ConfigRubric
+
+    rows = list(ConfigRubric.objects.filter(input_key=input_key,
+                                            is_active=True).order_by("stage"))
+    if not rows:
+        return None
+
+    def _f(value):
+        return float(value) if value is not None else None
+
+    stages = {}
+    for row in rows:
+        if row.ideal_min is not None or row.ideal_max is not None:
+            stages[row.stage] = {"ideal_min": _f(row.ideal_min),
+                                 "ideal_max": _f(row.ideal_max)}
+        else:
+            stages[row.stage] = {"excellent": _f(row.cut_excellent),
+                                 "good": _f(row.cut_good),
+                                 "fair": _f(row.cut_fair)}
+
+    first = rows[0]
+    ranged = any("ideal_min" in v for v in stages.values())
+    return {
+        "key": input_key,
+        "kind": "range" if ranged else "monotonic",
+        "metric": first.metric_name or "",
+        "unit": first.unit or "",
+        "direction": first.direction or "",
+        "parameter": first.ref_code or "",
+        "stages": stages,
+        "good_tolerance": (_f(first.good_tolerance_pct) or 0) / 100 or None,
+        "fair_tolerance": (_f(first.fair_tolerance_pct) or 0) / 100 or None,
+        "rationale": first.rationale or "",
+    }
+
+
+def _anchor_from_config(input_key):
+    """The four written band definitions for an anchor-scored parameter."""
+    from fundos.assessment.models import ConfigAnchor
+
+    row = (ConfigAnchor.objects.filter(input_key=input_key, is_active=True)
+           .order_by("-version").first())
+    if not row:
+        return None
+    return {
+        "key": input_key,
+        "parameter": row.ref_code or "",
+        "name": row.parameter_name or "",
+        "scoringBasis": row.scoring_basis or "",
+        "bands": {"Excellent": row.excellent_def or "",
+                  "Good": row.good_def or "",
+                  "Fair": row.fair_def or "",
+                  "Poor": row.poor_def or ""},
+        "evidenceRequired": row.evidence_required or "",
+    }
+
+
+def _rubric_for(input_key):
+    """The reference package when it is present, the database otherwise."""
+    if not input_key:
+        return None
+    found = v2_ref.rubric_for(input_key) if v2_ref else None
+    return found or _rubric_from_config(input_key)
+
+
+def _anchor_for(input_key):
+    if not input_key:
+        return None
+    found = v2_ref.anchor_for(input_key) if v2_ref else None
+    return found or _anchor_from_config(input_key)
+
+
 def _document_category_filename(assessment, category):
     """The company's uploaded file in this category, when there is one.
 
@@ -722,8 +811,8 @@ def build_v2_parameter_evidence(pv, cfg, node_data=None, assessment=None,
     if isinstance(trace_data, dict):
         trace_data.pop("thresholds_by_stage", None)
 
-    v2_rubric = v2_ref.rubrics().get(key) if v2_ref else None
-    v2_anchor = v2_ref.anchors().get(key) if v2_ref else None
+    v2_rubric = _rubric_for(key)
+    v2_anchor = _anchor_for(key)
 
     contrib = round(effective_total_pct * (score_val or 0.0) / 10.0, 4)
 
@@ -1838,8 +1927,8 @@ def build_v2_parameter_detail(assessment, ref):
     #
     # `ref` is still right for the dictionary, which IS keyed by ref.
     rubric_key = getattr(cfg, "input_key", "") or ref
-    v2_rubric = v2_ref.rubric_for(rubric_key) if v2_ref else None
-    v2_anchor = v2_ref.anchor_for(rubric_key) if v2_ref else None
+    v2_rubric = _rubric_for(rubric_key)
+    v2_anchor = _anchor_for(rubric_key)
     v2_dict = v2_ref.dictionary().get(ref) if v2_ref else None
 
     return {

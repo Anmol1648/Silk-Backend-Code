@@ -458,3 +458,117 @@ class TheParameterDetailEndpointEndToEnd(Phase1Base):
             f"NO_SUCH_KEY", **self.headers)
         self.assertIn(response.status_code,
                       (status.HTTP_200_OK, status.HTTP_404_NOT_FOUND))
+
+
+class TheRubricComesFromTheDatabaseNotADirectory(TestCase):
+    """`v2_ref` is imported from "Fundraising Strategy V2.0" -- a reference
+    folder outside src/ that is not deployed, and was never meant to be. The
+    import fails on the server, the failure is swallowed, and every rubric
+    and anchor comes back null across the whole product.
+
+    Live proof: /api/v1/assessment/reference answers 503 "V2 reference layer
+    unavailable", and 0 of 55 terminals on a real assessment carry either.
+
+    The same data is already in ConfigRubric and ConfigAnchor, imported from
+    the workbook -- which is how the engine bands these values at all. A
+    parameter cannot score "Excellent" without its thresholds, and prod's
+    scorecard is full of bands.
+    """
+
+    def setUp(self):
+        call_command("seed_initial_data", verbosity=0)
+        from fundos.assessment import v2_serializers
+
+        # Reproduce the server exactly: reference package unavailable.
+        self._saved = v2_serializers.v2_ref
+        v2_serializers.v2_ref = None
+        self.v2 = v2_serializers
+
+    def tearDown(self):
+        self.v2.v2_ref = self._saved
+
+    def _config_loaded(self):
+        """Seed the two rows these tests need.
+
+        Seeding does not load the workbook, so relying on it skipped seven of
+        these -- which is the same as not having written them. These are the
+        real shapes, taken from the imported table.
+        """
+        from decimal import Decimal
+
+        from fundos.assessment.models import ConfigAnchor, ConfigRubric
+
+        for stage, cuts in (("Series A", (10, 6, 3)), ("Seed", (10, 6, 3)),
+                            ("Series B", (12, 8, 4)), ("Growth", (15, 10, 5))):
+            ConfigRubric.objects.get_or_create(
+                input_key="TEAM_FDR_EXP", stage=stage, tenant_id=None,
+                defaults={
+                    "ref_code": "A.1.d", "is_active": True,
+                    "metric_name": "Founder Years of Experience in the "
+                                   "Industry",
+                    "unit": "Years", "direction": "Higher",
+                    "cut_excellent": Decimal(cuts[0]),
+                    "cut_good": Decimal(cuts[1]),
+                    "cut_fair": Decimal(cuts[2]),
+                    "rationale": "Deep domain time predicts judgement."})
+        ConfigAnchor.objects.get_or_create(
+            input_key="ANC_FDR_EDU", tenant_id=None,
+            defaults={
+                "ref_code": "A.1.a", "is_active": True, "version": 2,
+                "parameter_name": "Founder Education in the Field",
+                "scoring_basis": "Anchor-scored",
+                "excellent_def": "Degree directly in the domain.",
+                "good_def": "Top-tier institution, adjacent field.",
+                "fair_def": "Unrelated field, no domain qualification.",
+                "poor_def": "No relevant education.",
+                "evidence_required": "Institution, degree, year."})
+
+    def test_a_rubric_is_returned_without_the_reference_package(self):
+        self._config_loaded()
+        self.assertIsNotNone(self.v2._rubric_for("TEAM_FDR_EXP"))
+
+    def test_an_anchor_is_returned_without_the_reference_package(self):
+        self._config_loaded()
+        self.assertIsNotNone(self.v2._anchor_for("ANC_FDR_EDU"))
+
+    def test_the_rubric_carries_every_stage(self):
+        self._config_loaded()
+        stages = self.v2._rubric_for("TEAM_FDR_EXP")["stages"]
+        self.assertIn("Series A", stages)
+        self.assertGreaterEqual(len(stages), 2)
+
+    def test_a_monotonic_rubric_carries_its_cut_points(self):
+        self._config_loaded()
+        rubric = self.v2._rubric_for("TEAM_FDR_EXP")
+        self.assertEqual(rubric["kind"], "monotonic")
+        self.assertIn("excellent", rubric["stages"]["Series A"])
+
+    def test_the_rubric_names_its_metric_and_unit(self):
+        self._config_loaded()
+        rubric = self.v2._rubric_for("TEAM_FDR_EXP")
+        self.assertTrue(rubric["metric"])
+        self.assertEqual(rubric["unit"], "Years")
+        self.assertEqual(rubric["parameter"], "A.1.d")
+
+    def test_an_anchor_carries_all_four_written_bands(self):
+        self._config_loaded()
+        bands = self.v2._anchor_for("ANC_FDR_EDU")["bands"]
+        for name in ("Excellent", "Good", "Fair", "Poor"):
+            self.assertTrue(bands.get(name), f"{name} band is empty")
+
+    def test_an_anchor_says_what_evidence_it_needs(self):
+        self._config_loaded()
+        self.assertTrue(
+            self.v2._anchor_for("ANC_FDR_EDU")["evidenceRequired"])
+
+    def test_a_key_with_no_config_returns_nothing_rather_than_failing(self):
+        self.assertIsNone(self.v2._rubric_for("NO_SUCH_PARAMETER"))
+        self.assertIsNone(self.v2._anchor_for("NO_SUCH_PARAMETER"))
+
+    def test_no_key_returns_nothing(self):
+        self.assertIsNone(self.v2._rubric_for(""))
+        self.assertIsNone(self.v2._anchor_for(None))
+
+    def test_a_spec_ref_is_still_not_a_key(self):
+        """Pinned: the lookup is by input key, in the database too."""
+        self.assertIsNone(self.v2._rubric_for("A.1.d"))
