@@ -31,8 +31,18 @@ class ShippedDefaultsMixin:
         cleared.start()
         self.addCleanup(cleared.stop)
         import os
-        for var in ("GEMINI_API_KEY", "OPENAI_API_KEY", "DEEPINFRA_API_KEY"):
+
+        # BOTH SPELLINGS. A key may be configured singly or as a pool, and
+        # `keyring._read_raw` falls back from GEMINI_API_KEY to
+        # GEMINI_API_KEYS -- so clearing only the singular left a developer
+        # with a key pool configured seeing a fully provisioned Gemini
+        # endpoint here, the seeder repointing all three tiers onto the
+        # vendor alternates, and four tests failing on a machine difference
+        # this mixin exists to remove.
+        for var in ("ANTHROPIC_API_KEY", "GEMINI_API_KEY", "OPENAI_API_KEY",
+                    "DEEPINFRA_API_KEY"):
             os.environ.pop(var, None)
+            os.environ.pop(f"{var}S", None)
 
 
 class ContextFilteringTests(TestCase):

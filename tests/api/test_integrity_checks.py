@@ -92,9 +92,37 @@ class AGapIsNamedNotOnlyCounted(Phase1Base):
     def test_an_unevidenced_row_is_named_with_what_to_ask_for(self):
         finding = self._finding()
         self.assertIsNotNone(finding, "a mostly-blank deal reports no gaps")
-        # The workbook's own if_missing line, so the ask is specific.
-        self.assertIn("—", finding["message"])
+        # Named by ref code, so the ask points at a row in the workbook
+        # rather than at a count. This asserted the presence of an em dash,
+        # which only ever appeared because one parameter's NAME contains one
+        # -- and which ten rows get named depends on their weights, so the
+        # test passed or failed on the order the database returned them in.
+        from fundos.assessment.models import ConfigParameter
+
+        refs = set(ConfigParameter.objects.filter(
+            is_active=True, feeds_score=True).exclude(ref_code="")
+            .values_list("ref_code", flat=True))
+        message = finding["message"]
+        self.assertTrue(any(f"{ref} " in message for ref in refs),
+                        "no gap is named by its ref code")
         self.assertTrue(finding["parameters"])
+
+    def test_the_same_assessment_names_the_same_rows_every_time(self):
+        """With nothing scored every gap weighs the same, so the ordering
+        has to come from somewhere other than the weights."""
+        self.assertEqual(self._finding()["message"],
+                         self._finding()["message"])
+
+    def test_the_workbook_line_is_quoted_where_the_dictionary_has_one(self):
+        from fundos.assessment.models import ConfigParameter
+
+        target = ConfigParameter.objects.filter(
+            is_active=True, feeds_score=True).first()
+        target.if_missing = "Ask for the audited P&L."
+        target.save(update_fields=["if_missing"])
+        message = self._finding()["message"]
+        if f"{target.ref_code} " in message:
+            self.assertIn("Ask for the audited P&L.", message)
 
     def test_the_message_says_what_the_gaps_were_worth(self):
         """Six blank rows worth 2% is a different deal from two worth 30%."""

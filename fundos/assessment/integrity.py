@@ -684,6 +684,12 @@ def _perfect_scores_are_human(ctx):
         parameters=[pv.input_key for pv in awarded])]
 
 
+def _ref_of(ctx, key):
+    """A parameter's ref code, for a stable ordering. Falls back to the key."""
+    cfg = ctx.params.get(key)
+    return ((cfg.ref_code if cfg else "") or key)
+
+
 def _complete_pack_gaps(ctx):
     """What the company did not supply, named so it can be asked for.
 
@@ -719,12 +725,21 @@ def _complete_pack_gaps(ctx):
     weights = ctx.effective_weights()
     lost = sum(weights.get(k, 0.0) for k in gaps)
 
+    # Heaviest first, then by ref code. The tie-break is not cosmetic: on an
+    # assessment where nothing scored, EVERY gap weighs the same, and without
+    # it the ten rows named here are whichever ten the database happened to
+    # return -- so the same assessment reported a different list run to run.
     asks = []
-    for key in sorted(gaps, key=lambda k: -weights.get(k, 0.0))[:10]:
+    for key in sorted(gaps, key=lambda k: (-weights.get(k, 0.0),
+                                           _ref_of(ctx, k)))[:10]:
         cfg = ctx.params.get(key)
         ref = (cfg.ref_code if cfg else "") or key
         name = (cfg.name if cfg else "") or key
-        asks.append(f"{ref} {name}")
+        # The workbook's own line about what to do when the row is missing,
+        # where the dictionary has one. It is what makes the ask specific --
+        # a named document rather than "please send more information".
+        ask = (cfg.if_missing if cfg else "") or ""
+        asks.append(f"{ref} {name}" + (f" ({ask.strip()})" if ask else ""))
 
     severity = "warning" if share > 0.25 or lost > 0.20 else "info"
     param_list = ", ".join(asks)
