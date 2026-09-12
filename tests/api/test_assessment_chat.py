@@ -204,6 +204,15 @@ class AnOverrideIsProposedNeverApplied(ScoredDeal):
                                "reason": "Because."}])
         self.assertEqual(out[0]["proposedBand"], "Poor")
 
+    def test_the_card_names_the_row_as_the_scorecard_does(self):
+        """A person reads this card beside a panel headed "A.3.b Advisor
+        Quality" -- it cannot say TEAM_ADVISORS twice."""
+        out = self._validate([{"ref": self._ref_of("TEAM_ADVISORS"),
+                               "score": 7, "reason": "Evidence found."}])
+        self.assertTrue(out[0]["ref"][0].isalpha())
+        self.assertIn(".", out[0]["ref"])
+        self.assertNotEqual(out[0]["name"], out[0]["inputKey"])
+
     def test_the_impact_is_attached(self):
         out = self._validate([{"ref": self._ref_of("TEAM_ADVISORS"),
                                "score": 9, "reason": "Evidence found."}])

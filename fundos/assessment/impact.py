@@ -83,12 +83,16 @@ def preview(assessment, changes):
         if was is None and now is None:
             continue
         if was != now:
-            categories.append({"code": row["code"], "from": was, "to": now,
-                               "delta": _delta(was, now)})
+            categories.append({"code": row["code"], "from": _round(was),
+                               "to": _round(now), "delta": _delta(was, now)})
 
     return {
-        "overall": {"from": before.get("overall_score"),
-                    "to": after.get("overall_score"),
+        # ROUNDED WHERE IT IS READ. A score is shown to two decimals
+        # everywhere in this product, and handing a client 7.466666666666667
+        # invites it to render that, or to round it differently from the
+        # sentence sitting beside it.
+        "overall": {"from": _round(before.get("overall_score")),
+                    "to": _round(after.get("overall_score")),
                     "delta": _delta(before.get("overall_score"),
                                     after.get("overall_score"))},
         "rating": {"from": before.get("rating_band"),
@@ -98,6 +102,13 @@ def preview(assessment, changes):
         "categories": categories,
         "unknown": sorted(set(clean) - applied),
     }
+
+
+def _round(value):
+    """Two decimals, or None. The precision every score is displayed at."""
+    if value is None:
+        return None
+    return round(float(value), 2)
 
 
 def _delta(was, now):

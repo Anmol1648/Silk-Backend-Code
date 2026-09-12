@@ -183,11 +183,16 @@ def validate(assessment, raw):
             continue
 
         preview = impact.preview(assessment, {pv.input_key: score})
+        # THE CARD IS READ BY A PERSON. A ParameterValue's own `ref_code` is
+        # usually blank, so this showed "TEAM_ADVISORS" twice -- as the ref
+        # and as the name -- where the panel beside it says "A.3.b Advisor
+        # Quality". The scorecard's own address and label, or nothing.
+        display_ref = normalise_ref(pv.ref_code or ref)
         out.append({
             "id": f"ovr_{len(out) + 1}",
-            "ref": pv.ref_code or ref,
+            "ref": display_ref,
             "inputKey": pv.input_key,
-            "name": _name_of(pv.ref_code or ref),
+            "name": _name_of(display_ref),
             "currentScore": current,
             "currentBand": pv.band or "",
             "proposedScore": round(score, 2),
@@ -205,3 +210,9 @@ def _name_of(ref):
     from fundos.assessment import hierarchy as H
 
     return H.NAMES.get(ref, ref)
+
+
+def normalise_ref(ref):
+    from fundos.assessment.suggestions import normalise_ref as _n
+
+    return _n(ref)
