@@ -40,7 +40,7 @@ class DocumentsComeFirst(TestCase):
 
     def test_the_header_says_why(self):
         """The model reads this too — the ordering is an instruction."""
-        self.assertIn("outrank web research", self._dossier())
+        self.assertIn("placed ahead of web research", self._dossier())
 
     def test_a_tail_cut_now_takes_the_web_research(self):
         """The whole point: what survives is the company's own material."""
@@ -146,10 +146,14 @@ class AFormatNoProviderReadsIsRefusedNotSent(TestCase):
 
     def test_the_deck_still_gets_its_slide_text(self):
         """Refusing the model read must not turn off native extraction —
-        that is where the slide text and speaker notes come from."""
+        that is where the slide text and speaker notes come from. The
+        handler now says 'native only' because that is what happens; it
+        said 'native+model' while the model read failed on every run."""
         from fundos.profile.pipeline.source2_documents import policy_for
 
-        self.assertEqual(policy_for("deck.pptx").handler, "native+model")
+        policy = policy_for("deck.pptx")
+        self.assertEqual(policy.handler, "native only")
+        self.assertIn("slide text", policy.description)
 
     def test_an_unknown_suffix_is_not_claimed_unreadable(self):
         from fundos.profile.pipeline import document_ai

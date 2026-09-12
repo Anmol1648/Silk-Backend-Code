@@ -30,9 +30,21 @@ class OnlyTheRightFilesReachTheModel(TestCase):
     def test_a_word_document_is_never_sent(self):
         self.assertEqual(s2.policy_for("memo.docx").read_mode, "never")
 
-    def test_pdfs_decks_and_images_are_sent(self):
-        for name in ("report.pdf", "pitch.pptx", "cap.png", "scan.tiff"):
+    def test_pdfs_and_images_are_sent(self):
+        for name in ("report.pdf", "cap.png", "scan.tiff"):
             self.assertEqual(s2.policy_for(name).read_mode, "model", name)
+
+    def test_a_deck_is_not_sent_because_no_provider_reads_one(self):
+        """It was, and the call failed every time with "Unsupported MIME
+        type". The policy now says what actually happens, and names the
+        remedy: save the deck as PDF."""
+        policy = s2.policy_for("pitch.pptx")
+        self.assertEqual(policy.read_mode, "never")
+        self.assertIn("PDF", policy.description)
+
+    def test_the_slide_text_is_still_extracted(self):
+        """Refusing the model read must not stop native extraction."""
+        self.assertIn("slide text", s2.policy_for("pitch.pptx").description)
 
     def test_an_unknown_extension_is_not_sent(self):
         """The model needs a declared media type; guessing one is not a
@@ -40,11 +52,22 @@ class OnlyTheRightFilesReachTheModel(TestCase):
         self.assertEqual(s2.policy_for("mystery.xyz").read_mode, "never")
 
     def test_the_supported_types_agree_with_the_policy_table(self):
-        for name in ("report.pdf", "pitch.pptx", "cap.png"):
+        """The two tables have to say the same thing. They did not: the
+        policy promised a model read for `.pptx` that the MIME table could
+        not serve, so the promise was kept in the log and broken at the
+        provider."""
+        for name in ("report.pdf", "cap.png"):
             suffix = "." + name.split(".")[-1]
             self.assertTrue(document_ai.is_supported(suffix), name)
-        self.assertFalse(document_ai.is_supported(".xlsx"))
-        self.assertFalse(document_ai.is_supported(".docx"))
+        for suffix in (".xlsx", ".docx", ".pptx"):
+            self.assertFalse(document_ai.is_supported(suffix), suffix)
+
+    def test_every_model_read_format_has_a_media_type(self):
+        """The general rule behind the case above, asserted directly."""
+        for suffix in (".pdf", ".png", ".jpg", ".jpeg", ".webp", ".tiff"):
+            policy = s2.policy_for("f" + suffix)
+            if policy.read_mode == "model":
+                self.assertTrue(document_ai.is_supported(suffix), suffix)
 
     def test_each_type_declares_a_real_media_type(self):
         self.assertEqual(document_ai.mime_for(".pdf"), "application/pdf")

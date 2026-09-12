@@ -326,14 +326,21 @@ class DossierTests(TestCase):
         return DossierWriter(_FakeRun(), "Acme", "https://acme.example", [])
 
     def test_section_order_is_fixed_regardless_of_arrival_order(self):
+        """The order is fixed, and it is DOCUMENTS AHEAD OF RESEARCH.
+
+        It used to be research first. The dossier is capped before synthesis
+        and the cut takes the tail, so whatever renders last is what gets
+        lost — and losing the company's own financial model to keep a search
+        result whole is backwards.
+        """
         writer = self._writer()
-        writer.set_section("source2", "# Documents\n\nDoc text.")
         writer.set_section("source1", "# Research\n\nResearch text.")
+        writer.set_section("source2", "# Documents\n\nDoc text.")
         text = writer.text
-        self.assertLess(text.index("Research text."),
-                        text.index("Doc text."),
-                        "source1 must render before source2 whatever the "
-                        "completion order")
+        self.assertLess(text.index("Doc text."),
+                        text.index("Research text."),
+                        "uploaded documents must render before web research "
+                        "whatever the completion order")
 
     def test_an_unknown_section_key_fails_loudly(self):
         """A silent no-op would produce a dossier quietly missing a source,
@@ -521,13 +528,18 @@ class DocumentPolicyTests(TestCase):
         self.assertEqual(policy.read_mode, "model")
         self.assertEqual(policy.unit, "page")
 
-    def test_a_deck_is_read_by_the_document_model(self):
-        """Charts and screenshots carry numbers that exist only as pixels."""
+    def test_a_deck_is_not_read_by_the_document_model(self):
+        """Charts and screenshots do carry numbers that exist only as
+        pixels — and no provider accepts a PowerPoint file, so this asked
+        for a read it could not get and failed on every run. The policy now
+        states the loss and the remedy instead of promising the read.
+        """
         from fundos.profile.pipeline import source2_documents as s2
 
         policy = s2.policy_for("pitch.pptx")
-        self.assertEqual(policy.read_mode, "model")
+        self.assertEqual(policy.read_mode, "never")
         self.assertEqual(policy.unit, "slide")
+        self.assertIn("PDF", policy.description)
 
     def test_an_image_has_no_other_route_to_its_content(self):
         from fundos.profile.pipeline import source2_documents as s2

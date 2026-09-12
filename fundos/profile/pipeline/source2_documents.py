@@ -115,13 +115,25 @@ FILE_TYPE_POLICY = {
                      "which reaches scanned pages, and reads tables as tables "
                      "rather than as a run of text."),
         read_mode="model", unit="page"),
+    # A DECK IS NATIVE ONLY, because no provider will read the format.
+    #
+    # This said "native+model" and the model read 400'd every time --
+    # "Unsupported MIME type: ...presentationml.presentation" -- so every run
+    # promised a treatment it could not deliver, spent a failed call on it,
+    # and logged a CRITICAL pointing at the model binding, which was never
+    # the problem. The plan line now says what will actually happen.
+    #
+    # The loss is real and named rather than hidden: a number that exists
+    # only inside a chart or a screenshot is not recovered from slide text.
+    # Converting the deck to PDF before upload gets it read.
     ".pptx": TypePolicy(
-        handler="native+model",
-        description=("MarkItDown extracts the slide text and speaker notes, "
-                     "and the deck is additionally read by a document model, "
-                     "because charts and screenshots carry numbers that exist "
-                     "only as pixels."),
-        read_mode="model", unit="slide"),
+        handler="native only",
+        description=("MarkItDown extracts the slide text and speaker notes. "
+                     "A document model cannot read a PowerPoint file — no "
+                     "provider accepts the format — so numbers that appear "
+                     "only inside a chart or a screenshot are not read. "
+                     "Save the deck as PDF and they are."),
+        read_mode="never", unit="slide"),
     ".ppt": NATIVE_ONLY,
     ".xlsx": NATIVE_ONLY, ".xlsm": NATIVE_ONLY, ".xls": NATIVE_ONLY,
     ".csv": NATIVE_ONLY, ".docx": NATIVE_ONLY, ".doc": NATIVE_ONLY,
@@ -505,8 +517,9 @@ def _model_stage(local, filename, policy, note, sections, profile):
     if policy.read_mode == "never":
         return ReadOutcome(
             status="skipped",
-            reason=f"{suffix} is handled as '{policy.handler}': "
-                   f"{policy.description}")
+            reason=(document_ai.why_not_readable(suffix)
+                    or f"{suffix} is handled as '{policy.handler}': "
+                       f"{policy.description}"))
 
     # ASKED FOR, BUT NO PROVIDER ACCEPTS IT. A `.pptx` was sent on every run
     # and rejected on every run -- "Unsupported MIME type" -- so each deck

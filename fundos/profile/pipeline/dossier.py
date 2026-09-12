@@ -203,9 +203,9 @@ class DossierWriter:
             f"- Company: **{self.company_name}**\n"
             f"- Website: {self.website or '_not recorded_'}\n"
             f"- Last updated: {timezone.now().isoformat()}\n"
-            f"- Order: the company's own documents come first because they "
-            f"outrank web research. Where the two disagree, the document is "
-            f"what the company itself reported.\n"
+            f"- Order: the company's own documents are placed ahead of web "
+            f"research because they outrank it. Where the two disagree, the "
+            f"document is what the company itself reported.\n"
         )
         founders_block = _render_founders(self.founders)
         if founders_block:
