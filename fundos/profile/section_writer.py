@@ -928,6 +928,23 @@ def _object_has_data(structured):
 def _mirror_company_profile(profile, structured):
     """Keep the profile's own website/country/currency in sync with the
     company_profile section so the two never disagree."""
+    # THE INDUSTRY A COMPANY CLAIMS BECOMES A PICKLIST VALUE.
+    #
+    # A founder whose industry is not among the 60 has to put something in
+    # the box, and blocking them produces the worst outcome available: the
+    # nearest value that lets the form submit, which is wrong and looks
+    # deliberate. The label is accepted and marked for review instead.
+    #
+    # No benchmark cohort is created — see fundos.platformcfg.taxonomy.
+    try:
+        from fundos.platformcfg import taxonomy
+
+        taxonomy.record(structured.get("macro_sector"),
+                        structured.get("sub_sector"),
+                        company=getattr(profile.company, "name", ""))
+    except Exception as exc:            # pragma: no cover - never fatal
+        _logger.debug("TAXONOMY: not recorded for %s: %s", profile.pk, exc)
+
     changed = []
     website = structured.get("website")
     country = structured.get("country")

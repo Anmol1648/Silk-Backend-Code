@@ -391,3 +391,50 @@ class UiCopyAdmin(admin.ModelAdmin):
 admin.site.site_header = "Silk — Platform Administration"
 admin.site.site_title = "Silk Admin"
 admin.site.index_title = "Configuration"
+
+# ---------------------------------------------------------------------------
+# The picklists, with the values that arrived rather than being curated
+# visible as such. Without the flag a curated 60 quietly becomes 300 and
+# nobody can tell which is which.
+# ---------------------------------------------------------------------------
+from fundos.platformcfg.lookup_models import (              # noqa: E402
+    Sector as _Sector, SubSector as _SubSector,
+)
+
+
+@admin.register(_Sector)
+class SectorAdmin(admin.ModelAdmin):
+    list_display = ("name", "is_pending", "is_active", "added_from")
+    list_filter = ("is_pending", "is_active")
+    search_fields = ("name", "added_from")
+    actions = ("approve",)
+
+    @admin.action(description="Approve — keep as a curated value")
+    def approve(self, request, queryset):
+        updated = queryset.update(is_pending=False)
+        self.message_user(request, f"{updated} sector(s) approved.")
+
+
+@admin.register(_SubSector)
+class SubSectorAdmin(admin.ModelAdmin):
+    """A sub-sector is the benchmark join key, so approving one is not the
+    whole job: it also has to be mapped to a cohort that holds deal data.
+    The admin action below does the half that can be done in bulk; the
+    mapping itself is one question per value and lives on the review
+    endpoint, because only a person can answer it.
+    """
+
+    list_display = ("name", "sector", "benchmark_group", "is_pending",
+                    "is_active", "added_from")
+    list_filter = ("is_pending", "is_active", "sector")
+    search_fields = ("name", "added_from")
+
+    @admin.display(description="Benchmark group")
+    def benchmark_group(self, obj):
+        from fundos.assessment.models import SectorMapping
+
+        row = SectorMapping.objects.filter(raw_label__iexact=obj.name).first()
+        if row:
+            return row.clubbed_group
+        return "— not mapped: the benchmark category scores blank"
+

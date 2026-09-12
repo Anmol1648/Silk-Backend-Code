@@ -84,6 +84,41 @@ class ProfileSectionsConfigView(APIView):
         } for s in profile_sections()]})
 
 
+class TaxonomyReviewView(APIView):
+    """GET the values awaiting review; POST the answer to one of them.
+
+    A sub-sector arriving with a company raises one question a computer
+    cannot settle — which of the existing benchmark groups it belongs to —
+    and this is where a person settles it. Until they do, the benchmark
+    category scores blank, which is correct: an invented cohort holds no
+    deals and would score the company against nothing.
+    """
+
+    def get(self, request):
+        from fundos.platformcfg import taxonomy
+
+        return Response(taxonomy.pending())
+
+    def post(self, request):
+        from fundos.platformcfg import taxonomy
+
+        data = request.data or {}
+        name = (data.get("subSector") or data.get("sector") or "").strip()
+        group = (data.get("group") or "").strip()
+        if not name:
+            return Response({"detail": "Name the value being reviewed."},
+                            status=400)
+        try:
+            if data.get("subSector"):
+                result = taxonomy.resolve_sub_sector(name, group,
+                                                     user=request.user)
+            else:
+                result = taxonomy.approve_sector(name)
+        except taxonomy.TaxonomyError as exc:
+            return Response({"detail": str(exc)}, status=422)
+        return Response(result)
+
+
 class LookupsView(APIView):
     """All dropdown master data in one call (Req 1).
 

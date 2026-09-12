@@ -55,6 +55,10 @@ urlpatterns = [
          cfg.ProfileSectionsConfigView.as_view()),
     path(f"{V1}/config/ui-copy", cfg.UiCopyView.as_view()),
     path(f"{V1}/config/lookups", cfg.LookupsView.as_view()),
+    # Values that arrived with a company and are waiting for an
+    # administrator to say which benchmark group they belong to.
+    path(f"{V1}/config/taxonomy/review",
+         cfg.TaxonomyReviewView.as_view()),
 
     # --- Stage 1: Company Profile (company-scoped per C1) ---
     path(f"{COMPANY}/profile", profile.ProfileView.as_view()),
