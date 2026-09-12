@@ -167,6 +167,33 @@ def _founder_inputs(profile):
         return []
 
 
+class ProfileGone(RuntimeError):
+    """The profile this run was building no longer exists.
+
+    A distinct type because the remedy is distinct, and because there is
+    nothing wrong with the run: somebody deleted the profile, usually to
+    re-upload documents and start again. The run should stop where it
+    stands, cheaply, and say so in those words.
+    """
+
+
+def _require_profile(profile, tracker_=None):
+    """Stop the run if the profile has been deleted under it."""
+    from fundos.profile.models import CompanyProfile
+
+    if CompanyProfile.objects.filter(pk=profile.pk).exists():
+        return
+    message = ("The profile this run was building was deleted while the run "
+               "was in progress — nothing has been saved. This is what "
+               "happens when a profile is removed to re-upload documents; "
+               "start a new generation against the new profile.")
+    if tracker_ is not None:
+        tracker_.event(message)
+    logger.warning("PIPELINE: profile %s no longer exists — stopping the run "
+                   "before the synthesis call.", profile.pk)
+    raise ProfileGone(message)
+
+
 def run_pipeline(profile, run, *, user=None, trace=None):
     """Execute the pipeline for one profile. Never raises.
 
@@ -269,6 +296,15 @@ def run_pipeline(profile, run, *, user=None, trace=None):
                  f"from {len(consolidation['sections_present'])} source(s))")
 
         # --- Synthesize -----------------------------------------------------
+        #
+        # THE ONE EXPENSIVE CALL. Everything before it is cheap and
+        # recoverable; this is 300,000 prompt tokens and several minutes.
+        # A profile deleted while the run was in flight -- a founder
+        # re-uploading their documents does exactly that -- was discovered
+        # only at the save, thirteen minutes and about fifty rupees later,
+        # and reported as a foreign-key violation naming a UUID.
+        _require_profile(profile, tracker_)
+
         stage = tracker.SYNTHESIZING
         tracker_.stage_started(
             stage,
@@ -290,6 +326,12 @@ def run_pipeline(profile, run, *, user=None, trace=None):
                                   "synthesizing": synthesis})
 
         # --- Write ----------------------------------------------------------
+        # Checked again: synthesis takes minutes, and the profile can go
+        # during them. Without this the writer reports "16 could not be
+        # stored" — true but unexplained — and the assessment step that
+        # follows fails on a foreign key, which explains nothing at all.
+        _require_profile(profile, tracker_)
+
         stage = tracker.WRITING
         tracker_.stage_started(stage)
         written = profile_writer.write_profile(

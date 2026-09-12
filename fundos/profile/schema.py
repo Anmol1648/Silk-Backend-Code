@@ -750,6 +750,26 @@ def _canonicalise_sub_sector(data, notes=None):
                          f"to the benchmark group {resolved!r}")
 
 
+def _mapped_sub_sector(claimed):
+    """The group an administrator recorded for this label, or "".
+
+    Reads the same `SectorMapping` table the assessment's resolver reads, so
+    a label an administrator has explained resolves identically on both
+    sides. Never fatal: a missing table means "no alias", not a failed run.
+    """
+    text = str(claimed or "").strip()
+    if not text:
+        return ""
+    try:
+        from fundos.assessment.models import SectorMapping
+
+        row = SectorMapping.objects.filter(raw_label__iexact=text).first()
+    except Exception as exc:                # pragma: no cover - never fatal
+        logger.debug("SUB-SECTOR: alias lookup unavailable: %s", exc)
+        return ""
+    return (row.clubbed_group or "") if row else ""
+
+
 def canonical_sub_sector(claimed):
     """The benchmark group a claimed sub-sector names, or "" if none.
 
@@ -765,6 +785,19 @@ def canonical_sub_sector(claimed):
     claim = _normalise_label(str(claimed or "").replace("-", ""))
     if not claim:
         return ""
+
+    # THE ALIAS TABLE FIRST, because the assessment reads it and this did
+    # not. The same run logged "'Digital Health' matches no benchmark group,
+    # so the benchmark category will score blank" here, and
+    # `sub_sector_method="exact"` -> Healthtech there, a minute later. One
+    # string, two answers, and the warning shown to the operator was the
+    # false one. `SectorMapping` is where an administrator records that a
+    # label means a group; consulting it in one resolver and not the other
+    # guarantees they disagree.
+    mapped = _mapped_sub_sector(claimed)
+    if mapped:
+        return mapped
+
     best = ""
     for name in sub_sector_vocabulary():
         norm = _normalise_label(name.replace("-", ""))

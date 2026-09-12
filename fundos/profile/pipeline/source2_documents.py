@@ -215,40 +215,125 @@ def _convert_with_markitdown(path):
         (getattr(result, "text_content", None) or "").strip())
 
 
-#: A markdown table row whose cells are all blank, dashes or pipes. One
-#: spreadsheet produced 552,541 characters this way -- every unused cell of
-#: every sheet, rendered faithfully -- of which the actual P&L was a small
-#: fraction. The dossier is capped before synthesis, so scaffolding does not
-#: merely waste tokens: it pushes real numbers past the cut.
-_EMPTY_TABLE_ROW = re.compile(r"^\s*\|[\s|\-:]*\|\s*$")
+#: What a spreadsheet converter writes into a cell that holds nothing.
+#:
+#: MarkItDown renders an empty cell as the string "NaN" and an unnamed column
+#: as "Unnamed: 7" -- pandas artefacts, not content. A 3-row sheet with a few
+#: trailing columns came out at 5,152 characters, almost all of it these two.
+#: A live financial model reached 552,541 characters this way and became 70%
+#: of a dossier, crowding out the web research and the numbers that mattered.
+#:
+#: The first version of this only matched a truly blank cell (`|  |  |`), so
+#: it fired on decks and did nothing at all to the file it was written for.
+_EMPTY_CELL_WORDS = {"", "nan", "nat", "none", "null", "-", "--", "—"}
 
-#: Kept so a table still reads as a table: the header separator row matches
-#: the pattern above and must survive it.
-_SEPARATOR_ROW = re.compile(r"^\s*\|[\s|:]*-{2,}[\s|:\-]*\|\s*$")
+#: A column header a converter invented because the column has no name.
+_UNNAMED_COLUMN = re.compile(r"^unnamed:?\s*\d+$", re.IGNORECASE)
+
+#: A markdown table's header separator: `| --- | --- |`. It carries no data
+#: and must survive anyway, or the table stops rendering as a table.
+_SEPARATOR_ROW = re.compile(r"^\s*\|[\s|:]*-{2,}[\s|:\-]*\|?\s*$")
+
+
+def _cells(line):
+    """The cells of a markdown table row, without the outer pipes."""
+    stripped = line.strip()
+    if stripped.startswith("|"):
+        stripped = stripped[1:]
+    if stripped.endswith("|"):
+        stripped = stripped[:-1]
+    return [c.strip() for c in stripped.split("|")]
+
+
+def _is_blank_cell(cell):
+    return cell.strip().casefold() in _EMPTY_CELL_WORDS
+
+
+def _is_table_row(line):
+    return line.strip().startswith("|")
+
+
+def _trim_table(rows):
+    """One markdown table, with its empty rows and empty columns removed.
+
+    Conservative by construction. A column goes only when its header is one
+    the converter invented AND every cell beneath it is empty; a row goes
+    only when every cell in it is empty. A row with one figure and thirty
+    blanks is a fact about the company and survives whole.
+    """
+    parsed = [(line, _cells(line), bool(_SEPARATOR_ROW.match(line)))
+              for line in rows]
+    data = [cells for _line, cells, sep in parsed if not sep]
+    if not data:
+        return rows
+
+    # NO SEPARATOR, NO HEADER. A converter always writes one; a block of
+    # pipe-delimited lines without one is not a table whose first row names
+    # its columns, and treating it as one threw away a lone row that carried
+    # a figure. Drop the empty rows, keep everything else exactly as it is.
+    if not any(sep for _line, _cells_, sep in parsed):
+        return [line for line, cells, _sep in parsed
+                if not all(_is_blank_cell(cell) for cell in cells)]
+
+    width = max(len(c) for c in data)
+    header = data[0] + [""] * (width - len(data[0]))
+    body = [c + [""] * (width - len(c)) for c in data[1:]]
+
+    keep = []
+    for index in range(width):
+        invented = _UNNAMED_COLUMN.match(header[index].strip())
+        empty = all(_is_blank_cell(row[index]) for row in body)
+        if invented and empty:
+            continue
+        keep.append(index)
+    if not keep:
+        return []
+
+    out = []
+    for line, cells, sep in parsed:
+        if sep:
+            out.append("| " + " | ".join("---" for _ in keep) + " |")
+            continue
+        padded = cells + [""] * (width - len(cells))
+        picked = [padded[i] for i in keep]
+        if all(_is_blank_cell(cell) for cell in picked):
+            continue
+        out.append("| " + " | ".join(
+            "" if _is_blank_cell(cell) else cell for cell in picked) + " |")
+    # A table reduced to nothing but its header and rule says nothing.
+    if len([line for line in out if not _SEPARATOR_ROW.match(line)]) <= 1:
+        return []
+    return out
 
 
 def _drop_empty_rows(text):
-    """Remove blank spreadsheet rows, keeping every row that says anything.
+    """Remove the scaffolding a spreadsheet converter emits around the data.
 
-    Conservative by construction: a row is dropped only when EVERY cell in it
-    is empty. A row with one figure and nine blanks is a fact about the
-    company and survives whole, and the header separator that makes a
-    markdown table render is never removed.
+    Empty rows go, invented empty columns go, and a cell holding "NaN" is
+    written as the nothing it is. Everything that says anything is kept
+    exactly as it was.
     """
     if "|" not in text:
         return text
-    kept, dropped = [], 0
-    for line in text.split("\n"):
-        if (_EMPTY_TABLE_ROW.match(line)
-                and not _SEPARATOR_ROW.match(line)):
-            dropped += 1
+
+    lines = text.split("\n")
+    out, block = [], []
+    for line in lines:
+        if _is_table_row(line):
+            block.append(line)
             continue
-        kept.append(line)
-    if dropped:
-        logger.info("PIPELINE: dropped %d empty table row(s) from a native "
-                    "extract (%d -> %d characters).", dropped, len(text),
-                    sum(len(k) + 1 for k in kept))
-    return "\n".join(kept).strip()
+        if block:
+            out.extend(_trim_table(block))
+            block = []
+        out.append(line)
+    if block:
+        out.extend(_trim_table(block))
+
+    trimmed = "\n".join(out).strip()
+    if len(trimmed) < len(text):
+        logger.info("PIPELINE: spreadsheet scaffolding removed from a native "
+                    "extract (%d -> %d characters).", len(text), len(trimmed))
+    return trimmed
 
 
 def _model_read(path, filename, policy, note, profile):

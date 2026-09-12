@@ -1,0 +1,1681 @@
+2026-09-12 08:09:38 INFO    fundos.llm.adapter LLM: structured output is ON for role document_read but no schema will be sent — the profile states none and document_read is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 08:09:38 INFO    fundos.llm LLM: GEMINI_API_KEYS provides a pool of 1 key(s)
+2026-09-12 08:09:39 ERROR   fundos.llm.adapter LLM: document_read failed on GEMINI LLM: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+2026-09-12 08:09:39 CRITICAL fundos.llm.adapter GEN[?] FATAL LLM: LLM role 'document_read' unavailable after 1 attempt(s). Error category: MODEL_ERROR. Last error: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation. Remediation: Model binding issue for role 'document_read'. Verify the model name bound in Admin UI exists and is available with the provider.
+2026-09-12 08:09:39 WARNING fundos.profile PIPELINE: document model declined Project Orah Teaser_vff.pptx: LLMUnavailable: LLM role 'document_read' unavailable after 1 attempt(s). Error category: MODEL_ERROR. Last error: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation. Remediation: Model binding issue for role 'document_read'. Verify the model name bound in Admin UI exists and is available with the provider.
+2026-09-12 08:09:39 INFO    fundos.llm.adapter LLM: structured output is ON for role material_critique but no schema will be sent — the profile states none and material_critique is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 08:09:42 WARNING fundos.profile.views PROFILE: domain clash for company eb99fc71-9b19-4f99-a6e5-2b637e69a2c6 — skipped
+2026-09-12 08:09:42 DEBUG   fundos.generation Could not check PromptTemplate freshness: 'PromptTemplate' object has no attribute 'created_at'
+2026-09-12 08:09:42 INFO    fundos.generation GEN[6f0ff2] step="preflight.config" status="OK" ai_mocked=false llm_bindings=36 llm_endpoints_active=2 research_endpoint="GEMINI LLM" research_model="gemini-2.5-flash" research_mocked=false research_profile="profile.research" synthesis_endpoint="GEMINI LLM" synthesis_model="gemini-2.5-flash" synthesis_mocked=false synthesis_profile="profile.synthesis" registered_sections=19 celery_eager=false assessment_parameters=61
+2026-09-12 08:09:42 INFO    fundos.generation GEN[6f0ff2] step="sources.deal" status="OK" dealId="8a5f53fe-9723-4d55-92f7-aaed31a4a8be"
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="sources.website" status="OK" ms=998 url="https://zyla.in" chars=4768
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="sources.documents" status="OK" uploaded=2 analysed=1 pending=1 chars=237 note=""
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="sources.founders" status="OK" count=2
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="preflight.research_sources" status="OK" enabled_count=5 enabled="website,market,competitor,industry,public_funding"
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="sources.research.market" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="sources.research.competitor" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="sources.research.industry" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="sources.research.public_funding" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="sources.summary" status="OK" website_chars=4698 documents_chars=70 research_chars=0 founders=2 total_chars=5046 failures=0
+2026-09-12 08:09:43 INFO    fundos.generation PIPELINE[a59f961b] pipeline started for Zyla Health. Sources 1-2 run concurrently.
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="pipeline started for Zyla Health. Sources 1-2 run concurrently."
+2026-09-12 08:09:43 INFO    fundos.generation PIPELINE[a59f961b] Researching the company on the web — started
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="Researching the company on the web — started" stage="researching"
+2026-09-12 08:09:43 INFO    fundos.generation PIPELINE[a59f961b] Reading the uploaded documents — started
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="Reading the uploaded documents — started" stage="processing_documents"
+2026-09-12 08:09:43 INFO    fundos.generation PIPELINE[a59f961b] source 2: 2 file(s) to process, one at a time. Plan: Project Orah Teaser_vff.pptx -> native+model; Project Orah_Financial Model_vf.xlsx -> native only
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="source 2: 2 file(s) to process, one at a time. Plan: Project Orah Teaser_vff.pptx -> native+model; Project Orah_Financial Model_vf.xlsx -> native only" stage="processing_documents"
+2026-09-12 08:09:43 INFO    fundos.generation PIPELINE[a59f961b] source 1: 10 research batches (100 questions), 5 at a time
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="source 1: 10 research batches (100 questions), 5 at a time" stage="researching"
+2026-09-12 08:09:43 INFO    fundos.generation PIPELINE[a59f961b] reading file 1/2 Project Orah Teaser_vff.pptx (Company Presentation, .pptx) — handled as 'native+model': MarkItDown extracts the slide text and speaker notes, and the deck is additionally read by a document model, because charts and screenshots carry numbers that exist only as pixels.
+2026-09-12 08:09:43 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="reading file 1/2 Project Orah Teaser_vff.pptx (Company Presentation, .pptx) — handled as 'native+model': MarkItDown extracts the slide text and speaker notes, and the deck is additionally read by a document model, because charts and screenshots carry numbers that exist only as pixels." stage="processing_documents"
+2026-09-12 08:09:43 INFO    fundos.llm LLM: GEMINI_API_KEYS provides a pool of 1 key(s)
+2026-09-12 08:09:44 INFO    fundos.generation PIPELINE[a59f961b] native extraction of Project Orah Teaser_vff.pptx recovered 22,882 characters in 1.5s
+2026-09-12 08:09:44 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="native extraction of Project Orah Teaser_vff.pptx recovered 22,882 characters in 1.5s" stage="processing_documents"
+2026-09-12 08:09:44 INFO    fundos.generation PIPELINE[a59f961b] Project Orah Teaser_vff.pptx: sending Project Orah Teaser_vff.pptx (8593 KB) to the document model for reading
+2026-09-12 08:09:44 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="Project Orah Teaser_vff.pptx: sending Project Orah Teaser_vff.pptx (8593 KB) to the document model for reading" stage="processing_documents"
+2026-09-12 08:09:44 INFO    fundos.llm.adapter LLM: structured output is ON for role document_read but no schema will be sent — the profile states none and document_read is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 08:09:46 ERROR   fundos.generation GEN[6f0ff2] step="llm.call.document_read" status="FAIL" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=1316 prompt_chars=789 context_chars=0 prompt_tokens=0 completion_tokens=0 thinking_tokens=0 finish_reason="" response_chars=0 billed=false caps_sent="thinking" thinking_budget="0" error="HTTPError: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation"
+2026-09-12 08:09:46 ERROR   fundos.llm.adapter LLM: document_read failed on GEMINI LLM: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation
+2026-09-12 08:09:46 CRITICAL fundos.llm.adapter GEN[6f0ff2] FATAL LLM: LLM role 'document_read' unavailable after 1 attempt(s). Error category: MODEL_ERROR. Last error: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation. Remediation: Model binding issue for role 'document_read'. Verify the model name bound in Admin UI exists and is available with the provider.
+2026-09-12 08:09:46 WARNING fundos.profile PIPELINE: document model declined Project Orah Teaser_vff.pptx: LLMUnavailable: LLM role 'document_read' unavailable after 1 attempt(s). Error category: MODEL_ERROR. Last error: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation. Remediation: Model binding issue for role 'document_read'. Verify the model name bound in Admin UI exists and is available with the provider.
+2026-09-12 08:09:46 INFO    fundos.generation PIPELINE[a59f961b] OCR failed for Project Orah Teaser_vff.pptx: The document model could not read this file: LLMUnavailable: LLM role 'document_read' unavailable after 1 attempt(s). Error category: MODEL_ERROR. Last error: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation. Remediation: Model binding issue for role 'document_read'. Verify the model name bound in Admin UI exists and is available with the provider.
+2026-09-12 08:09:46 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="OCR failed for Project Orah Teaser_vff.pptx: The document model could not read this file: LLMUnavailable: LLM role 'document_read' unavailable after 1 attempt(s). Error category: MODEL_ERROR. Last error: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation. Remediation: Model binding issue for role 'document_read'. …" stage="processing_documents"
+2026-09-12 08:09:46 INFO    fundos.generation PIPELINE[a59f961b] finished file 1/2 (Project Orah Teaser_vff.pptx) in 2.9s
+2026-09-12 08:09:46 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="finished file 1/2 (Project Orah Teaser_vff.pptx) in 2.9s" stage="processing_documents"
+2026-09-12 08:09:46 INFO    fundos.generation PIPELINE[a59f961b] reading file 2/2 Project Orah_Financial Model_vf.xlsx (Financial Model, .xlsx) — handled as 'native only': MarkItDown extracts the text and tables directly. This format stores its content as text, and for a spreadsheet the cells are exact — a model reading them could only be worse.
+2026-09-12 08:09:46 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="reading file 2/2 Project Orah_Financial Model_vf.xlsx (Financial Model, .xlsx) — handled as 'native only': MarkItDown extracts the text and tables directly. This format stores its content as text, and for a spreadsheet the cells are exact — a model reading them could only be worse." stage="processing_documents"
+2026-09-12 08:10:07 INFO    fundos.generation PIPELINE[a59f961b] native extraction of Project Orah_Financial Model_vf.xlsx recovered 552,541 characters in 20.9s
+2026-09-12 08:10:07 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="native extraction of Project Orah_Financial Model_vf.xlsx recovered 552,541 characters in 20.9s" stage="processing_documents"
+2026-09-12 08:10:07 INFO    fundos.generation PIPELINE[a59f961b] OCR skipped for Project Orah_Financial Model_vf.xlsx: .xlsx is handled as 'native only': MarkItDown extracts the text and tables directly. This format stores its content as text, and for a spreadsheet the cells are exact — a model reading them could only be worse.
+2026-09-12 08:10:07 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="OCR skipped for Project Orah_Financial Model_vf.xlsx: .xlsx is handled as 'native only': MarkItDown extracts the text and tables directly. This format stores its content as text, and for a spreadsheet the cells are exact — a model reading them could only be worse." stage="processing_documents"
+2026-09-12 08:10:07 INFO    fundos.generation PIPELINE[a59f961b] finished file 2/2 (Project Orah_Financial Model_vf.xlsx) in 20.9s
+2026-09-12 08:10:07 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="finished file 2/2 (Project Orah_Financial Model_vf.xlsx) in 20.9s" stage="processing_documents"
+2026-09-12 08:10:09 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=25543 prompt_chars=1520 context_chars=163 prompt_tokens=1049 completion_tokens=1645 thinking_tokens=2929 finish_reason="STOP" response_chars=6205 searches=13 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=26 total_fields=26 was_repaired=false was_normalized=false note=""
+2026-09-12 08:10:09 INFO    fundos.generation GEN[6f0ff2] step="research.batch.1" status="OK" ms=25731 topic="Company Basics & Identity" chars=12499 searches=13 questions_count=10
+2026-09-12 08:10:09 INFO    fundos.profile RESEARCH batch 1/10 (Company Basics & Identity): OK in 25731ms, 12499 chars, 13 search(es)
+2026-09-12 08:10:09 INFO    fundos.generation PIPELINE[a59f961b] research batch 1/10 'Company Basics & Identity' ok after 25.7s (1/10 finished, 1 with data, 13 search(es))
+2026-09-12 08:10:09 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 1/10 'Company Basics & Identity' ok after 25.7s (1/10 finished, 1 with data, 13 search(es))" stage="researching"
+2026-09-12 08:10:09 INFO    fundos.llm.adapter LLM: structured output is ON for role material_critique but no schema will be sent — the profile states none and material_critique is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 08:10:09 INFO    fundos.llm LLM: GEMINI_API_KEYS provides a pool of 1 key(s)
+2026-09-12 08:10:14 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=31177 prompt_chars=1304 context_chars=163 prompt_tokens=856 completion_tokens=2257 thinking_tokens=3377 finish_reason="STOP" response_chars=6808 searches=17 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=22 total_fields=22 was_repaired=false was_normalized=false note=""
+2026-09-12 08:10:14 INFO    fundos.generation GEN[6f0ff2] step="research.batch.5" status="OK" ms=31371 topic="Operating Metrics & KPIs" chars=11945 searches=17 questions_count=10
+2026-09-12 08:10:14 INFO    fundos.profile RESEARCH batch 5/10 (Operating Metrics & KPIs): OK in 31371ms, 11945 chars, 17 search(es)
+2026-09-12 08:10:14 INFO    fundos.generation PIPELINE[a59f961b] research batch 5/10 'Operating Metrics & KPIs' ok after 31.4s (2/10 finished, 2 with data, 17 search(es))
+2026-09-12 08:10:14 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 5/10 'Operating Metrics & KPIs' ok after 31.4s (2/10 finished, 2 with data, 17 search(es))" stage="researching"
+2026-09-12 08:10:17 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=33479 prompt_chars=1561 context_chars=163 prompt_tokens=1018 completion_tokens=3664 thinking_tokens=2851 finish_reason="STOP" response_chars=13215 searches=10 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=15 total_fields=15 was_repaired=false was_normalized=false note=""
+2026-09-12 08:10:17 INFO    fundos.generation GEN[6f0ff2] step="research.batch.2" status="OK" ms=33672 topic="Founders & Leadership" chars=16769 searches=10 questions_count=10
+2026-09-12 08:10:17 INFO    fundos.profile RESEARCH batch 2/10 (Founders & Leadership): OK in 33672ms, 16769 chars, 10 search(es)
+2026-09-12 08:10:17 INFO    fundos.generation PIPELINE[a59f961b] research batch 2/10 'Founders & Leadership' ok after 33.7s (3/10 finished, 3 with data, 10 search(es))
+2026-09-12 08:10:17 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 2/10 'Founders & Leadership' ok after 33.7s (3/10 finished, 3 with data, 10 search(es))" stage="researching"
+2026-09-12 08:10:23 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=39558 prompt_chars=1425 context_chars=163 prompt_tokens=974 completion_tokens=3769 thinking_tokens=2928 finish_reason="STOP" response_chars=17075 searches=18 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=28 total_fields=28 was_repaired=false was_normalized=false note=""
+2026-09-12 08:10:23 INFO    fundos.generation GEN[6f0ff2] step="research.batch.4" status="OK" ms=39733 topic="Customers, Markets & Differentiators" chars=23675 searches=18 questions_count=10
+2026-09-12 08:10:23 INFO    fundos.profile RESEARCH batch 4/10 (Customers, Markets & Differentiators): OK in 39733ms, 23675 chars, 18 search(es)
+2026-09-12 08:10:23 INFO    fundos.generation PIPELINE[a59f961b] research batch 4/10 'Customers, Markets & Differentiators' ok after 39.7s (4/10 finished, 4 with data, 18 search(es))
+2026-09-12 08:10:23 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 4/10 'Customers, Markets & Differentiators' ok after 39.7s (4/10 finished, 4 with data, 18 search(es))" stage="researching"
+2026-09-12 08:10:28 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=44758 prompt_chars=1454 context_chars=163 prompt_tokens=1005 completion_tokens=6001 thinking_tokens=1313 finish_reason="STOP" response_chars=29262 searches=13 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=25 total_fields=25 was_repaired=false was_normalized=false note=""
+2026-09-12 08:10:28 INFO    fundos.generation GEN[6f0ff2] step="research.batch.3" status="OK" ms=44945 topic="Products, Services & Business Model" chars=35280 searches=13 questions_count=10
+2026-09-12 08:10:28 INFO    fundos.profile RESEARCH batch 3/10 (Products, Services & Business Model): OK in 44945ms, 35280 chars, 13 search(es)
+2026-09-12 08:10:28 INFO    fundos.generation PIPELINE[a59f961b] research batch 3/10 'Products, Services & Business Model' ok after 45.0s (5/10 finished, 5 with data, 13 search(es))
+2026-09-12 08:10:28 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 3/10 'Products, Services & Business Model' ok after 45.0s (5/10 finished, 5 with data, 13 search(es))" stage="researching"
+2026-09-12 08:10:41 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=32094 prompt_chars=1513 context_chars=163 prompt_tokens=1014 completion_tokens=1981 thinking_tokens=2671 finish_reason="STOP" response_chars=6419 searches=29 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=24 total_fields=24 was_repaired=false was_normalized=false note=""
+2026-09-12 08:10:41 INFO    fundos.generation GEN[6f0ff2] step="research.batch.6" status="OK" ms=32128 topic="Funding History & Investors" chars=12849 searches=29 questions_count=10
+2026-09-12 08:10:41 INFO    fundos.profile RESEARCH batch 6/10 (Funding History & Investors): OK in 32128ms, 12849 chars, 29 search(es)
+2026-09-12 08:10:41 INFO    fundos.generation PIPELINE[a59f961b] research batch 6/10 'Funding History & Investors' ok after 32.1s (6/10 finished, 6 with data, 29 search(es))
+2026-09-12 08:10:41 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 6/10 'Funding History & Investors' ok after 32.1s (6/10 finished, 6 with data, 29 search(es))" stage="researching"
+2026-09-12 08:10:42 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=27394 prompt_chars=1486 context_chars=163 prompt_tokens=1002 completion_tokens=2563 thinking_tokens=2227 finish_reason="STOP" response_chars=9368 searches=14 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=21 total_fields=21 was_repaired=false was_normalized=false note=""
+2026-09-12 08:10:42 INFO    fundos.generation GEN[6f0ff2] step="research.batch.7" status="OK" ms=27417 topic="Financial Performance" chars=14429 searches=14 questions_count=10
+2026-09-12 08:10:42 INFO    fundos.profile RESEARCH batch 7/10 (Financial Performance): OK in 27417ms, 14429 chars, 14 search(es)
+2026-09-12 08:10:42 INFO    fundos.generation PIPELINE[a59f961b] research batch 7/10 'Financial Performance' ok after 27.4s (7/10 finished, 7 with data, 14 search(es))
+2026-09-12 08:10:42 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 7/10 'Financial Performance' ok after 27.4s (7/10 finished, 7 with data, 14 search(es))" stage="researching"
+2026-09-12 08:10:59 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=36397 prompt_chars=1435 context_chars=163 prompt_tokens=0 completion_tokens=1754 thinking_tokens=3001 finish_reason="STOP" response_chars=1314 searches=30 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=2 total_fields=3 was_repaired=false was_normalized=false note=""
+2026-09-12 08:10:59 INFO    fundos.generation GEN[6f0ff2] step="research.batch.9" status="OK" ms=36420 topic="Recent News & Developments" chars=1314 searches=30 questions_count=10
+2026-09-12 08:10:59 INFO    fundos.profile RESEARCH batch 9/10 (Recent News & Developments): OK in 36420ms, 1314 chars, 30 search(es)
+2026-09-12 08:10:59 INFO    fundos.generation PIPELINE[a59f961b] research batch 9/10 'Recent News & Developments' ok after 36.4s (8/10 finished, 8 with data, 30 search(es))
+2026-09-12 08:10:59 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 9/10 'Recent News & Developments' ok after 36.4s (8/10 finished, 8 with data, 30 search(es))" stage="researching"
+2026-09-12 08:11:08 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=51078 prompt_chars=1490 context_chars=163 prompt_tokens=988 completion_tokens=5417 thinking_tokens=3145 finish_reason="STOP" response_chars=21548 searches=28 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=43 total_fields=43 was_repaired=false was_normalized=false note=""
+2026-09-12 08:11:08 INFO    fundos.generation GEN[6f0ff2] step="research.batch.8" status="OK" ms=51100 topic="Competitive Landscape" chars=32405 searches=28 questions_count=10
+2026-09-12 08:11:08 INFO    fundos.profile RESEARCH batch 8/10 (Competitive Landscape): OK in 51100ms, 32405 chars, 28 search(es)
+2026-09-12 08:11:08 INFO    fundos.generation PIPELINE[a59f961b] research batch 8/10 'Competitive Landscape' ok after 51.1s (9/10 finished, 9 with data, 28 search(es))
+2026-09-12 08:11:08 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 8/10 'Competitive Landscape' ok after 51.1s (9/10 finished, 9 with data, 28 search(es))" stage="researching"
+2026-09-12 08:11:25 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=57551 prompt_chars=1464 context_chars=163 prompt_tokens=1001 completion_tokens=7767 thinking_tokens=1176 finish_reason="STOP" response_chars=35771 searches=23 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=38 total_fields=38 was_repaired=false was_normalized=false note=""
+2026-09-12 08:11:25 INFO    fundos.generation GEN[6f0ff2] step="research.batch.10" status="OK" ms=57575 topic="Company Story, Industry Research & Investment Thesis" chars=45773 searches=23 questions_count=10
+2026-09-12 08:11:25 INFO    fundos.profile RESEARCH batch 10/10 (Company Story, Industry Research & Investment Thesis): OK in 57575ms, 45773 chars, 23 search(es)
+2026-09-12 08:11:25 INFO    fundos.generation PIPELINE[a59f961b] research batch 10/10 'Company Story, Industry Research & Investment Thesis' ok after 57.6s (10/10 finished, 10 with data, 23 search(es))
+2026-09-12 08:11:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="research batch 10/10 'Company Story, Industry Research & Investment Thesis' ok after 57.6s (10/10 finished, 10 with data, 23 search(es))" stage="researching"
+2026-09-12 08:11:25 INFO    fundos.generation PIPELINE[a59f961b] Researching the company on the web — finished in 1m 42s
+2026-09-12 08:11:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="Researching the company on the web — finished in 1m 42s" stage="researching" duration_seconds=102.6
+2026-09-12 08:11:25 INFO    fundos.generation PIPELINE[a59f961b] Reading the uploaded documents — finished in 1m 42s
+2026-09-12 08:11:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="Reading the uploaded documents — finished in 1m 42s" stage="processing_documents" duration_seconds=102.6
+2026-09-12 08:11:25 INFO    fundos.generation PIPELINE[a59f961b] merging the two sources into one dossier
+2026-09-12 08:11:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="merging the two sources into one dossier" stage="consolidating"
+2026-09-12 08:11:25 INFO    fundos.generation PIPELINE[a59f961b] dossier written (786,531 characters from 2 source(s))
+2026-09-12 08:11:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="dossier written (786,531 characters from 2 source(s))" stage="consolidating" duration_seconds=0.01
+2026-09-12 08:11:25 INFO    fundos.generation PIPELINE[a59f961b] sending the dossier for the structured profile — this is a single large call and typically the longest uninterrupted wait
+2026-09-12 08:11:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="sending the dossier for the structured profile — this is a single large call and typically the longest uninterrupted wait" stage="synthesizing"
+2026-09-12 08:11:25 INFO    fundos.profile PIPELINE: synthesizing Zyla Health from 600209 characters of dossier across 16 sections
+2026-09-12 08:11:25 INFO    fundos.profile PIPELINE: 13 citable source(s) for Zyla Health, 2 of them uploaded documents
+2026-09-12 08:11:25 WARNING fundos.llm.adapter LLM: asked gemini-2.5-flash for 102400 output tokens; it returns at most 65536. Clamping. A response near that ceiling is TRUNCATED, not complete — the salvage recovers the prefix and synthesis re-asks for what is missing.
+2026-09-12 08:14:46 WARNING fundos.llm.adapter LLM: profile_synthesis returned JSON that would not parse; recovered the good prefix locally (10378 of 258062 characters kept) without paying for a repair call. The result is INCOMPLETE by definition. If the response was CUT OFF, raise the role's output ceiling; if it finished (finish_reason=STOP) the fault is a malformed value mid-response and the ceiling is not the problem.
+2026-09-12 08:14:46 ERROR   fundos.llm.adapter LLM: profile_synthesis was truncated at the output ceiling (finish_reason=MAX_TOKENS, thinking_tokens=2150). The parsed result is incomplete.
+2026-09-12 08:14:46 WARNING fundos.generation GEN[6f0ff2] step="llm.call.profile_synthesis" status="WARN" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=200275 prompt_chars=612756 context_chars=163 prompt_tokens=300419 completion_tokens=63379 thinking_tokens=2150 finish_reason="MAX_TOKENS" response_chars=258062 searches="unknown" caps_sent="thinking" thinking_budget=4096 search_expected=false role_expects_search=false populated_fields=115 total_fields=118 was_repaired=true was_normalized=false note="response was CUT OFF at the output ceiling after spending 2150 tokens on thinking — this is usually the MODEL's own output limit rather than a configured one, and a binding can only lower the role ceiling, never raise it. Lower the thinking budget on the config profile to leave more room for the answer, or ask for less in one call. The prefix is salvaged and the missing sections are re-asked for"
+2026-09-12 08:14:46 INFO    fundos.profile PIPELINE: synthesis round 2 for Zyla Health — asking again for 14 section(s) the first response did not fill: products_services, customers_markets, competitive_advantages, business_model, revenue_model, company_metrics, financial_summary, funding_history, competitors, news, investors_cap_table, company_story, industry_research, investment_thesis
+2026-09-12 08:14:46 WARNING fundos.llm.adapter LLM: asked gemini-2.5-flash for 102400 output tokens; it returns at most 65536. Clamping. A response near that ceiling is TRUNCATED, not complete — the salvage recovers the prefix and synthesis re-asks for what is missing.
+2026-09-12 08:17:18 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_synthesis" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=152632 prompt_chars=611167 context_chars=163 prompt_tokens=299943 completion_tokens=46771 thinking_tokens=1796 finish_reason="STOP" response_chars=188354 searches="unknown" caps_sent="thinking" thinking_budget=4096 search_expected=false role_expects_search=false populated_fields=1560 total_fields=1774 was_repaired=false was_normalized=false note=""
+2026-09-12 08:17:18 INFO    fundos.profile PIPELINE: synthesis round 2 recovered 13 section(s): products_services, customers_markets, competitive_advantages, business_model, revenue_model, company_metrics, financial_summary, funding_history, competitors, investors_cap_table, company_story, industry_research, investment_thesis
+2026-09-12 08:17:18 INFO    fundos.profile PIPELINE: synthesis round 3 for Zyla Health — asking again for 1 section(s) the first response did not fill: news
+2026-09-12 08:17:19 WARNING fundos.llm.adapter LLM: asked gemini-2.5-flash for 102400 output tokens; it returns at most 65536. Clamping. A response near that ceiling is TRUNCATED, not complete — the salvage recovers the prefix and synthesis re-asks for what is missing.
+2026-09-12 08:17:25 INFO    fundos.generation GEN[6f0ff2] step="llm.call.profile_synthesis" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=6260 prompt_chars=605317 context_chars=163 prompt_tokens=298365 completion_tokens=49 thinking_tokens=139 finish_reason="STOP" response_chars=127 searches="unknown" caps_sent="thinking" thinking_budget=4096 search_expected=false role_expects_search=false populated_fields=1 total_fields=3 was_repaired=false was_normalized=false note=""
+2026-09-12 08:17:25 INFO    fundos.profile PIPELINE: synthesis round 3 recovered 0 section(s): none
+2026-09-12 08:17:25 INFO    fundos.profile PIPELINE: normalization corrected 1 field(s) on the synthesis response for Zyla Health
+2026-09-12 08:17:25 INFO    fundos.profile PIPELINE: synthesis complete — 16 of 17 sections populated in 3 call(s), 13 recovered after the first
+2026-09-12 08:17:25 INFO    fundos.generation PIPELINE[a59f961b] synthesis complete: 16 of 17 sections populated
+2026-09-12 08:17:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="synthesis complete: 16 of 17 sections populated" stage="synthesizing" duration_seconds=359.36
+2026-09-12 08:17:25 INFO    fundos.generation PIPELINE[a59f961b] normalization corrected 1 field(s) in the synthesis response — each was coerced to the shape its field spec declares rather than rejected; a recurring one is a prompt or field-spec problem, not a model problem
+2026-09-12 08:17:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="normalization corrected 1 field(s) in the synthesis response — each was coerced to the shape its field spec declares rather than rejected; a recurring one is a prompt or field-spec problem, not a model problem" stage="synthesizing"
+2026-09-12 08:17:25 INFO    fundos.generation PIPELINE[a59f961b]   · financial_summary: 35 citation(s) named a source that is not in the dossier and were dropped (financials.0.financial_year, financials.0.is_estimate, financials.1.financial_year, financials.1.is_estimate)
+2026-09-12 08:17:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="  · financial_summary: 35 citation(s) named a source that is not in the dossier and were dropped (financials.0.financial_year, financials.0.is_estimate, financials.1.financial_year, financials.1.is_estimate)" stage="synthesizing"
+2026-09-12 08:17:25 INFO    fundos.generation PIPELINE[a59f961b] Saving the profile — started
+2026-09-12 08:17:25 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="Saving the profile — started" stage="writing"
+2026-09-12 08:17:26 INFO    fundos.generation PIPELINE[a59f961b] 15 section(s) saved, 1 left empty, 0 could not be stored
+2026-09-12 08:17:26 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="15 section(s) saved, 1 left empty, 0 could not be stored" stage="writing" duration_seconds=1.18
+2026-09-12 08:17:26 INFO    fundos.generation PIPELINE[a59f961b] sub-sector 'Healthtech' matched the benchmark group 'Healthtech' (exact)
+2026-09-12 08:17:26 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="sub-sector 'Healthtech' matched the benchmark group 'Healthtech' (exact)"
+2026-09-12 08:17:26 INFO    fundos.generation PIPELINE[a59f961b] Completed — started
+2026-09-12 08:17:26 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="Completed — started" stage="completed"
+2026-09-12 08:17:26 INFO    fundos.generation PIPELINE[a59f961b] pipeline finished: 15 of 17 sections populated from a 786,531-character dossier
+2026-09-12 08:17:26 INFO    fundos.generation GEN[6f0ff2] step="pipeline.activity" status="OK" note="pipeline finished: 15 of 17 sections populated from a 786,531-character dossier"
+2026-09-12 08:17:26 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: starting batch 'people_and_deal' (15 numeric, 13 anchors asked)...
+2026-09-12 08:17:26 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: starting batch 'financials_and_quality' (14 numeric, 7 anchors asked)...
+2026-09-12 08:17:26 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: starting batch 'market_and_benchmarks' (10 numeric, 2 anchors asked)...
+2026-09-12 08:17:47 WARNING fundos.llm.adapter LLM: role assessment_inputs performed NO web search (0 searches). Its answers came from the supplied context and the model's own recollection, and cannot be cited. Read `caps_sent` and `thinking_budget` on the llm.call trace line for this role FIRST — they separate 'the tool was never attached' from 'the tool was attached and the model declined', which need opposite fixes. If web_search is absent from caps_sent the fault is configuration: check the resolved profile tier.advanced.gemini is bound to the advanced tier and that the search breaker is not open. If it is present, the model declined: check thinking_budget is non-zero (google_search is model-decided and a model with no deliberation budget cannot choose to call it), then run tools/diagnose_gemini_search.py to test whether responseSchema is suppressing the tool on this model.
+2026-09-12 08:17:47 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: batch 'financials_and_quality' completed -> returned 13 values, 7 bands.
+2026-09-12 08:17:50 WARNING fundos.llm.adapter LLM: role assessment_inputs performed NO web search (0 searches). Its answers came from the supplied context and the model's own recollection, and cannot be cited. Read `caps_sent` and `thinking_budget` on the llm.call trace line for this role FIRST — they separate 'the tool was never attached' from 'the tool was attached and the model declined', which need opposite fixes. If web_search is absent from caps_sent the fault is configuration: check the resolved profile tier.advanced.gemini is bound to the advanced tier and that the search breaker is not open. If it is present, the model declined: check thinking_budget is non-zero (google_search is model-decided and a model with no deliberation budget cannot choose to call it), then run tools/diagnose_gemini_search.py to test whether responseSchema is suppressing the tool on this model.
+2026-09-12 08:17:50 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: batch 'market_and_benchmarks' completed -> returned 10 values, 2 bands.
+2026-09-12 08:18:05 WARNING fundos.llm.adapter LLM SEARCH OVERRUN: profile tier.advanced.gemini used 15 searches against a cap of 6 (strike 1/3). The provider does not enforce max_uses, so this call was billed in full.
+2026-09-12 08:18:05 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: batch 'people_and_deal' completed -> returned 12 values, 13 bands.
+2026-09-12 08:18:05 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION (consolidated 3 batches): 35 total values, 22 total bands returned.
+2026-09-12 08:18:05 INFO    fundos.assessment.derived DERIVED: DD_RAISE_MULT not computed — the amount being raised is not recorded
+2026-09-12 08:18:05 INFO    fundos.assessment.derived DERIVED: DD_RAISE_SHARE not computed — the amount being raised is not recorded
+2026-09-12 08:18:05 WARNING fundos.profile.assessment_extraction ASSESSMENT INPUTS eb99fc71-9b19-4f99-a6e5-2b637e69a2c6: DD_RAISE_MULT, DD_RAISE_SHARE left blank — they are the ask divided by history, and no amount being raised is recorded for this company. The model's stand-in was discarded rather than scored.
+2026-09-12 08:18:05 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS eb99fc71-9b19-4f99-a6e5-2b637e69a2c6: {'asked': 61, 'written': 52, 'low_confidence': 0, 'bands': 22, 'benchmarks': 0, 'missing': 0, 'sub_sector_method': 'unresolved', 'unsourced_rejected': 0, 'unknown_key_rejected': 0, 'excluded_category_rejected': 0, 'rescued': 0, 'unparseable_band': 0, 'dossier_sourced': 20, 'mode': 'full', 'derived': 0, 'derived_blank': 2, 'sector': '', 'subSector': '', 'subSectorGroup': '', 'coveragePct': 85.2}
+2026-09-12 08:18:05 INFO    fundos.generation GEN[6f0ff2] step="assessment_inputs" status="OK" asked=61 written=52 low_confidence=0 bands=22 benchmarks=0 missing=0 sub_sector_method="unresolved" unsourced_rejected=0 unknown_key_rejected=0 excluded_category_rejected=0 rescued=0 unparseable_band=0 dossier_sourced=20 mode="full" derived=0 derived_blank=2 sector="" subSector="" subSectorGroup="" coveragePct=85.2
+2026-09-12 08:18:05 WARNING fundos.generation GEN[6f0ff2] step="run.economics" status="WARN" mode="pipeline" llm_calls=14 failed_calls=1 mocked_calls=0 prompt_tokens=907634 completion_tokens=147017 thinking_tokens=29703 billed_output_tokens=176720 cache_read_tokens=1738 cache_write_tokens=0 total_tokens=1086092 cost_inr=62.84 llm_latency_ms=739512 searches=195 searches_unknown=4 redundant_input_pct=66.8 concerns="1 call(s) failed; 66.8% of input was re-sent context" note="cost_inr uses the seeded price book; billed_output includes thinking. searches_unknown counts calls whose provider returned no grounding metadata — that is NOT the same as zero searches and needs a different fix."
+2026-09-12 08:18:05 INFO    fundos.generation GEN[6f0ff2] step="run.economics.role" status="OK" role="profile_synthesis" calls=3 prompt_tokens=898727 completion_tokens=110199 thinking_tokens=4085 cost_inr=48.87 latency_ms=359167 searches=0 searches_unknown=3 tokens_in_per_token_out=7.9
+2026-09-12 08:18:05 INFO    fundos.generation GEN[6f0ff2] step="run.economics.role" status="OK" role="profile_research_batch" calls=10 prompt_tokens=8907 completion_tokens=36818 thinking_tokens=25618 cost_inr=13.98 latency_ms=379029 searches=195 searches_unknown=0 tokens_in_per_token_out=0.1
+2026-09-12 08:18:05 INFO    fundos.generation GEN[6f0ff2] step="run.economics.role" status="OK" role="document_read" calls=1 prompt_tokens=0 completion_tokens=0 thinking_tokens=0 cost_inr=0.0 latency_ms=1316 searches=0 searches_unknown=1 tokens_in_per_token_out="n/a"
+2026-09-12 08:18:05 INFO    fundos.generation GEN[6f0ff2] complete: steps=77 failures=1 ms=503261
+2026-09-12 08:18:05 WARNING fundos.generation GEN[6f0ff2] DIAGNOSIS 1 [CRITICAL] The AI provider REJECTED THE REQUEST ITSELF — this is a configuration or payload fault, not a billing one. | EVIDENCE: llm call failed: HTTPError: gemini 400 for model gemini-2.5-flash: Unsupported MIME type: application/vnd.openxmlformats-officedocument.presentationml.presentation | FIX: The provider's own explanation is in the evidence above; it names the offending field. The usual causes are a capability combination the model does not allow (on Gemini, web search cannot be combined with a response schema — Admin → Config profiles: turn structured output OFF on the searching profile), a model string the endpoint does not serve, or an output ceiling below the thinking budget.
+2026-09-12 08:20:27 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 08:20:27 INFO    fundos.assessment.profile_bridge BRIDGE d98a9333-81a3-4640-a73d-c9555c18efd0: {'available': 52, 'seeded': 52, 'skipped_unknown': 0, 'skipped_blank': 0, 'bands': 22, 'benchmarks': 6}
+2026-09-12 08:20:27 INFO    fundos.assessment.tasks ASSESSMENT d98a9333-81a3-4640-a73d-c9555c18efd0: profile bridge {'available': 52, 'seeded': 52, 'skipped_unknown': 0, 'skipped_blank': 0, 'bands': 22, 'benchmarks': 6}
+2026-09-12 08:20:27 INFO    fundos.assessment.extraction EXTRACT d98a9333-81a3-4640-a73d-c9555c18efd0: read Project Orah Teaser_vff.pptx (deck) — 12016 characters.
+2026-09-12 08:20:30 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 08:20:30 INFO    fundos.assessment.extraction EXTRACT d98a9333-81a3-4640-a73d-c9555c18efd0: read Project Orah_Financial Model_vf.xlsx (spreadsheet) — 500000 characters.
+2026-09-12 08:20:30 INFO    fundos.llm.adapter LLM: structured output is ON for role assessment_extraction but no schema will be sent — the profile states none and assessment_extraction is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 08:20:30 INFO    fundos.llm.adapter LLM: structured output is ON for role assessment_extraction but no schema will be sent — the profile states none and assessment_extraction is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 08:20:30 INFO    fundos.llm.adapter LLM: structured output is ON for role assessment_extraction but no schema will be sent — the profile states none and assessment_extraction is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 08:20:35 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 08:20:44 INFO    fundos.llm.adapter LLM: structured output is ON for role assessment_extraction but no schema will be sent — the profile states none and assessment_extraction is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 08:20:53 INFO    fundos.assessment.extraction EXTRACT d98a9333-81a3-4640-a73d-c9555c18efd0: ANC_CXO_FINANCE reported tier 'Not Evidenced', which does not score. The row is excluded and its weight redistributes.
+2026-09-12 08:20:53 INFO    fundos.assessment.extraction EXTRACT d98a9333-81a3-4640-a73d-c9555c18efd0: ANC_MOAT_NETWORK reported tier 'Not Evidenced', which does not score. The row is excluded and its weight redistributes.
+2026-09-12 08:20:53 INFO    fundos.assessment.extraction EXTRACT d98a9333-81a3-4640-a73d-c9555c18efd0: {'documents': 2, 'readable': 2, 'values': 19, 'low_confidence': 2, 'unanswered': 39, 'not_evidenced': 2, 'bands': 7}
+2026-09-12 08:20:53 INFO    fundos.assessment.tasks ASSESSMENT d98a9333-81a3-4640-a73d-c9555c18efd0: extraction {'documents': 2, 'readable': 2, 'values': 19, 'low_confidence': 2, 'unanswered': 39, 'not_evidenced': 2, 'bands': 7}
+2026-09-12 08:20:53 WARNING fundos.assessment.services ASSESSMENT d98a9333-81a3-4640-a73d-c9555c18efd0: deal stage was not set. Defaulting to Series A — every numeric parameter is being banded against Series A cut-points, which may be wrong. Set the stage and re-run.
+2026-09-12 08:20:54 INFO    fundos.assessment.review REVIEW d98a9333-81a3-4640-a73d-c9555c18efd0: 1 deterministic finding(s)
+2026-09-12 08:21:06 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 08:21:10 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 08:21:18 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 08:27:43 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 14:22:38 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 14:22:39 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 16:00:42 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 16:00:42 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:00:18 WARNING fundos.profile.views PROFILE: domain clash for company f78fa5dc-027a-4ae2-972c-e763018d5306 — skipped
+2026-09-12 18:00:18 DEBUG   fundos.generation Could not check PromptTemplate freshness: 'PromptTemplate' object has no attribute 'created_at'
+2026-09-12 18:00:18 INFO    fundos.generation GEN[cddff0] step="preflight.config" status="OK" ai_mocked=false llm_bindings=36 llm_endpoints_active=2 research_endpoint="GEMINI LLM" research_model="gemini-2.5-flash" research_mocked=false research_profile="profile.research" synthesis_endpoint="GEMINI LLM" synthesis_model="gemini-2.5-flash" synthesis_mocked=false synthesis_profile="profile.synthesis" registered_sections=19 celery_eager=false assessment_parameters=61
+2026-09-12 18:00:18 INFO    fundos.generation GEN[cddff0] step="sources.deal" status="OK" dealId="c96df34d-41b0-4d25-a239-3e606f627baa"
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="sources.website" status="OK" ms=904 url="https://zyla.in" chars=4768
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="sources.documents" status="OK" uploaded=0 analysed=0 pending=0 chars=2 note=""
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="sources.founders" status="OK" count=2
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="preflight.research_sources" status="OK" enabled_count=5 enabled="website,market,competitor,industry,public_funding"
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="sources.research.market" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="sources.research.competitor" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="sources.research.industry" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="sources.research.public_funding" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="sources.summary" status="OK" website_chars=4698 documents_chars=0 research_chars=0 founders=2 total_chars=4961 failures=0
+2026-09-12 18:00:19 INFO    fundos.generation PIPELINE[1453acf9] pipeline started for Zyla Health. Sources 1-2 run concurrently.
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="pipeline started for Zyla Health. Sources 1-2 run concurrently."
+2026-09-12 18:00:19 INFO    fundos.generation PIPELINE[1453acf9] Researching the company on the web — started
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="Researching the company on the web — started" stage="researching"
+2026-09-12 18:00:19 INFO    fundos.generation PIPELINE[1453acf9] Reading the uploaded documents — started
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="Reading the uploaded documents — started" stage="processing_documents"
+2026-09-12 18:00:19 INFO    fundos.generation PIPELINE[1453acf9] source 2: no documents uploaded, nothing to do
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="source 2: no documents uploaded, nothing to do" stage="processing_documents"
+2026-09-12 18:00:19 INFO    fundos.generation PIPELINE[1453acf9] source 1: 10 research batches (100 questions), 5 at a time
+2026-09-12 18:00:19 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="source 1: 10 research batches (100 questions), 5 at a time" stage="researching"
+2026-09-12 18:00:19 INFO    fundos.llm LLM: GEMINI_API_KEYS provides a pool of 1 key(s)
+2026-09-12 18:00:52 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=32931 prompt_chars=1561 context_chars=163 prompt_tokens=1018 completion_tokens=3926 thinking_tokens=2476 finish_reason="STOP" response_chars=12867 searches=6 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=12 total_fields=12 was_repaired=false was_normalized=false note=""
+2026-09-12 18:00:52 INFO    fundos.generation GEN[cddff0] step="research.batch.2" status="OK" ms=33011 topic="Founders & Leadership" chars=15533 searches=6 questions_count=10
+2026-09-12 18:00:52 INFO    fundos.profile RESEARCH batch 2/10 (Founders & Leadership): OK in 33011ms, 15533 chars, 6 search(es)
+2026-09-12 18:00:52 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:00:52 INFO    fundos.generation PIPELINE[1453acf9] research batch 2/10 'Founders & Leadership' ok after 33.0s (1/10 finished, 1 with data, 6 search(es))
+2026-09-12 18:00:52 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 2/10 'Founders & Leadership' ok after 33.0s (1/10 finished, 1 with data, 6 search(es))" stage="researching"
+2026-09-12 18:00:52 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:00:55 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=35845 prompt_chars=1304 context_chars=163 prompt_tokens=866 completion_tokens=4221 thinking_tokens=1018 finish_reason="STOP" response_chars=14115 searches=29 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=23 total_fields=23 was_repaired=false was_normalized=false note=""
+2026-09-12 18:00:55 INFO    fundos.generation GEN[cddff0] step="research.batch.5" status="OK" ms=35916 topic="Operating Metrics & KPIs" chars=19796 searches=29 questions_count=10
+2026-09-12 18:00:55 INFO    fundos.profile RESEARCH batch 5/10 (Operating Metrics & KPIs): OK in 35916ms, 19796 chars, 29 search(es)
+2026-09-12 18:00:55 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:00:55 INFO    fundos.generation PIPELINE[1453acf9] research batch 5/10 'Operating Metrics & KPIs' ok after 35.9s (2/10 finished, 2 with data, 29 search(es))
+2026-09-12 18:00:55 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 5/10 'Operating Metrics & KPIs' ok after 35.9s (2/10 finished, 2 with data, 29 search(es))" stage="researching"
+2026-09-12 18:00:55 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:00:57 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=38458 prompt_chars=1425 context_chars=163 prompt_tokens=860 completion_tokens=3157 thinking_tokens=3116 finish_reason="STOP" response_chars=14385 searches=13 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=25 total_fields=25 was_repaired=false was_normalized=false note=""
+2026-09-12 18:00:57 INFO    fundos.generation GEN[cddff0] step="research.batch.4" status="OK" ms=38528 topic="Customers, Markets & Differentiators" chars=20098 searches=13 questions_count=10
+2026-09-12 18:00:57 INFO    fundos.profile RESEARCH batch 4/10 (Customers, Markets & Differentiators): OK in 38528ms, 20098 chars, 13 search(es)
+2026-09-12 18:00:57 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:00:57 INFO    fundos.generation PIPELINE[1453acf9] research batch 4/10 'Customers, Markets & Differentiators' ok after 38.5s (3/10 finished, 3 with data, 13 search(es))
+2026-09-12 18:00:57 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 4/10 'Customers, Markets & Differentiators' ok after 38.5s (3/10 finished, 3 with data, 13 search(es))" stage="researching"
+2026-09-12 18:00:57 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:01:00 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=40795 prompt_chars=1520 context_chars=163 prompt_tokens=1049 completion_tokens=3658 thinking_tokens=3306 finish_reason="STOP" response_chars=12065 searches=17 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=26 total_fields=26 was_repaired=false was_normalized=false note=""
+2026-09-12 18:01:00 INFO    fundos.generation GEN[cddff0] step="research.batch.1" status="OK" ms=40873 topic="Company Basics & Identity" chars=18369 searches=17 questions_count=10
+2026-09-12 18:01:00 INFO    fundos.profile RESEARCH batch 1/10 (Company Basics & Identity): OK in 40873ms, 18369 chars, 17 search(es)
+2026-09-12 18:01:00 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:01:00 INFO    fundos.generation PIPELINE[1453acf9] research batch 1/10 'Company Basics & Identity' ok after 40.9s (4/10 finished, 4 with data, 17 search(es))
+2026-09-12 18:01:00 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 1/10 'Company Basics & Identity' ok after 40.9s (4/10 finished, 4 with data, 17 search(es))" stage="researching"
+2026-09-12 18:01:00 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:01:05 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=46454 prompt_chars=1454 context_chars=163 prompt_tokens=866 completion_tokens=4223 thinking_tokens=3187 finish_reason="STOP" response_chars=19915 searches=15 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=23 total_fields=23 was_repaired=false was_normalized=false note=""
+2026-09-12 18:01:05 INFO    fundos.generation GEN[cddff0] step="research.batch.3" status="OK" ms=46535 topic="Products, Services & Business Model" chars=25408 searches=15 questions_count=10
+2026-09-12 18:01:05 INFO    fundos.profile RESEARCH batch 3/10 (Products, Services & Business Model): OK in 46535ms, 25408 chars, 15 search(es)
+2026-09-12 18:01:05 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:01:05 INFO    fundos.generation PIPELINE[1453acf9] research batch 3/10 'Products, Services & Business Model' ok after 46.5s (5/10 finished, 5 with data, 15 search(es))
+2026-09-12 18:01:05 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 3/10 'Products, Services & Business Model' ok after 46.5s (5/10 finished, 5 with data, 15 search(es))" stage="researching"
+2026-09-12 18:01:05 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:01:22 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=29807 prompt_chars=1513 context_chars=163 prompt_tokens=1014 completion_tokens=1964 thinking_tokens=2328 finish_reason="STOP" response_chars=6606 searches=22 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=18 total_fields=18 was_repaired=false was_normalized=false note=""
+2026-09-12 18:01:22 INFO    fundos.generation GEN[cddff0] step="research.batch.6" status="OK" ms=29831 topic="Funding History & Investors" chars=11036 searches=22 questions_count=10
+2026-09-12 18:01:22 INFO    fundos.profile RESEARCH batch 6/10 (Funding History & Investors): OK in 29831ms, 11036 chars, 22 search(es)
+2026-09-12 18:01:22 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:01:22 INFO    fundos.generation PIPELINE[1453acf9] research batch 6/10 'Funding History & Investors' ok after 29.8s (6/10 finished, 6 with data, 22 search(es))
+2026-09-12 18:01:22 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 6/10 'Funding History & Investors' ok after 29.8s (6/10 finished, 6 with data, 22 search(es))" stage="researching"
+2026-09-12 18:01:22 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:01:28 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=33024 prompt_chars=1486 context_chars=163 prompt_tokens=1002 completion_tokens=2689 thinking_tokens=2406 finish_reason="STOP" response_chars=9891 searches=10 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=17 total_fields=17 was_repaired=false was_normalized=false note=""
+2026-09-12 18:01:28 INFO    fundos.generation GEN[cddff0] step="research.batch.7" status="OK" ms=33047 topic="Financial Performance" chars=13950 searches=10 questions_count=10
+2026-09-12 18:01:28 INFO    fundos.profile RESEARCH batch 7/10 (Financial Performance): OK in 33047ms, 13950 chars, 10 search(es)
+2026-09-12 18:01:28 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:01:28 INFO    fundos.generation PIPELINE[1453acf9] research batch 7/10 'Financial Performance' ok after 33.0s (7/10 finished, 7 with data, 10 search(es))
+2026-09-12 18:01:28 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 7/10 'Financial Performance' ok after 33.0s (7/10 finished, 7 with data, 10 search(es))" stage="researching"
+2026-09-12 18:01:28 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:01:34 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=34665 prompt_chars=1435 context_chars=163 prompt_tokens=983 completion_tokens=3167 thinking_tokens=2588 finish_reason="STOP" response_chars=13163 searches=12 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=23 total_fields=23 was_repaired=false was_normalized=false note=""
+2026-09-12 18:01:34 INFO    fundos.generation GEN[cddff0] step="research.batch.9" status="OK" ms=34687 topic="Recent News & Developments" chars=19426 searches=12 questions_count=10
+2026-09-12 18:01:34 INFO    fundos.profile RESEARCH batch 9/10 (Recent News & Developments): OK in 34687ms, 19426 chars, 12 search(es)
+2026-09-12 18:01:34 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:01:34 INFO    fundos.generation PIPELINE[1453acf9] research batch 9/10 'Recent News & Developments' ok after 34.7s (8/10 finished, 8 with data, 12 search(es))
+2026-09-12 18:01:34 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 9/10 'Recent News & Developments' ok after 34.7s (8/10 finished, 8 with data, 12 search(es))" stage="researching"
+2026-09-12 18:01:34 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:01:48 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=50857 prompt_chars=1490 context_chars=163 prompt_tokens=988 completion_tokens=4269 thinking_tokens=3481 finish_reason="STOP" response_chars=17257 searches=27 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=46 total_fields=46 was_repaired=false was_normalized=false note=""
+2026-09-12 18:01:48 INFO    fundos.generation GEN[cddff0] step="research.batch.8" status="OK" ms=50880 topic="Competitive Landscape" chars=29075 searches=27 questions_count=10
+2026-09-12 18:01:48 INFO    fundos.profile RESEARCH batch 8/10 (Competitive Landscape): OK in 50880ms, 29075 chars, 27 search(es)
+2026-09-12 18:01:48 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:01:48 INFO    fundos.generation PIPELINE[1453acf9] research batch 8/10 'Competitive Landscape' ok after 50.9s (9/10 finished, 9 with data, 27 search(es))
+2026-09-12 18:01:48 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 8/10 'Competitive Landscape' ok after 50.9s (9/10 finished, 9 with data, 27 search(es))" stage="researching"
+2026-09-12 18:01:48 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:02:05 INFO    fundos.profile PIPELINE: dropped 11 empty table row(s) from a native extract (22882 -> 22444 characters).
+2026-09-12 18:02:05 INFO    fundos.llm.adapter LLM: structured output is ON for role material_critique but no schema will be sent — the profile states none and material_critique is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 18:02:05 INFO    fundos.llm LLM: GEMINI_API_KEYS provides a pool of 1 key(s)
+2026-09-12 18:02:07 WARNING fundos.profile.views PROFILE: domain clash for company e4ccd485-00e1-406d-b89d-ed608830968e — skipped
+2026-09-12 18:02:07 DEBUG   fundos.generation Could not check PromptTemplate freshness: 'PromptTemplate' object has no attribute 'created_at'
+2026-09-12 18:02:07 INFO    fundos.generation GEN[2dcae7] step="preflight.config" status="OK" ai_mocked=false llm_bindings=36 llm_endpoints_active=2 research_endpoint="GEMINI LLM" research_model="gemini-2.5-flash" research_mocked=false research_profile="profile.research" synthesis_endpoint="GEMINI LLM" synthesis_model="gemini-2.5-flash" synthesis_mocked=false synthesis_profile="profile.synthesis" registered_sections=19 celery_eager=false assessment_parameters=61
+2026-09-12 18:02:07 INFO    fundos.generation GEN[2dcae7] step="sources.deal" status="OK" dealId="3a045c05-9c88-4e05-9cd0-fa1f0299586b"
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="sources.website" status="OK" ms=868 url="https://zyla.in" chars=4768
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="sources.documents" status="OK" uploaded=2 analysed=1 pending=1 chars=237 note=""
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="sources.founders" status="OK" count=2
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="preflight.research_sources" status="OK" enabled_count=5 enabled="website,market,competitor,industry,public_funding"
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="sources.research.market" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="sources.research.competitor" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="sources.research.industry" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="sources.research.public_funding" status="SKIP" reason="fixture adapter — no live feed behind this source yet; contributes no facts"
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="sources.summary" status="OK" website_chars=4698 documents_chars=70 research_chars=0 founders=2 total_chars=5046 failures=0
+2026-09-12 18:02:08 INFO    fundos.generation PIPELINE[c318f9cb] pipeline started for Zyla Health. Sources 1-2 run concurrently.
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="pipeline started for Zyla Health. Sources 1-2 run concurrently."
+2026-09-12 18:02:08 INFO    fundos.generation PIPELINE[c318f9cb] Researching the company on the web — started
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="Researching the company on the web — started" stage="researching"
+2026-09-12 18:02:08 INFO    fundos.generation PIPELINE[c318f9cb] Reading the uploaded documents — started
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="Reading the uploaded documents — started" stage="processing_documents"
+2026-09-12 18:02:08 INFO    fundos.generation PIPELINE[c318f9cb] source 1: 10 research batches (100 questions), 5 at a time
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="source 1: 10 research batches (100 questions), 5 at a time" stage="researching"
+2026-09-12 18:02:08 INFO    fundos.generation PIPELINE[c318f9cb] source 2: 2 file(s) to process, one at a time. Plan: Project Orah Teaser_vff.pptx -> native only; Project Orah_Financial Model_vf.xlsx -> native only
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="source 2: 2 file(s) to process, one at a time. Plan: Project Orah Teaser_vff.pptx -> native only; Project Orah_Financial Model_vf.xlsx -> native only" stage="processing_documents"
+2026-09-12 18:02:08 INFO    fundos.generation PIPELINE[c318f9cb] reading file 1/2 Project Orah Teaser_vff.pptx (Company Presentation, .pptx) — handled as 'native only': MarkItDown extracts the slide text and speaker notes. A document model cannot read a PowerPoint file — no provider accepts the format — so numbers that appear only inside a chart or a screenshot are not read. Save the deck as PDF and they are.
+2026-09-12 18:02:08 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="reading file 1/2 Project Orah Teaser_vff.pptx (Company Presentation, .pptx) — handled as 'native only': MarkItDown extracts the slide text and speaker notes. A document model cannot read a PowerPoint file — no provider accepts the format — so numbers that appear only inside a chart or a screenshot are not read. Save the deck as PDF and they are." stage="processing_documents"
+2026-09-12 18:02:08 INFO    fundos.llm LLM: GEMINI_API_KEYS provides a pool of 1 key(s)
+2026-09-12 18:02:09 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=64001 prompt_chars=1464 context_chars=163 prompt_tokens=1001 completion_tokens=7408 thinking_tokens=2905 finish_reason="STOP" response_chars=34475 searches=9 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=34 total_fields=34 was_repaired=false was_normalized=false note=""
+2026-09-12 18:02:09 INFO    fundos.generation GEN[cddff0] step="research.batch.10" status="OK" ms=64029 topic="Company Story, Industry Research & Investment Thesis" chars=43038 searches=9 questions_count=10
+2026-09-12 18:02:09 INFO    fundos.profile RESEARCH batch 10/10 (Company Story, Industry Research & Investment Thesis): OK in 64029ms, 43038 chars, 9 search(es)
+2026-09-12 18:02:09 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:09 INFO    fundos.generation PIPELINE[1453acf9] research batch 10/10 'Company Story, Industry Research & Investment Thesis' ok after 1m 04s (10/10 finished, 10 with data, 9 search(es))
+2026-09-12 18:02:09 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="research batch 10/10 'Company Story, Industry Research & Investment Thesis' ok after 1m 04s (10/10 finished, 10 with data, 9 search(es))" stage="researching"
+2026-09-12 18:02:09 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:02:09 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:09 INFO    fundos.generation PIPELINE[1453acf9] Researching the company on the web — finished in 1m 50s
+2026-09-12 18:02:09 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="Researching the company on the web — finished in 1m 50s" stage="researching" duration_seconds=110.63
+2026-09-12 18:02:09 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:02:09 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:09 INFO    fundos.generation PIPELINE[1453acf9] Reading the uploaded documents — finished in 1m 50s
+2026-09-12 18:02:09 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="Reading the uploaded documents — finished in 1m 50s" stage="processing_documents" duration_seconds=110.64
+2026-09-12 18:02:09 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:02:09 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:09 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:10 DEBUG   fundos.generation could not record stage start
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 215, in stage_started
+    self.run.save(update_fields=["stage"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:10 INFO    fundos.generation PIPELINE[1453acf9] merging the two sources into one dossier
+2026-09-12 18:02:10 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="merging the two sources into one dossier" stage="consolidating"
+2026-09-12 18:02:10 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:02:10 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:10 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:10 INFO    fundos.generation PIPELINE[1453acf9] dossier written (219,005 characters from 2 source(s))
+2026-09-12 18:02:10 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="dossier written (219,005 characters from 2 source(s))" stage="consolidating" duration_seconds=0.02
+2026-09-12 18:02:10 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:02:10 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:10 DEBUG   fundos.generation could not record stage start
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 215, in stage_started
+    self.run.save(update_fields=["stage"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:02:10 INFO    fundos.generation PIPELINE[1453acf9] sending the dossier for the structured profile — this is a single large call and typically the longest uninterrupted wait
+2026-09-12 18:02:10 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="sending the dossier for the structured profile — this is a single large call and typically the longest uninterrupted wait" stage="synthesizing"
+2026-09-12 18:02:10 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:02:10 INFO    fundos.profile PIPELINE: synthesizing Zyla Health from 219005 characters of dossier across 16 sections
+2026-09-12 18:02:10 INFO    fundos.profile PIPELINE: 11 citable source(s) for Zyla Health, 0 of them uploaded documents
+2026-09-12 18:02:10 WARNING fundos.llm.adapter LLM: asked gemini-2.5-flash for 102400 output tokens; it returns at most 65536. Clamping. A response near that ceiling is TRUNCATED, not complete — the salvage recovers the prefix and synthesis re-asks for what is missing.
+2026-09-12 18:02:10 INFO    fundos.profile PIPELINE: dropped 11 empty table row(s) from a native extract (22882 -> 22444 characters).
+2026-09-12 18:02:10 INFO    fundos.generation PIPELINE[c318f9cb] native extraction of Project Orah Teaser_vff.pptx recovered 22,443 characters in 1.7s
+2026-09-12 18:02:10 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="native extraction of Project Orah Teaser_vff.pptx recovered 22,443 characters in 1.7s" stage="processing_documents"
+2026-09-12 18:02:10 INFO    fundos.generation PIPELINE[c318f9cb] OCR skipped for Project Orah Teaser_vff.pptx: Gemini does not accept a PowerPoint file inline. The slide text and speaker notes are extracted natively; numbers that appear only inside a chart or a screenshot are not read. Converting the deck to PDF before upload recovers them.
+2026-09-12 18:02:10 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="OCR skipped for Project Orah Teaser_vff.pptx: Gemini does not accept a PowerPoint file inline. The slide text and speaker notes are extracted natively; numbers that appear only inside a chart or a screenshot are not read. Converting the deck to PDF before upload recovers them." stage="processing_documents"
+2026-09-12 18:02:10 INFO    fundos.generation PIPELINE[c318f9cb] finished file 1/2 (Project Orah Teaser_vff.pptx) in 1.7s
+2026-09-12 18:02:10 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="finished file 1/2 (Project Orah Teaser_vff.pptx) in 1.7s" stage="processing_documents"
+2026-09-12 18:02:10 INFO    fundos.generation PIPELINE[c318f9cb] reading file 2/2 Project Orah_Financial Model_vf.xlsx (Financial Model, .xlsx) — handled as 'native only': MarkItDown extracts the text and tables directly. This format stores its content as text, and for a spreadsheet the cells are exact — a model reading them could only be worse.
+2026-09-12 18:02:10 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="reading file 2/2 Project Orah_Financial Model_vf.xlsx (Financial Model, .xlsx) — handled as 'native only': MarkItDown extracts the text and tables directly. This format stores its content as text, and for a spreadsheet the cells are exact — a model reading them could only be worse." stage="processing_documents"
+2026-09-12 18:02:28 INFO    fundos.llm.adapter LLM: structured output is ON for role material_critique but no schema will be sent — the profile states none and material_critique is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 18:02:28 INFO    fundos.llm LLM: GEMINI_API_KEYS provides a pool of 1 key(s)
+2026-09-12 18:02:30 INFO    fundos.generation PIPELINE[c318f9cb] native extraction of Project Orah_Financial Model_vf.xlsx recovered 552,541 characters in 20.5s
+2026-09-12 18:02:30 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="native extraction of Project Orah_Financial Model_vf.xlsx recovered 552,541 characters in 20.5s" stage="processing_documents"
+2026-09-12 18:02:30 INFO    fundos.generation PIPELINE[c318f9cb] OCR skipped for Project Orah_Financial Model_vf.xlsx: .xlsx is handled as 'native only': MarkItDown extracts the text and tables directly. This format stores its content as text, and for a spreadsheet the cells are exact — a model reading them could only be worse.
+2026-09-12 18:02:30 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="OCR skipped for Project Orah_Financial Model_vf.xlsx: .xlsx is handled as 'native only': MarkItDown extracts the text and tables directly. This format stores its content as text, and for a spreadsheet the cells are exact — a model reading them could only be worse." stage="processing_documents"
+2026-09-12 18:02:30 INFO    fundos.generation PIPELINE[c318f9cb] finished file 2/2 (Project Orah_Financial Model_vf.xlsx) in 20.5s
+2026-09-12 18:02:30 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="finished file 2/2 (Project Orah_Financial Model_vf.xlsx) in 20.5s" stage="processing_documents"
+2026-09-12 18:02:36 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=28315 prompt_chars=1561 context_chars=163 prompt_tokens=1018 completion_tokens=2767 thinking_tokens=2258 finish_reason="STOP" response_chars=10545 searches=14 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=16 total_fields=16 was_repaired=false was_normalized=false note=""
+2026-09-12 18:02:36 INFO    fundos.generation GEN[2dcae7] step="research.batch.2" status="OK" ms=28425 topic="Founders & Leadership" chars=14549 searches=14 questions_count=10
+2026-09-12 18:02:36 INFO    fundos.profile RESEARCH batch 2/10 (Founders & Leadership): OK in 28425ms, 14549 chars, 14 search(es)
+2026-09-12 18:02:36 INFO    fundos.generation PIPELINE[c318f9cb] research batch 2/10 'Founders & Leadership' ok after 28.4s (1/10 finished, 1 with data, 14 search(es))
+2026-09-12 18:02:36 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 2/10 'Founders & Leadership' ok after 28.4s (1/10 finished, 1 with data, 14 search(es))" stage="researching"
+2026-09-12 18:02:38 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=29562 prompt_chars=1304 context_chars=163 prompt_tokens=972 completion_tokens=1934 thinking_tokens=3522 finish_reason="STOP" response_chars=5688 searches=4 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=13 total_fields=13 was_repaired=false was_normalized=false note=""
+2026-09-12 18:02:38 INFO    fundos.generation GEN[2dcae7] step="research.batch.5" status="OK" ms=29677 topic="Operating Metrics & KPIs" chars=8602 searches=4 questions_count=10
+2026-09-12 18:02:38 INFO    fundos.profile RESEARCH batch 5/10 (Operating Metrics & KPIs): OK in 29677ms, 8602 chars, 4 search(es)
+2026-09-12 18:02:38 INFO    fundos.generation PIPELINE[c318f9cb] research batch 5/10 'Operating Metrics & KPIs' ok after 29.7s (2/10 finished, 2 with data, 4 search(es))
+2026-09-12 18:02:38 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 5/10 'Operating Metrics & KPIs' ok after 29.7s (2/10 finished, 2 with data, 4 search(es))" stage="researching"
+2026-09-12 18:02:43 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=34641 prompt_chars=1520 context_chars=163 prompt_tokens=1049 completion_tokens=2409 thinking_tokens=3350 finish_reason="STOP" response_chars=8841 searches=12 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=30 total_fields=30 was_repaired=false was_normalized=false note=""
+2026-09-12 18:02:43 INFO    fundos.generation GEN[2dcae7] step="research.batch.1" status="OK" ms=34753 topic="Company Basics & Identity" chars=16179 searches=12 questions_count=10
+2026-09-12 18:02:43 INFO    fundos.profile RESEARCH batch 1/10 (Company Basics & Identity): OK in 34753ms, 16179 chars, 12 search(es)
+2026-09-12 18:02:43 INFO    fundos.generation PIPELINE[c318f9cb] research batch 1/10 'Company Basics & Identity' ok after 34.8s (3/10 finished, 3 with data, 12 search(es))
+2026-09-12 18:02:43 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 1/10 'Company Basics & Identity' ok after 34.8s (3/10 finished, 3 with data, 12 search(es))" stage="researching"
+2026-09-12 18:02:44 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=35910 prompt_chars=1425 context_chars=163 prompt_tokens=882 completion_tokens=3169 thinking_tokens=2328 finish_reason="STOP" response_chars=14613 searches=13 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=31 total_fields=31 was_repaired=false was_normalized=false note=""
+2026-09-12 18:02:44 INFO    fundos.generation GEN[2dcae7] step="research.batch.4" status="OK" ms=36024 topic="Customers, Markets & Differentiators" chars=21997 searches=13 questions_count=10
+2026-09-12 18:02:44 INFO    fundos.profile RESEARCH batch 4/10 (Customers, Markets & Differentiators): OK in 36024ms, 21997 chars, 13 search(es)
+2026-09-12 18:02:44 INFO    fundos.generation PIPELINE[c318f9cb] research batch 4/10 'Customers, Markets & Differentiators' ok after 36.0s (4/10 finished, 4 with data, 13 search(es))
+2026-09-12 18:02:44 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 4/10 'Customers, Markets & Differentiators' ok after 36.0s (4/10 finished, 4 with data, 13 search(es))" stage="researching"
+2026-09-12 18:03:03 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=55211 prompt_chars=1454 context_chars=163 prompt_tokens=1005 completion_tokens=5426 thinking_tokens=3022 finish_reason="STOP" response_chars=25198 searches=26 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=30 total_fields=30 was_repaired=false was_normalized=false note=""
+2026-09-12 18:03:03 INFO    fundos.generation GEN[2dcae7] step="research.batch.3" status="OK" ms=55318 topic="Products, Services & Business Model" chars=32780 searches=26 questions_count=10
+2026-09-12 18:03:03 INFO    fundos.profile RESEARCH batch 3/10 (Products, Services & Business Model): OK in 55318ms, 32780 chars, 26 search(es)
+2026-09-12 18:03:03 INFO    fundos.generation PIPELINE[c318f9cb] research batch 3/10 'Products, Services & Business Model' ok after 55.3s (5/10 finished, 5 with data, 26 search(es))
+2026-09-12 18:03:03 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 3/10 'Products, Services & Business Model' ok after 55.3s (5/10 finished, 5 with data, 26 search(es))" stage="researching"
+2026-09-12 18:03:09 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=32859 prompt_chars=1513 context_chars=163 prompt_tokens=897 completion_tokens=2395 thinking_tokens=2656 finish_reason="STOP" response_chars=8629 searches=21 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=20 total_fields=20 was_repaired=false was_normalized=false note=""
+2026-09-12 18:03:09 INFO    fundos.generation GEN[2dcae7] step="research.batch.6" status="OK" ms=32881 topic="Funding History & Investors" chars=13534 searches=21 questions_count=10
+2026-09-12 18:03:09 INFO    fundos.profile RESEARCH batch 6/10 (Funding History & Investors): OK in 32881ms, 13534 chars, 21 search(es)
+2026-09-12 18:03:09 INFO    fundos.generation PIPELINE[c318f9cb] research batch 6/10 'Funding History & Investors' ok after 32.9s (6/10 finished, 6 with data, 21 search(es))
+2026-09-12 18:03:09 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 6/10 'Funding History & Investors' ok after 32.9s (6/10 finished, 6 with data, 21 search(es))" stage="researching"
+2026-09-12 18:03:20 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=42405 prompt_chars=1486 context_chars=163 prompt_tokens=884 completion_tokens=3634 thinking_tokens=3204 finish_reason="STOP" response_chars=11899 searches=22 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=27 total_fields=27 was_repaired=false was_normalized=false note=""
+2026-09-12 18:03:20 INFO    fundos.generation GEN[2dcae7] step="research.batch.7" status="OK" ms=42428 topic="Financial Performance" chars=18452 searches=22 questions_count=10
+2026-09-12 18:03:20 INFO    fundos.profile RESEARCH batch 7/10 (Financial Performance): OK in 42428ms, 18452 chars, 22 search(es)
+2026-09-12 18:03:20 INFO    fundos.generation PIPELINE[c318f9cb] research batch 7/10 'Financial Performance' ok after 42.4s (7/10 finished, 7 with data, 22 search(es))
+2026-09-12 18:03:20 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 7/10 'Financial Performance' ok after 42.4s (7/10 finished, 7 with data, 22 search(es))" stage="researching"
+2026-09-12 18:03:25 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=42766 prompt_chars=1490 context_chars=163 prompt_tokens=898 completion_tokens=5501 thinking_tokens=1338 finish_reason="STOP" response_chars=20281 searches=28 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=42 total_fields=42 was_repaired=false was_normalized=false note=""
+2026-09-12 18:03:25 INFO    fundos.generation GEN[2dcae7] step="research.batch.8" status="OK" ms=42789 topic="Competitive Landscape" chars=30668 searches=28 questions_count=10
+2026-09-12 18:03:25 INFO    fundos.profile RESEARCH batch 8/10 (Competitive Landscape): OK in 42789ms, 30668 chars, 28 search(es)
+2026-09-12 18:03:25 INFO    fundos.generation PIPELINE[c318f9cb] research batch 8/10 'Competitive Landscape' ok after 42.8s (8/10 finished, 8 with data, 28 search(es))
+2026-09-12 18:03:25 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 8/10 'Competitive Landscape' ok after 42.8s (8/10 finished, 8 with data, 28 search(es))" stage="researching"
+2026-09-12 18:03:27 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=42801 prompt_chars=1435 context_chars=163 prompt_tokens=885 completion_tokens=5151 thinking_tokens=3103 finish_reason="STOP" response_chars=15629 searches=13 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=23 total_fields=23 was_repaired=false was_normalized=false note=""
+2026-09-12 18:03:27 INFO    fundos.generation GEN[2dcae7] step="research.batch.9" status="OK" ms=42824 topic="Recent News & Developments" chars=21777 searches=13 questions_count=10
+2026-09-12 18:03:27 INFO    fundos.profile RESEARCH batch 9/10 (Recent News & Developments): OK in 42824ms, 21777 chars, 13 search(es)
+2026-09-12 18:03:27 INFO    fundos.generation PIPELINE[c318f9cb] research batch 9/10 'Recent News & Developments' ok after 42.8s (9/10 finished, 9 with data, 13 search(es))
+2026-09-12 18:03:27 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 9/10 'Recent News & Developments' ok after 42.8s (9/10 finished, 9 with data, 13 search(es))" stage="researching"
+2026-09-12 18:03:55 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_research_batch" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=52188 prompt_chars=1464 context_chars=163 prompt_tokens=1001 completion_tokens=6634 thinking_tokens=1139 finish_reason="STOP" response_chars=30615 searches=30 caps_sent="thinking,web_search" thinking_budget=2048 search_expected=true role_expects_search=true populated_fields=47 total_fields=47 was_repaired=false was_normalized=false note=""
+2026-09-12 18:03:55 INFO    fundos.generation GEN[2dcae7] step="research.batch.10" status="OK" ms=52211 topic="Company Story, Industry Research & Investment Thesis" chars=43666 searches=30 questions_count=10
+2026-09-12 18:03:55 INFO    fundos.profile RESEARCH batch 10/10 (Company Story, Industry Research & Investment Thesis): OK in 52211ms, 43666 chars, 30 search(es)
+2026-09-12 18:03:55 INFO    fundos.generation PIPELINE[c318f9cb] research batch 10/10 'Company Story, Industry Research & Investment Thesis' ok after 52.2s (10/10 finished, 10 with data, 30 search(es))
+2026-09-12 18:03:55 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="research batch 10/10 'Company Story, Industry Research & Investment Thesis' ok after 52.2s (10/10 finished, 10 with data, 30 search(es))" stage="researching"
+2026-09-12 18:03:55 INFO    fundos.generation PIPELINE[c318f9cb] Researching the company on the web — finished in 1m 47s
+2026-09-12 18:03:55 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="Researching the company on the web — finished in 1m 47s" stage="researching" duration_seconds=107.61
+2026-09-12 18:03:56 INFO    fundos.generation PIPELINE[c318f9cb] Reading the uploaded documents — finished in 1m 47s
+2026-09-12 18:03:56 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="Reading the uploaded documents — finished in 1m 47s" stage="processing_documents" duration_seconds=107.61
+2026-09-12 18:03:56 INFO    fundos.generation PIPELINE[c318f9cb] merging the two sources into one dossier
+2026-09-12 18:03:56 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="merging the two sources into one dossier" stage="consolidating"
+2026-09-12 18:03:56 INFO    fundos.generation PIPELINE[c318f9cb] dossier written (801,350 characters from 2 source(s))
+2026-09-12 18:03:56 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="dossier written (801,350 characters from 2 source(s))" stage="consolidating" duration_seconds=0.01
+2026-09-12 18:03:56 INFO    fundos.generation PIPELINE[c318f9cb] sending the dossier for the structured profile — this is a single large call and typically the longest uninterrupted wait
+2026-09-12 18:03:56 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="sending the dossier for the structured profile — this is a single large call and typically the longest uninterrupted wait" stage="synthesizing"
+2026-09-12 18:03:56 INFO    fundos.profile PIPELINE: synthesizing Zyla Health from 801350 characters of dossier across 16 sections
+2026-09-12 18:03:56 INFO    fundos.profile PIPELINE: 13 citable source(s) for Zyla Health, 2 of them uploaded documents
+2026-09-12 18:03:56 WARNING fundos.llm.adapter LLM: asked gemini-2.5-flash for 102400 output tokens; it returns at most 65536. Clamping. A response near that ceiling is TRUNCATED, not complete — the salvage recovers the prefix and synthesis re-asks for what is missing.
+2026-09-12 18:09:35 WARNING fundos.llm.adapter LLM: profile_synthesis returned JSON that would not parse; recovered the good prefix locally (14435 of 242301 characters kept) without paying for a repair call. The result is INCOMPLETE by definition. If the response was CUT OFF, raise the role's output ceiling; if it finished (finish_reason=STOP) the fault is a malformed value mid-response and the ceiling is not the problem.
+2026-09-12 18:09:35 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_synthesis" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=445512 prompt_chars=231406 context_chars=163 prompt_tokens=78305 completion_tokens=57109 thinking_tokens=4095 finish_reason="STOP" response_chars=242301 searches="unknown" caps_sent="thinking" thinking_budget=4096 search_expected=false role_expects_search=false populated_fields=121 total_fields=124 was_repaired=true was_normalized=false note=""
+2026-09-12 18:09:35 INFO    fundos.profile PIPELINE: synthesis round 2 for Zyla Health — asking again for 14 section(s) the first response did not fill: products_services, customers_markets, competitive_advantages, business_model, revenue_model, company_metrics, financial_summary, funding_history, competitors, news, investors_cap_table, company_story, industry_research, investment_thesis
+2026-09-12 18:09:35 WARNING fundos.llm.adapter LLM: asked gemini-2.5-flash for 102400 output tokens; it returns at most 65536. Clamping. A response near that ceiling is TRUNCATED, not complete — the salvage recovers the prefix and synthesis re-asks for what is missing.
+2026-09-12 18:10:47 WARNING fundos.llm.adapter LLM: profile_synthesis returned JSON that would not parse; recovered the good prefix locally (9366 of 164633 characters kept) without paying for a repair call. The result is INCOMPLETE by definition. If the response was CUT OFF, raise the role's output ceiling; if it finished (finish_reason=STOP) the fault is a malformed value mid-response and the ceiling is not the problem.
+2026-09-12 18:10:47 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_synthesis" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=411750 prompt_chars=813897 context_chars=163 prompt_tokens=424928 completion_tokens=42257 thinking_tokens=4096 finish_reason="STOP" response_chars=164633 searches="unknown" caps_sent="thinking" thinking_budget=4096 search_expected=false role_expects_search=false populated_fields=115 total_fields=118 was_repaired=true was_normalized=false note=""
+2026-09-12 18:10:47 INFO    fundos.profile PIPELINE: synthesis round 2 for Zyla Health — asking again for 14 section(s) the first response did not fill: products_services, customers_markets, competitive_advantages, business_model, revenue_model, company_metrics, financial_summary, funding_history, competitors, news, investors_cap_table, company_story, industry_research, investment_thesis
+2026-09-12 18:10:47 WARNING fundos.llm.adapter LLM: asked gemini-2.5-flash for 102400 output tokens; it returns at most 65536. Clamping. A response near that ceiling is TRUNCATED, not complete — the salvage recovers the prefix and synthesis re-asks for what is missing.
+2026-09-12 18:13:45 INFO    fundos.generation GEN[cddff0] step="llm.call.profile_synthesis" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=250337 prompt_chars=229817 context_chars=163 prompt_tokens=77829 completion_tokens=20726 thinking_tokens=3277 finish_reason="STOP" response_chars=81716 searches="unknown" caps_sent="thinking" thinking_budget=4096 search_expected=false role_expects_search=false populated_fields=795 total_fields=954 was_repaired=false was_normalized=false note=""
+2026-09-12 18:13:45 INFO    fundos.profile PIPELINE: synthesis round 2 recovered 14 section(s): products_services, customers_markets, competitive_advantages, business_model, revenue_model, company_metrics, financial_summary, funding_history, competitors, news, investors_cap_table, company_story, industry_research, investment_thesis
+2026-09-12 18:13:45 INFO    fundos.profile PIPELINE: normalization corrected 1 field(s) on the synthesis response for Zyla Health
+2026-09-12 18:13:45 INFO    fundos.profile PIPELINE: synthesis complete — 16 of 17 sections populated in 2 call(s), 14 recovered after the first
+2026-09-12 18:13:45 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:45 INFO    fundos.generation PIPELINE[1453acf9] synthesis complete: 16 of 17 sections populated
+2026-09-12 18:13:45 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="synthesis complete: 16 of 17 sections populated" stage="synthesizing" duration_seconds=695.97
+2026-09-12 18:13:45 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:13:45 INFO    fundos.generation PIPELINE[1453acf9] normalization corrected 1 field(s) in the synthesis response — each was coerced to the shape its field spec declares rather than rejected; a recurring one is a prompt or field-spec problem, not a model problem
+2026-09-12 18:13:45 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="normalization corrected 1 field(s) in the synthesis response — each was coerced to the shape its field spec declares rather than rejected; a recurring one is a prompt or field-spec problem, not a model problem" stage="synthesizing"
+2026-09-12 18:13:45 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:13:45 INFO    fundos.generation PIPELINE[1453acf9]   · company_profile: sub-sector 'Digital Health' matches no benchmark group, so the benchmark category will score blank
+2026-09-12 18:13:45 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="  · company_profile: sub-sector 'Digital Health' matches no benchmark group, so the benchmark category will score blank" stage="synthesizing"
+2026-09-12 18:13:45 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:13:46 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 DEBUG   fundos.generation could not record stage start
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 215, in stage_started
+    self.run.save(update_fields=["stage"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 INFO    fundos.generation PIPELINE[1453acf9] Saving the profile — started
+2026-09-12 18:13:46 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="Saving the profile — started" stage="writing"
+2026-09-12 18:13:46 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section company_profile: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section founders: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section products_services: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section customers_markets: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section competitive_advantages: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section business_model: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section revenue_model: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section company_metrics: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section financial_summary: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section funding_history: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section competitors: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section news: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section investors_cap_table: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section company_story: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section industry_research: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile PIPELINE: could not write section investment_thesis: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 INFO    fundos.generation PIPELINE[1453acf9] 0 section(s) saved, 0 left empty, 16 could not be stored
+2026-09-12 18:13:46 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="0 section(s) saved, 0 left empty, 16 could not be stored" stage="writing" duration_seconds=0.59
+2026-09-12 18:13:46 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:13:46 ERROR   fundos.profile PIPELINE: run failed during writing for f78fa5dc-027a-4ae2-972c-e763018d5306
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 305, in run_pipeline
+    completeness = _finalise(profile)
+                   ^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 530, in _finalise
+    profile.save(update_fields=["status", "last_generated_at", "updated_at"])
+  File "/d01/fundos/src/fundos/core/models/base.py", line 52, in save
+    super().save(*args, **kwargs)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 305, in run_pipeline
+    completeness = _finalise(profile)
+                   ^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 530, in _finalise
+    profile.save(update_fields=["status", "last_generated_at", "updated_at"])
+  File "/d01/fundos/src/fundos/core/models/base.py", line 52, in save
+    super().save(*args, **kwargs)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 DEBUG   fundos.generation could not record stage timing
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 305, in run_pipeline
+    completeness = _finalise(profile)
+                   ^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 530, in _finalise
+    profile.save(update_fields=["status", "last_generated_at", "updated_at"])
+  File "/d01/fundos/src/fundos/core/models/base.py", line 52, in save
+    super().save(*args, **kwargs)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 267, in _touch_stage
+    self.run.save(update_fields=["stage_timings"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 INFO    fundos.generation PIPELINE[1453acf9] Saving the profile — FAILED in 0.6s
+2026-09-12 18:13:46 INFO    fundos.generation GEN[cddff0] step="pipeline.activity" status="OK" note="Saving the profile — FAILED in 0.6s" stage="writing" duration_seconds=0.6
+2026-09-12 18:13:46 DEBUG   fundos.generation could not append activity event
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 305, in run_pipeline
+    completeness = _finalise(profile)
+                   ^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 530, in _finalise
+    profile.save(update_fields=["status", "last_generated_at", "updated_at"])
+  File "/d01/fundos/src/fundos/core/models/base.py", line 52, in save
+    super().save(*args, **kwargs)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.ForeignKeyViolation: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 57, in _savepoint
+    with transaction.atomic():
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/transaction.py", line 263, in __exit__
+    connection.commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/utils/asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 337, in commit
+    self._commit()
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 312, in _commit
+    with debug_transaction(self, "COMMIT"), self.wrap_database_errors:
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/backends/base/base.py", line 313, in _commit
+    return self.connection.commit()
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.IntegrityError: insert or update on table "profile_run_event" violates foreign key constraint "profile_run_event_run_id_85c3f5b1_fk_profile_generation_run_id"
+DETAIL:  Key (run_id)=(1453acf9-6df4-476b-97c0-9cf35a19ff19) is not present in table "profile_generation_run".
+
+2026-09-12 18:13:46 DEBUG   fundos.generation could not update run progress
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 305, in run_pipeline
+    completeness = _finalise(profile)
+                   ^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 530, in _finalise
+    profile.save(update_fields=["status", "last_generated_at", "updated_at"])
+  File "/d01/fundos/src/fundos/core/models/base.py", line 52, in save
+    super().save(*args, **kwargs)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 58, in _savepoint
+    yield
+  File "/d01/fundos/src/fundos/profile/pipeline/tracker.py", line 284, in update
+    self.run.save(update_fields=writable)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 DEBUG   fundos.profile could not reset profile status
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 305, in run_pipeline
+    completeness = _finalise(profile)
+                   ^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 530, in _finalise
+    profile.save(update_fields=["status", "last_generated_at", "updated_at"])
+  File "/d01/fundos/src/fundos/core/models/base.py", line 52, in save
+    super().save(*args, **kwargs)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/pipeline/orchestrator.py", line 546, in _reset_status
+    profile.save(update_fields=["status", "updated_at"])
+  File "/d01/fundos/src/fundos/core/models/base.py", line 52, in save
+    super().save(*args, **kwargs)
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:13:46 WARNING fundos.profile.assessment_extraction ASSESSMENT INPUTS f78fa5dc-027a-4ae2-972c-e763018d5306: no search, no documents and no research — only 4649 characters of the company's own website. Restricting the question set to what a website can actually evidence.
+2026-09-12 18:13:46 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: starting batch 'people_and_deal' (3 numeric, 8 anchors asked)...
+2026-09-12 18:13:46 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: starting batch 'financials_and_quality' (2 numeric, 3 anchors asked)...
+2026-09-12 18:14:06 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: batch 'financials_and_quality' completed -> returned 2 values, 3 bands.
+2026-09-12 18:14:20 WARNING fundos.llm.adapter LLM SEARCH OVERRUN: profile tier.advanced.gemini used 8 searches against a cap of 6 (strike 1/3). The provider does not enforce max_uses, so this call was billed in full.
+2026-09-12 18:14:20 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: batch 'people_and_deal' completed -> returned 3 values, 8 bands.
+2026-09-12 18:14:20 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION (consolidated 3 batches): 5 total values, 11 total bands returned.
+2026-09-12 18:14:20 INFO    fundos.assessment.derived DERIVED: DD_RAISE_MULT not computed — the amount being raised is not recorded
+2026-09-12 18:14:20 INFO    fundos.assessment.derived DERIVED: DD_RAISE_SHARE not computed — the amount being raised is not recorded
+2026-09-12 18:14:20 WARNING fundos.profile.services PROFILE: assessment-input extraction failed: insert or update on table "company_profile_assessment_input" violates foreign key constraint "company_profile_asse_profile_id_84e14893_fk_company_p"
+DETAIL:  Key (profile_id)=(ea9fa0f8-4747-4699-8d8f-a1ffe4374aee) is not present in table "company_profile".
+
+2026-09-12 18:14:20 ERROR   fundos.generation GEN[cddff0] step="assessment_inputs" status="FAIL" error="insert or update on table 'company_profile_assessment_input' violates foreign key constraint 'company_profile_asse_profile_id_84e14893_fk_company_p' DETAIL:  Key (profile_id)=(ea9fa0f8-4747-4699-8d8f-a1ffe4374aee) is not present in table 'company_profile'. "
+2026-09-12 18:14:20 WARNING fundos.generation GEN[cddff0] step="run.economics" status="WARN" mode="pipeline" llm_calls=12 failed_calls=0 mocked_calls=0 prompt_tokens=165781 completion_tokens=116517 thinking_tokens=34183 billed_output_tokens=150700 cache_read_tokens=359 cache_write_tokens=0 total_tokens=316840 cost_inr=37.53 llm_latency_ms=1102686 searches=160 searches_unknown=2 redundant_input_pct=52.1 concerns="52.1% of input was re-sent context" note="cost_inr uses the seeded price book; billed_output includes thinking. searches_unknown counts calls whose provider returned no grounding metadata — that is NOT the same as zero searches and needs a different fix."
+2026-09-12 18:14:20 INFO    fundos.generation GEN[cddff0] step="run.economics.role" status="OK" role="profile_synthesis" calls=2 prompt_tokens=156134 completion_tokens=77835 thinking_tokens=7372 cost_inr=22.87 latency_ms=695849 searches=0 searches_unknown=2 tokens_in_per_token_out=1.8
+2026-09-12 18:14:20 INFO    fundos.generation GEN[cddff0] step="run.economics.role" status="OK" role="profile_research_batch" calls=10 prompt_tokens=9647 completion_tokens=38682 thinking_tokens=26811 cost_inr=14.66 latency_ms=406837 searches=160 searches_unknown=0 tokens_in_per_token_out=0.1
+2026-09-12 18:14:20 WARNING fundos.profile.services PROFILE: run economics skipped: DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:14:20 INFO    fundos.generation GEN[cddff0] complete: steps=63 failures=1 ms=842564
+2026-09-12 18:14:20 WARNING fundos.generation GEN[cddff0] DIAGNOSIS 1 [MEDIUM] No specific fault signature matched. | EVIDENCE: See the full step list. | FIX: Send this trace to the development team.
+2026-09-12 18:14:20 ERROR   fundos.profile.tasks PROFILE: generation failed for ea9fa0f8-4747-4699-8d8f-a1ffe4374aee
+Traceback (most recent call last):
+  File "/d01/fundos/src/fundos/profile/tasks.py", line 36, in generate_profile_task
+    return jobs.run_tracked(job_id, generate_profile, profile, user=user,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/src/fundos/core/services/jobs.py", line 162, in run_tracked
+    job.save(update_fields=["status", "finished_at", "artifact_id"])
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 814, in save
+    self.save_base(
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 877, in save_base
+    updated = self._save_table(
+              ^^^^^^^^^^^^^^^^^
+  File "/d01/fundos/app/venv/lib64/python3.11/site-packages/django/db/models/base.py", line 996, in _save_table
+    raise DatabaseError("Save with update_fields did not affect any rows.")
+django.db.utils.DatabaseError: Save with update_fields did not affect any rows.
+2026-09-12 18:15:49 INFO    fundos.generation GEN[2dcae7] step="llm.call.profile_synthesis" status="OK" endpoint="GEMINI LLM" model="gemini-2.5-flash" attempt="primary" ms=301804 prompt_chars=812308 context_chars=163 prompt_tokens=424452 completion_tokens=48399 thinking_tokens=2257 finish_reason="STOP" response_chars=187685 searches="unknown" caps_sent="thinking" thinking_budget=4096 search_expected=false role_expects_search=false populated_fields=1897 total_fields=2082 was_repaired=false was_normalized=false note=""
+2026-09-12 18:15:49 INFO    fundos.profile PIPELINE: synthesis round 2 recovered 14 section(s): products_services, customers_markets, competitive_advantages, business_model, revenue_model, company_metrics, financial_summary, funding_history, competitors, news, investors_cap_table, company_story, industry_research, investment_thesis
+2026-09-12 18:15:49 INFO    fundos.profile PIPELINE: normalization corrected 3 field(s) on the synthesis response for Zyla Health
+2026-09-12 18:15:49 INFO    fundos.profile PIPELINE: synthesis complete — 17 of 17 sections populated in 2 call(s), 14 recovered after the first
+2026-09-12 18:15:49 INFO    fundos.generation PIPELINE[c318f9cb] synthesis complete: 17 of 17 sections populated
+2026-09-12 18:15:49 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="synthesis complete: 17 of 17 sections populated" stage="synthesizing" duration_seconds=713.71
+2026-09-12 18:15:49 INFO    fundos.generation PIPELINE[c318f9cb] normalization corrected 3 field(s) in the synthesis response — each was coerced to the shape its field spec declares rather than rejected; a recurring one is a prompt or field-spec problem, not a model problem
+2026-09-12 18:15:49 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="normalization corrected 3 field(s) in the synthesis response — each was coerced to the shape its field spec declares rather than rejected; a recurring one is a prompt or field-spec problem, not a model problem" stage="synthesizing"
+2026-09-12 18:15:49 INFO    fundos.generation PIPELINE[c318f9cb]   · company_profile: sub-sector 'Digital Health' matches no benchmark group, so the benchmark category will score blank
+2026-09-12 18:15:49 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="  · company_profile: sub-sector 'Digital Health' matches no benchmark group, so the benchmark category will score blank" stage="synthesizing"
+2026-09-12 18:15:49 INFO    fundos.generation PIPELINE[c318f9cb]   · customers_markets: 9 citation(s) named a source that is not in the dossier and were dropped (0.geography, 1.geography, 2.geography, 3.geography)
+2026-09-12 18:15:49 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="  · customers_markets: 9 citation(s) named a source that is not in the dossier and were dropped (0.geography, 1.geography, 2.geography, 3.geography)" stage="synthesizing"
+2026-09-12 18:15:49 INFO    fundos.generation PIPELINE[c318f9cb]   · investors_cap_table: 1 citation(s) named a source that is not in the dossier and were dropped (4.round)
+2026-09-12 18:15:49 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="  · investors_cap_table: 1 citation(s) named a source that is not in the dossier and were dropped (4.round)" stage="synthesizing"
+2026-09-12 18:15:49 INFO    fundos.generation PIPELINE[c318f9cb] Saving the profile — started
+2026-09-12 18:15:49 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="Saving the profile — started" stage="writing"
+2026-09-12 18:15:50 INFO    fundos.generation PIPELINE[c318f9cb] 16 section(s) saved, 0 left empty, 0 could not be stored
+2026-09-12 18:15:50 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="16 section(s) saved, 0 left empty, 0 could not be stored" stage="writing" duration_seconds=1.24
+2026-09-12 18:15:50 INFO    fundos.generation PIPELINE[c318f9cb] sub-sector 'Digital Health' matched the benchmark group 'Healthtech' (exact)
+2026-09-12 18:15:50 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="sub-sector 'Digital Health' matched the benchmark group 'Healthtech' (exact)"
+2026-09-12 18:15:51 INFO    fundos.generation PIPELINE[c318f9cb] Completed — started
+2026-09-12 18:15:51 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="Completed — started" stage="completed"
+2026-09-12 18:15:51 INFO    fundos.generation PIPELINE[c318f9cb] pipeline finished: 16 of 17 sections populated from a 801,350-character dossier
+2026-09-12 18:15:51 INFO    fundos.generation GEN[2dcae7] step="pipeline.activity" status="OK" note="pipeline finished: 16 of 17 sections populated from a 801,350-character dossier"
+2026-09-12 18:15:51 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: starting batch 'people_and_deal' (15 numeric, 13 anchors asked)...
+2026-09-12 18:15:51 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: starting batch 'financials_and_quality' (14 numeric, 7 anchors asked)...
+2026-09-12 18:15:51 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: starting batch 'market_and_benchmarks' (10 numeric, 2 anchors asked)...
+2026-09-12 18:16:26 WARNING fundos.llm.adapter LLM: role assessment_inputs performed NO web search (0 searches). Its answers came from the supplied context and the model's own recollection, and cannot be cited. Read `caps_sent` and `thinking_budget` on the llm.call trace line for this role FIRST — they separate 'the tool was never attached' from 'the tool was attached and the model declined', which need opposite fixes. If web_search is absent from caps_sent the fault is configuration: check the resolved profile tier.advanced.gemini is bound to the advanced tier and that the search breaker is not open. If it is present, the model declined: check thinking_budget is non-zero (google_search is model-decided and a model with no deliberation budget cannot choose to call it), then run tools/diagnose_gemini_search.py to test whether responseSchema is suppressing the tool on this model.
+2026-09-12 18:16:26 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: batch 'people_and_deal' completed -> returned 15 values, 13 bands.
+2026-09-12 18:16:35 WARNING fundos.llm.adapter LLM SEARCH OVERRUN: profile tier.advanced.gemini used 9 searches against a cap of 6 (strike 1/3). The provider does not enforce max_uses, so this call was billed in full.
+2026-09-12 18:16:35 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: batch 'market_and_benchmarks' completed -> returned 10 values, 2 bands.
+2026-09-12 18:16:56 WARNING fundos.llm.adapter LLM: assessment_inputs returned JSON that would not parse; recovered the good prefix locally (3746 of 39333 characters kept) without paying for a repair call. The result is INCOMPLETE by definition. If the response was CUT OFF, raise the role's output ceiling; if it finished (finish_reason=STOP) the fault is a malformed value mid-response and the ceiling is not the problem.
+2026-09-12 18:16:56 WARNING fundos.llm.adapter LLM SEARCH OVERRUN: profile tier.advanced.gemini used 7 searches against a cap of 6 (strike 2/3). The provider does not enforce max_uses, so this call was billed in full.
+2026-09-12 18:16:56 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION: batch 'financials_and_quality' completed -> returned 7 values, 0 bands.
+2026-09-12 18:16:56 INFO    fundos.profile.assessment_extraction ASSESSMENT EXTRACTION (consolidated 3 batches): 32 total values, 15 total bands returned.
+2026-09-12 18:16:56 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:16:56 INFO    fundos.assessment.derived DERIVED: DD_RAISE_MULT not computed — the amount being raised is not recorded
+2026-09-12 18:16:56 INFO    fundos.assessment.derived DERIVED: DD_RAISE_SHARE not computed — the amount being raised is not recorded
+2026-09-12 18:16:56 WARNING fundos.profile.assessment_extraction ASSESSMENT INPUTS e4ccd485-00e1-406d-b89d-ed608830968e: DD_RAISE_MULT, DD_RAISE_SHARE left blank — they are the ask divided by history, and no amount being raised is recorded for this company. The model's stand-in was discarded rather than scored.
+2026-09-12 18:16:56 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS e4ccd485-00e1-406d-b89d-ed608830968e: {'asked': 61, 'written': 48, 'low_confidence': 0, 'bands': 14, 'benchmarks': 6, 'missing': 0, 'sub_sector_method': 'exact', 'unsourced_rejected': 0, 'unknown_key_rejected': 0, 'excluded_category_rejected': 0, 'rescued': 0, 'unparseable_band': 1, 'dossier_sourced': 14, 'mode': 'full', 'derived': 0, 'derived_blank': 2, 'sector': 'Healthcare', 'subSector': 'Digital Health', 'subSectorGroup': 'Healthtech', 'coveragePct': 78.7}
+2026-09-12 18:16:56 INFO    fundos.generation GEN[2dcae7] step="assessment_inputs" status="OK" asked=61 written=48 low_confidence=0 bands=14 benchmarks=6 missing=0 sub_sector_method="exact" unsourced_rejected=0 unknown_key_rejected=0 excluded_category_rejected=0 rescued=0 unparseable_band=1 dossier_sourced=14 mode="full" derived=0 derived_blank=2 sector="Healthcare" subSector="Digital Health" subSectorGroup="Healthtech" coveragePct=78.7
+2026-09-12 18:16:56 WARNING fundos.generation GEN[2dcae7] step="run.economics" status="WARN" mode="pipeline" llm_calls=12 failed_calls=0 mocked_calls=0 prompt_tokens=858871 completion_tokens=129676 thinking_tokens=32273 billed_output_tokens=161949 cache_read_tokens=515 cache_write_tokens=0 total_tokens=1021335 cost_inr=58.3 llm_latency_ms=1110212 searches=183 searches_unknown=2 redundant_input_pct=50.4 concerns="50.4% of input was re-sent context" note="cost_inr uses the seeded price book; billed_output includes thinking. searches_unknown counts calls whose provider returned no grounding metadata — that is NOT the same as zero searches and needs a different fix."
+2026-09-12 18:16:56 INFO    fundos.generation GEN[2dcae7] step="run.economics.role" status="OK" role="profile_synthesis" calls=2 prompt_tokens=849380 completion_tokens=90656 thinking_tokens=6353 cost_inr=43.77 latency_ms=713554 searches=0 searches_unknown=2 tokens_in_per_token_out=8.8
+2026-09-12 18:16:56 INFO    fundos.generation GEN[2dcae7] step="run.economics.role" status="OK" role="profile_research_batch" calls=10 prompt_tokens=9491 completion_tokens=39020 thinking_tokens=25920 cost_inr=14.54 latency_ms=396658 searches=183 searches_unknown=0 tokens_in_per_token_out=0.1
+2026-09-12 18:16:56 INFO    fundos.generation GEN[2dcae7] complete: steps=75 failures=0 ms=889576
+2026-09-12 18:16:56 WARNING fundos.generation GEN[2dcae7] DIAGNOSIS 1 [MEDIUM] No specific fault signature matched. | EVIDENCE: See the full step list. | FIX: Send this trace to the development team.
+2026-09-12 18:19:28 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:19:28 INFO    fundos.assessment.profile_bridge BRIDGE 766e584b-e82b-4f71-a958-fd258c837c9c: {'available': 48, 'seeded': 48, 'skipped_unknown': 0, 'skipped_blank': 0, 'bands': 14, 'benchmarks': 6}
+2026-09-12 18:19:28 INFO    fundos.assessment.tasks ASSESSMENT 766e584b-e82b-4f71-a958-fd258c837c9c: profile bridge {'available': 48, 'seeded': 48, 'skipped_unknown': 0, 'skipped_blank': 0, 'bands': 14, 'benchmarks': 6}
+2026-09-12 18:19:29 INFO    fundos.assessment.extraction EXTRACT 766e584b-e82b-4f71-a958-fd258c837c9c: read Project Orah Teaser_vff.pptx (deck) — 12016 characters.
+2026-09-12 18:19:31 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:19:32 INFO    fundos.assessment.extraction EXTRACT 766e584b-e82b-4f71-a958-fd258c837c9c: read Project Orah_Financial Model_vf.xlsx (spreadsheet) — 500000 characters.
+2026-09-12 18:19:32 INFO    fundos.llm.adapter LLM: structured output is ON for role assessment_extraction but no schema will be sent — the profile states none and assessment_extraction is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 18:19:32 INFO    fundos.llm.adapter LLM: structured output is ON for role assessment_extraction but no schema will be sent — the profile states none and assessment_extraction is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 18:19:32 INFO    fundos.llm.adapter LLM: structured output is ON for role assessment_extraction but no schema will be sent — the profile states none and assessment_extraction is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 18:19:34 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:19:36 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:19:42 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:19:43 INFO    fundos.llm.adapter LLM: structured output is ON for role assessment_extraction but no schema will be sent — the profile states none and assessment_extraction is not in schemas.SCHEMA_IS_COMPLETE_OUTPUT. The response is validated after the fact and repaired if needed, which is the designed path; the admin tick simply has no wire effect here.
+2026-09-12 18:19:49 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:19:55 INFO    fundos.assessment.extraction EXTRACT 766e584b-e82b-4f71-a958-fd258c837c9c: ANC_CXO_FINANCE reported tier 'Poor', which does not score. The row is excluded and its weight redistributes.
+2026-09-12 18:19:55 INFO    fundos.assessment.extraction EXTRACT 766e584b-e82b-4f71-a958-fd258c837c9c: ANC_MOAT_NETWORK reported tier 'Not Evidenced', which does not score. The row is excluded and its weight redistributes.
+2026-09-12 18:19:55 INFO    fundos.assessment.extraction EXTRACT 766e584b-e82b-4f71-a958-fd258c837c9c: {'documents': 2, 'readable': 2, 'values': 24, 'low_confidence': 0, 'unanswered': 34, 'not_evidenced': 2, 'bands': 8}
+2026-09-12 18:19:55 INFO    fundos.assessment.tasks ASSESSMENT 766e584b-e82b-4f71-a958-fd258c837c9c: extraction {'documents': 2, 'readable': 2, 'values': 24, 'low_confidence': 0, 'unanswered': 34, 'not_evidenced': 2, 'bands': 8}
+2026-09-12 18:19:55 WARNING fundos.assessment.services ASSESSMENT 766e584b-e82b-4f71-a958-fd258c837c9c: deal stage was not set. Defaulting to Series A — every numeric parameter is being banded against Series A cut-points, which may be wrong. Set the stage and re-run.
+2026-09-12 18:19:56 INFO    fundos.assessment.services ASSESSMENT: TEAM_MARQUEE_CLIENTS held Not Evidenced — its evidence does not state the relationship the row scores.
+2026-09-12 18:19:56 INFO    fundos.assessment.review REVIEW 766e584b-e82b-4f71-a958-fd258c837c9c: 1 deterministic finding(s)
+2026-09-12 18:20:10 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
+2026-09-12 18:20:16 INFO    fundos.profile.assessment_extraction ASSESSMENT INPUTS: sector 'Healthcare' resolved to 'Healthtech' through the taxonomy alias list.
