@@ -344,3 +344,129 @@ class ThroughTheApi(ScoredDeal):
             f"{self.base}/parameters/TEAM_ADVISORS/override",
             {"score": 7}, content_type="application/json", **self.headers)
         self.assertEqual(response.status_code, 400)
+
+class TheCompanyScopedPanelHasItsOwnAddress(ScoredDeal):
+    """The V2 panel is company-scoped throughout: it fetched the parameter
+    from `companies/{id}/assessment/parameters/{ref}` and holds a company id,
+    not a deal id. Making it resolve a deal to ask about a row it already has
+    open would be friction for nothing."""
+
+    def setUp(self):
+        super().setUp()
+        self.cbase = f"/api/v1/companies/{self.company.id}/assessment"
+
+    def test_suggestions_by_company(self):
+        response = self.client.get(f"{self.cbase}/suggestions?ref=A",
+                                   **self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()["suggestions"]["A"])
+
+    def test_suggestions_default_to_the_categories(self):
+        from fundos.assessment import hierarchy as H
+
+        body = self.client.get(f"{self.cbase}/suggestions",
+                               **self.headers).json()
+        self.assertEqual(set(body["suggestions"]), set(H.CATEGORY_CODES))
+
+    def test_the_two_scopes_agree(self):
+        """Same functions behind both; a different answer would mean a
+        second implementation nobody is maintaining."""
+        ref = self._ref_of("TEAM_ADVISORS")
+        by_company = self.client.get(f"{self.cbase}/suggestions?ref={ref}",
+                                     **self.headers).json()
+        by_deal = self.client.get(f"{self.base}/suggestions?ref={ref}",
+                                  **self.headers).json()
+        self.assertEqual(by_company["suggestions"], by_deal["suggestions"])
+
+    def test_the_chat_answers_by_company(self):
+        ref = self._ref_of("TEAM_ADVISORS")
+        payload = {"answer": "Because the roster is not in evidence.",
+                   "proposedOverrides": [
+                       {"ref": ref, "score": 7, "reason": "Four advisers."}]}
+        with patch("fundos.llm.adapter.llm_generate", return_value=payload):
+            response = self.client.post(
+                f"{self.cbase}/qa", {"question": "Why Fair?", "ref": ref},
+                content_type="application/json", **self.headers)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["proposedOverrides"]), 1)
+
+    def test_the_proposal_carries_both_addresses(self):
+        """`ref` for the company-scoped PATCH, `inputKey` for the
+        deal-scoped POST. Whichever path the client uses, it has the
+        identifier that path needs."""
+        from fundos.assessment.qa import validate
+
+        out = validate(self.assessment, [
+            {"ref": self._ref_of("TEAM_ADVISORS"), "score": 7,
+             "reason": "Four advisers."}])
+        self.assertTrue(out[0]["ref"])
+        self.assertTrue(out[0]["inputKey"])
+        self.assertNotEqual(out[0]["ref"], out[0]["inputKey"])
+
+
+class TheCompanyScopedOverrideUsesTheOneCascade(ScoredDeal):
+    """It wrote the score straight onto the row: no ReviewLog, and no
+    re-scoring — so the panel showed a corrected row above a headline that
+    still reflected the old one."""
+
+    def setUp(self):
+        super().setUp()
+        self.cbase = f"/api/v1/companies/{self.company.id}/assessment"
+
+    def _override(self, **body):
+        return self.client.patch(
+            f"{self.cbase}/parameters/TEAM_ADVISORS", body,
+            content_type="application/json", **self.headers)
+
+    def test_the_headline_moves_with_the_row(self):
+        before = float(self.assessment.overall_score)
+        response = self._override(score=9, comment="Roster produced.")
+        self.assertEqual(response.status_code, 200)
+        self.assessment.refresh_from_db()
+        self.assertGreater(float(self.assessment.overall_score), before)
+
+    def test_the_response_carries_the_rescored_summary(self):
+        """The panel redraws from this payload, so it has to be the state
+        after the write, not before it."""
+        before = float(self.assessment.overall_score)
+        body = self._override(score=9, comment="Roster produced.").json()
+        self.assertGreater(float(body["summary"]["overall_score"]), before)
+
+    def test_the_override_is_written_to_the_review_log(self):
+        from fundos.assessment.models import ReviewLog
+
+        self._override(score=9, comment="Roster produced.")
+        self.assertTrue(ReviewLog.objects.filter(
+            assessment=self.assessment,
+            field_or_topic="TEAM_ADVISORS").exists())
+
+    def test_the_machine_s_own_answer_survives(self):
+        self._override(score=9, comment="Roster produced.")
+        pv = self.assessment.parameter_values.get(input_key="TEAM_ADVISORS")
+        self.assertTrue(pv.is_overridden)
+        self.assertIsNotNone(pv.system_score)
+        self.assertNotEqual(float(pv.score), float(pv.system_score))
+
+    def test_a_band_with_no_score_is_worth_what_the_key_says(self):
+        self._override(band="Excellent", comment="Anchor met in full.")
+        pv = self.assessment.parameter_values.get(input_key="TEAM_ADVISORS")
+        self.assertEqual(float(pv.score), 9.0)
+
+    def test_an_unknown_band_is_refused(self):
+        response = self._override(band="Legendary", comment="Because.")
+        self.assertEqual(response.status_code, 422)
+
+    def test_a_reason_is_still_required(self):
+        response = self._override(score=9)
+        self.assertEqual(response.status_code, 422)
+
+    def test_clearing_reverts_and_rescores(self):
+        self._override(score=9, comment="Roster produced.")
+        after_override = float(
+            self.assessment.parameter_values.get(
+                input_key="TEAM_ADVISORS").score)
+        self._override()
+        pv = self.assessment.parameter_values.get(input_key="TEAM_ADVISORS")
+        self.assertFalse(pv.is_overridden)
+        self.assertEqual(float(pv.score), float(pv.system_score))
+        self.assertNotEqual(float(pv.score), after_override)

@@ -11,6 +11,16 @@ urlpatterns = [
     path("companies/<uuid:company_id>/assessment",
          v2_api.V2AssessmentView.as_view(),
          name="v2-assessment"),
+    # The chat that sits beside the parameter panel. Company-scoped like the
+    # rest of this surface — the panel holds a company id, and making it
+    # resolve a deal first to ask about a row it already has open would be
+    # friction for nothing. Deal-scoped twins live further down.
+    path("companies/<uuid:company_id>/assessment/suggestions",
+         v2_api.V2AssessmentSuggestionsView.as_view(),
+         name="v2-assessment-suggestions"),
+    path("companies/<uuid:company_id>/assessment/qa",
+         v2_api.V2AssessmentQAView.as_view(),
+         name="v2-assessment-qa"),
     path("companies/<uuid:company_id>/assessment/parameters/<str:ref>",
          v2_api.V2AssessmentParameterDetailView.as_view(),
          name="v2-assessment-parameter-detail"),
