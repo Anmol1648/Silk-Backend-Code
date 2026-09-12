@@ -40,6 +40,13 @@ urlpatterns = [
          views.ParameterDetailView.as_view(), name="assessment-parameter"),
     path("deals/<uuid:deal_id>/assessment/parameters/<str:key>/override",
          views.ParameterOverrideView.as_view(), name="assessment-override"),
+    # What to ask about a node of the scorecard, at any level, and the chat
+    # that answers it. An override the chat proposes is applied through the
+    # existing override route below — one write path, one audit trail.
+    path("deals/<uuid:deal_id>/assessment/suggestions",
+         views.AssessmentSuggestionsView.as_view()),
+    path("deals/<uuid:deal_id>/assessment/qa",
+         views.AssessmentQAView.as_view()),
     path("deals/<uuid:deal_id>/assessment/findings",
          views.DiligenceFindingsView.as_view(), name="assessment-findings"),
     path("deals/<uuid:deal_id>/assessment/band-advancement",

@@ -65,31 +65,34 @@ class TheFoundersOwnFigureIsFound(TestCase):
     def _enter(self, raise_amount, ccy="USD"):
         return save_deal_targets(
             self.company, self.deal.id, target_raise=Decimal(raise_amount),
-            pre_money=Decimal("20000000"), ccy=ccy, user=self.user)
+            pre_money=Decimal("20"), ccy=ccy, user=self.user)
 
     def test_the_entered_raise_reaches_the_scorecard(self):
-        self._enter("5000000")
+        self._enter("5")
         amount, basis = current_raise.for_company(self.company.id)
         self.assertEqual(float(amount), 5.0)
         self.assertIn("deal targets", basis)
 
-    def test_it_is_converted_to_millions_not_passed_through(self):
-        """US$5,000,000 is 5 US$ Mn. Passing it through would read as five
-        million million, and the scorecard rows divide by it."""
-        self._enter("5000000")
+    def test_the_scale_convention_is_stated_in_one_place(self):
+        """`DealTargets` records a value and a currency and NO scale. Every
+        other raise figure in this system is millions, so that is the
+        convention -- adopted explicitly, in one constant, rather than
+        inferred differently by each of the four consumers."""
+        self.assertTrue(current_raise.RAISE_VALUES_ARE_MILLIONS)
+        self._enter("5")
         amount, _ = current_raise.for_company(self.company.id)
-        self.assertLess(float(amount), 1000)
+        self.assertEqual(float(amount), 5.0)
 
     def test_a_later_entry_supersedes_an_earlier_one(self):
-        self._enter("5000000")
-        self._enter("8000000")
+        self._enter("5")
+        self._enter("8")
         amount, _ = current_raise.for_company(self.company.id)
         self.assertEqual(float(amount), 8.0)
 
     def test_a_non_dollar_entry_is_still_answered_in_dollars(self):
         """The row converts on save and records the rate, so the figure read
         back here is already USD."""
-        self._enter("400000000", ccy="INR")
+        self._enter("400", ccy="INR")
         amount, _ = current_raise.for_company(self.company.id)
         if amount is not None:
             self.assertLess(float(amount), 400.0)
@@ -104,8 +107,8 @@ class ASelectedScenarioOutranksTheEnteredTerms(TestCase):
     def setUp(self):
         self.tenant, self.user, self.company, self.deal = _bootstrap()
         save_deal_targets(self.company, self.deal.id,
-                          target_raise=Decimal("5000000"),
-                          pre_money=Decimal("20000000"), user=self.user)
+                          target_raise=Decimal("5"),
+                          pre_money=Decimal("20"), user=self.user)
 
     def _scenario(self, value, selected=True, ccy="USD"):
         from fundos.strategy.models import RaiseRecommendation, RaiseScenario
@@ -118,13 +121,13 @@ class ASelectedScenarioOutranksTheEnteredTerms(TestCase):
             raise_value=Decimal(value), raise_ccy=ccy, is_selected=selected)
 
     def test_a_decision_taken_wins_over_a_target_entered(self):
-        self._scenario("9000000")
+        self._scenario("9")
         amount, basis = current_raise.for_company(self.company.id)
         self.assertEqual(float(amount), 9.0)
         self.assertIn("scenario", basis)
 
     def test_an_unselected_scenario_is_not_a_decision(self):
-        self._scenario("9000000", selected=False)
+        self._scenario("9", selected=False)
         amount, basis = current_raise.for_company(self.company.id)
         self.assertEqual(float(amount), 5.0)
         self.assertIn("deal targets", basis)
@@ -132,7 +135,7 @@ class ASelectedScenarioOutranksTheEnteredTerms(TestCase):
     def test_a_scenario_in_another_currency_defers_to_the_usd_figure(self):
         """Converting it here would put an unrecorded rate inside a scored
         row; the founder's own USD figure is the better answer."""
-        self._scenario("700000000", ccy="INR")
+        self._scenario("700", ccy="INR")
         amount, basis = current_raise.for_company(self.company.id)
         self.assertEqual(float(amount), 5.0)
         self.assertIn("deal targets", basis)
@@ -164,8 +167,8 @@ class TheAssessmentColumnRemainsTheLastResort(TestCase):
     def test_entered_terms_outrank_it(self):
         self._assessment("12")
         save_deal_targets(self.company, self.deal.id,
-                          target_raise=Decimal("5000000"),
-                          pre_money=Decimal("20000000"), user=self.user)
+                          target_raise=Decimal("5"),
+                          pre_money=Decimal("20"), user=self.user)
         amount, basis = current_raise.for_company(self.company.id)
         self.assertEqual(float(amount), 5.0)
         self.assertIn("deal targets", basis)
@@ -176,8 +179,8 @@ class EveryConsumerAsksTheSameResolver(TestCase):
     def setUp(self):
         self.tenant, self.user, self.company, self.deal = _bootstrap()
         save_deal_targets(self.company, self.deal.id,
-                          target_raise=Decimal("5000000"),
-                          pre_money=Decimal("20000000"), user=self.user)
+                          target_raise=Decimal("5"),
+                          pre_money=Decimal("20"), user=self.user)
 
     def test_the_derived_scorecard_rows_see_it(self):
         from fundos.profile.assessment_extraction import _current_raise

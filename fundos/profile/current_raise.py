@@ -30,26 +30,40 @@ from decimal import Decimal, InvalidOperation
 
 logger = logging.getLogger(__name__)
 
-#: `target_raise_usd` and `raise_value` hold WHOLE currency units -- the
-#: column is named `_usd`, not `_usd_mn`; post-money is computed as a plain
-#: sum with the pre-money entered the same way; and the summary strip renders
-#: it with no scale suffix while rendering the assessment column with "M".
-#: Three independent signals, and the conversion is done in one place so a
-#: wrong reading is one line to correct rather than four.
-UNITS_PER_MILLION = Decimal(1_000_000)
+#: UNITS, AND WHY THIS IS STATED RATHER THAN INFERRED.
+#:
+#: `DealTargets` records a value and a currency and NO SCALE -- the same gap
+#: that made a funding round of "20" mean either twenty dollars or twenty
+#: crore. Nothing in the row says which, so this module cannot read it off
+#: the data; it has to adopt a convention and say so.
+#:
+#: The convention is MILLIONS, because every other raise figure in this
+#: system is: `capital_raised_usd_mn`, `amount_usd_mn`,
+#: `totalFundingReceivedUsdMn`. A founder typing 7 into a raise field in this
+#: product means US$7M, and the phase-1 summary renders that entry back as
+#: "USD 7" for exactly that reason.
+#:
+#: The honest fix is a denomination column on `DealTargets`, the way
+#: `FundingRound` got one. Until then this is the single place the
+#: assumption lives, so correcting it is one line rather than four.
+RAISE_VALUES_ARE_MILLIONS = True
 
 
-def _millions(whole_units):
-    """Whole USD -> USD millions, or None."""
-    if whole_units is None:
+def _millions(value):
+    """A stated raise as US$ millions, or None when it states nothing.
+
+    Zero and negative are not asks; they come back None so a caller shows a
+    blank rather than a raise of nothing.
+    """
+    if value is None:
         return None
     try:
-        value = Decimal(str(whole_units))
+        number = Decimal(str(value))
     except (InvalidOperation, ValueError, TypeError):
         return None
-    if not value.is_finite() or value <= 0:
+    if not number.is_finite() or number <= 0:
         return None
-    return value / UNITS_PER_MILLION
+    return number if RAISE_VALUES_ARE_MILLIONS else number / Decimal(1_000_000)
 
 
 def _from_selected_scenario(company_id):
@@ -84,7 +98,11 @@ def _from_selected_scenario(company_id):
 
 
 def _from_deal_targets(company_id):
-    """The headline terms the founder entered, in USD as stored."""
+    """The headline terms the founder entered, in USD as stored.
+
+    The row converts to USD on save and records the rate, so what is read
+    back here is already dollars; only the SCALE is a convention.
+    """
     try:
         from fundos.profile.targets import DealTargets
 

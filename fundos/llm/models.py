@@ -53,6 +53,11 @@ LLM_ROLES = (
     "company_profile_judgment",     # adjudicates conflicting extracted figures
     "assessment_extraction",        # fundos/assessment/extraction.py
     "assessment_rubric_review",     # fundos/assessment/tasks.py
+    # Grounded Q&A over one deal's SCORECARD, and the overrides it may
+    # propose. Declared here so an administrator can bind and mock it like
+    # any other role -- an undeclared role has no binding, and llm_generate
+    # raises rather than falling back.
+    "assessment_qa",                # fundos/assessment/qa.py
     # v23 Phase 3 — emits the assessment workbook's own input_key values from
     # step 1 research, so the company profile finally reaches the scorecard.
     "assessment_inputs",            # fundos/profile/assessment_extraction.py

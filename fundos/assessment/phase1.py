@@ -1179,12 +1179,16 @@ def deal_terms(assessment):
                 ask = _money(row.target_raise_value, row.target_raise_ccy)
         except Exception as exc:      # never break the scorecard over a label
             logger.debug("PHASE1: deal targets unavailable: %s", exc)
-    raise_mn = _current_raise_mn(assessment)
     if not ask:
-        ask = _money(raise_mn, "USD", "M")
+        ask = _money(_current_raise_mn(assessment), "USD", "M")
     return {
         "ask_amount": ask,
-        "capital_raised": _money(raise_mn, "USD", "M"),
+        # NOT the resolver. This is the figure the assessment was banded
+        # against -- category D read it when the score was produced -- so it
+        # has to keep saying what was scored, not what the deal's terms say
+        # today. `ask_amount` above is the live one; these are two different
+        # questions and were briefly collapsed into one.
+        "capital_raised": _money(assessment.capital_raised_usd_mn, "USD", "M"),
     }
 
 

@@ -888,6 +888,41 @@ DEFAULT_PROMPTS = {
                   "any naming a field that does not exist."),
     },
 
+    "assessment_qa": {
+        "tier": "simple",
+        "system": (
+            "You answer questions about ONE deal's SCORECARD using ONLY the "
+            "scorecard context provided: the rows, their scores and bands, "
+            "the reasoning and evidence recorded for each, and the rubric "
+            "and anchor definitions where they are given. Do not use outside "
+            "knowledge and do not browse. If the context does not answer the "
+            "question, say so and name what is missing.\n\n"
+            "The ANCHOR is authoritative about what a band requires. When "
+            "asked how a row could improve, quote what the anchor requires "
+            "for the band above and say what the evidence here lacks. Never "
+            "invent a band definition.\n\n"
+            "DO NOT DO ARITHMETIC ON THE SCORE. The server computes what any "
+            "change is worth and shows it beside your answer; a number you "
+            "calculate will contradict it.\n\n"
+            "You may PROPOSE an override when the evidence in front of you "
+            "genuinely supports a different band - never because someone "
+            "asks for a higher score. Every proposal needs a reason that "
+            "cites the evidence and the anchor. A person reviews and applies "
+            "it; you never change a score yourself. Leave the array empty "
+            "when nothing in the context supports a change.\n\n"
+            'Return JSON: {"answer": str, "citations": [str], "answered": '
+            'bool, "missing": [str], "proposedOverrides": [{"ref": str, '
+            '"score": number, "reason": str}]}'
+        ),
+        "user": "Answer this question about the scorecard: {question}",
+        "context_keys": ["scorecard", "question"],
+        "notes": ("Grounded Q&A over one deal's scorecard. No web search - "
+                  "SIMPLE tier. Proposed overrides are suggestions a person "
+                  "applies through the override endpoint, which requires a "
+                  "reason; the server validates every one and computes the "
+                  "score impact itself."),
+    },
+
     # ---------------- Field regen default (fixes empty-prompt bug) -------
     "company_profile_field": {
         "tier": "simple",
@@ -1081,6 +1116,7 @@ ROLE_TIER_DEFAULTS = {
     "company_profile_field": "simple",
     "founder_profile": "simple",
     "profile_qa": "simple",
+    "assessment_qa": "simple",
     "readiness_summary": "simple",
     "material_critique": "simple",
     "strategy_blueprint": "simple",

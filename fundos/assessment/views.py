@@ -522,6 +522,64 @@ class ParameterOverrideView(DealScopedAPIView):
         })
 
 
+class AssessmentSuggestionsView(DealScopedAPIView):
+    """GET — what is worth asking about a node of the scorecard.
+
+    `?ref=` addresses any level: a category (A), a child (A.1) or the row
+    that actually scores (A.1.d). Each level gets different questions,
+    because they ARE different questions -- nothing settles a category, its
+    rows do. With no ref, the six categories come back, which is what a
+    panel that has not drilled in yet needs.
+
+    Computed from the scorecard, not asked of a model: the anchor already
+    defines what each band requires, and the engine can say exactly what a
+    change is worth. Instant, free, and unable to name a row that does not
+    exist.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, deal_id):
+        from fundos.assessment import suggestions
+
+        a = _active(self.deal)
+        if a is None:
+            return Response({"suggestions": {}, "assessed": False})
+
+        raw = (request.query_params.get("ref") or "").strip()
+        refs = [r.strip() for r in raw.split(",") if r.strip()] or None
+        return Response({"assessed": True,
+                         "suggestions": suggestions.for_assessment(a, refs)})
+
+
+class AssessmentQAView(DealScopedAPIView):
+    """POST — a question about this scorecard, and any override it proposes.
+
+    The chat never changes a score. It may propose one; a person applies it
+    through `…/parameters/{key}/override`, which demands a reason and keeps
+    the machine's own answer in its own columns.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, deal_id):
+        from fundos.assessment.qa import answer
+
+        question = ((request.data or {}).get("question") or "").strip()
+        if not question:
+            return Response({"detail": "question is required"}, status=400)
+
+        a = _active(self.deal)
+        if a is None:
+            return Response({"error": "E-NOTFOUND-404",
+                             "detail": "This deal has no assessment yet."},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        return Response(answer(a, question,
+                               ref=((request.data or {}).get("ref") or ""),
+                               user=request.user))
+
+
 class DiligenceFindingsView(DealScopedAPIView):
     """Extracted evidence, observations, and the question to ask the founder.
 
