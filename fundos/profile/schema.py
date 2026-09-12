@@ -559,9 +559,24 @@ def sources_block(labels, document_count=0):
     return SOURCES_INSTRUCTION + "\n".join(parts)
 
 
+#: Punctuation inside a filename that a model routinely retypes as a space.
+#: `Project Orah_Financial Model_vf.xlsx` comes back as "Project Orah
+#: Financial Model" often enough that treating the two as different sources
+#: drops a real citation for a typographic difference.
+_LABEL_PUNCTUATION = str.maketrans({"_": " ", "-": " ", "–": " ",
+                                    "—": " "})
+
+
 def _normalise_label(text):
-    """Both sides of a citation match, lowercased and whitespace-collapsed."""
-    return " ".join(str(text or "").split()).casefold()
+    """Both sides of a citation match: lowercased, depunctuated, collapsed.
+
+    Underscores and dashes become spaces because a filename is frequently
+    quoted back with them swapped, and a citation dropped over an underscore
+    is a real source lost to typography. The WORDS still have to match --
+    this makes the comparison forgiving about punctuation, not about content.
+    """
+    cleaned = str(text or "").translate(_LABEL_PUNCTUATION)
+    return " ".join(cleaned.split()).casefold()
 
 
 def canonical_source(claimed, labels):

@@ -59,10 +59,25 @@ logger = logging.getLogger("fundos.profile")
 # writes under its key, and `set_section` rejects anything not listed here so a
 # typo fails loudly at the call site instead of silently producing a dossier
 # missing a whole source.
+# DOCUMENTS RENDER FIRST, whatever their number.
+#
+# The dossier is capped before synthesis (`profile_max_dossier_chars`) and the
+# cut takes the TAIL. With web research first, a 552,000-character financial
+# model sat at the end and lost 174,000 characters of itself to a cap the web
+# research never came near — the company's own numbers cut so a search result
+# could be kept whole. That is backwards: an uploaded document outranks the
+# web everywhere else in this system, and it has to outrank it here too,
+# where the loss actually happens.
+#
+# The keys and the "Source N" labels are UNCHANGED. They are identifiers, not
+# positions: `source_labels` keys on "# Source 2" to find the document block,
+# citations name files and batches rather than these headings, and citations
+# stored on existing profiles still resolve. Renumbering to match the new
+# order would break all three for a cosmetic gain.
 SECTION_ORDER = (
-    ("source1", "Source 1: Web Research (search-grounded)"),
     ("source2", "Source 2: Company Documents "
                 "(native extraction + document model)"),
+    ("source1", "Source 1: Web Research (search-grounded)"),
 )
 
 
@@ -188,6 +203,9 @@ class DossierWriter:
             f"- Company: **{self.company_name}**\n"
             f"- Website: {self.website or '_not recorded_'}\n"
             f"- Last updated: {timezone.now().isoformat()}\n"
+            f"- Order: the company's own documents come first because they "
+            f"outrank web research. Where the two disagree, the document is "
+            f"what the company itself reported.\n"
         )
         founders_block = _render_founders(self.founders)
         if founders_block:

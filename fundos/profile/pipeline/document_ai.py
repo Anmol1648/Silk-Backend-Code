@@ -60,8 +60,28 @@ MIME_TYPES = {
     ".tif": "image/tiff",
     ".tiff": "image/tiff",
     ".bmp": "image/bmp",
-    ".pptx": ("application/vnd.openxmlformats-officedocument"
-              ".presentationml.presentation"),
+}
+
+#: Formats a document model is ASKED to read but no provider accepts inline.
+#:
+#: `.pptx` was in the table above and the call 400'd every single time --
+#: "Unsupported MIME type: ...presentationml.presentation" -- on every
+#: company that uploads a deck, which is most of them. Native extraction
+#: still recovers the slide text and speaker notes, so the failure was
+#: invisible in the profile and visible only as a CRITICAL line in the log.
+#:
+#: Named here rather than deleted, because the reason the deck wanted a model
+#: read has not gone away: a chart or a screenshot carries numbers that exist
+#: only as pixels, and nothing recovers those from an OOXML text extract.
+#: Reading them needs the deck converted to PDF or to images first, which
+#: needs a converter on the server -- a deployment decision, not a code one.
+UNREADABLE_BY_MODEL = {
+    ".pptx": ("Gemini does not accept a PowerPoint file inline. The slide "
+              "text and speaker notes are extracted natively; numbers that "
+              "appear only inside a chart or a screenshot are not read. "
+              "Converting the deck to PDF before upload recovers them."),
+    ".ppt": ("A binary PowerPoint file is not accepted inline by any "
+             "document model. Save it as .pdf to have its charts read."),
 }
 
 SYSTEM = (
@@ -91,6 +111,16 @@ PROMPT = (
 def is_supported(suffix):
     """True when this format is read by a model rather than by an extractor."""
     return str(suffix or "").lower() in MIME_TYPES
+
+
+def why_not_readable(suffix):
+    """Why a model cannot read this format, or "" when it can.
+
+    A sentence a founder can act on, not a MIME type. It reaches the document
+    row and the dossier, so "the deck was not read" is a fact on the screen
+    rather than a line in a log nobody opens.
+    """
+    return UNREADABLE_BY_MODEL.get(str(suffix or "").lower(), "")
 
 
 def mime_for(suffix):

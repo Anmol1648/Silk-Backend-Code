@@ -220,3 +220,76 @@ class TheBenchmarksActuallyArrive(TestCase):
         self.assertEqual(group, "B2B Ecommerce")
         self.assertGreater(len(exact), len(loose),
                            "the canonical value must bring more peers")
+
+class TheAssessmentIsHandedWhatTheProfileResolved(TestCase):
+    """One run logged both of these, a minute apart:
+
+        "sub-sector 'Healthtech' matched the benchmark group 'Healthtech'"
+        sub_sector_method="unresolved" sector="" subSector=""
+
+    The profile resolved it and stored it on the company_profile section.
+    The assessment then looked at the model's own answer, and at
+    `Company.sector` / `Company.sub_sector` -- two columns nothing in the
+    pipeline writes. Category F is a fifth of the rating and scored blank on
+    a company whose cohort was known.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command("seed_platform_config", verbosity=0)
+
+    def setUp(self):
+        import uuid
+
+        from fundos.core.models import Company, Membership, Tenant, User
+        from fundos.profile.services import get_or_create_profile
+
+        tenant = Tenant.objects.create(name=f"T-{uuid.uuid4().hex[:8]}")
+        self.user = User.objects.create_user(
+            email=f"{uuid.uuid4().hex[:8]}@example.com", tenant_id=tenant.id,
+            name="Sector User")
+        self.company = Company.objects.create(
+            tenant_id=tenant.id, name="Cohort Co", created_by=self.user)
+        Membership.objects.create(
+            tenant_id=tenant.id, user=self.user, scope_type="company",
+            scope_id=self.company.id, role="founder", status="active")
+        self.profile = get_or_create_profile(self.company, user=self.user)
+
+    def _store(self, macro, sub):
+        from fundos.profile.section_writer import update_section_from_data
+
+        update_section_from_data(
+            self.profile, "company_profile",
+            {"description_of_business": "Care.", "website": "",
+             "country": "IN", "macro_sector": macro, "sub_sector": sub,
+             "funding_status_name": "", "revenue_size_name": "",
+             "currency_id": "INR"},
+            user=self.user)
+
+    def _read(self):
+        from fundos.profile.assessment_extraction import _sector_from_profile
+
+        return _sector_from_profile(self.profile)
+
+    def test_the_resolved_sub_sector_is_readable_from_the_profile(self):
+        self._store("Healthcare", "Healthtech")
+        self.assertEqual(self._read(), ("Healthcare", "Healthtech"))
+
+    def test_a_profile_that_says_nothing_returns_blanks(self):
+        self.assertEqual(self._read(), ("", ""))
+
+    def test_the_company_row_is_not_where_this_lives(self):
+        """Nothing in the pipeline writes those columns, which is exactly why
+        reading them found nothing."""
+        self._store("Healthcare", "Healthtech")
+        self.company.refresh_from_db()
+        self.assertFalse(getattr(self.company, "sub_sector", "") or "")
+
+    def test_an_unreadable_profile_is_not_an_error(self):
+        """A sector lookup must never be what fails a generation run."""
+        from unittest import mock
+
+        with mock.patch("fundos.profile.spec_serializer.serialize_section",
+                        side_effect=RuntimeError("boom")):
+            self.assertEqual(self._read(), ("", ""))

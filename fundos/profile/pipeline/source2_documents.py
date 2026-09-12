@@ -43,6 +43,7 @@ fails the source.
 
 import logging
 import os
+import re
 import tempfile
 from dataclasses import dataclass, field
 
@@ -198,7 +199,44 @@ def _convert_with_markitdown(path):
     from markitdown import MarkItDown
 
     result = MarkItDown().convert(str(path))
-    return (getattr(result, "text_content", None) or "").strip()
+    return _drop_empty_rows(
+        (getattr(result, "text_content", None) or "").strip())
+
+
+#: A markdown table row whose cells are all blank, dashes or pipes. One
+#: spreadsheet produced 552,541 characters this way -- every unused cell of
+#: every sheet, rendered faithfully -- of which the actual P&L was a small
+#: fraction. The dossier is capped before synthesis, so scaffolding does not
+#: merely waste tokens: it pushes real numbers past the cut.
+_EMPTY_TABLE_ROW = re.compile(r"^\s*\|[\s|\-:]*\|\s*$")
+
+#: Kept so a table still reads as a table: the header separator row matches
+#: the pattern above and must survive it.
+_SEPARATOR_ROW = re.compile(r"^\s*\|[\s|:]*-{2,}[\s|:\-]*\|\s*$")
+
+
+def _drop_empty_rows(text):
+    """Remove blank spreadsheet rows, keeping every row that says anything.
+
+    Conservative by construction: a row is dropped only when EVERY cell in it
+    is empty. A row with one figure and nine blanks is a fact about the
+    company and survives whole, and the header separator that makes a
+    markdown table render is never removed.
+    """
+    if "|" not in text:
+        return text
+    kept, dropped = [], 0
+    for line in text.split("\n"):
+        if (_EMPTY_TABLE_ROW.match(line)
+                and not _SEPARATOR_ROW.match(line)):
+            dropped += 1
+            continue
+        kept.append(line)
+    if dropped:
+        logger.info("PIPELINE: dropped %d empty table row(s) from a native "
+                    "extract (%d -> %d characters).", dropped, len(text),
+                    sum(len(k) + 1 for k in kept))
+    return "\n".join(kept).strip()
 
 
 def _model_read(path, filename, policy, note, profile):
@@ -463,12 +501,28 @@ def _model_stage(local, filename, policy, note, sections, profile):
             status="disabled",
             reason="Document reading is switched off for this deployment "
                    "(Application configuration -> document model enabled).")
+    suffix = os.path.splitext(filename)[1].lower()
     if policy.read_mode == "never":
-        suffix = os.path.splitext(filename)[1].lower()
         return ReadOutcome(
             status="skipped",
             reason=f"{suffix} is handled as '{policy.handler}': "
                    f"{policy.description}")
+
+    # ASKED FOR, BUT NO PROVIDER ACCEPTS IT. A `.pptx` was sent on every run
+    # and rejected on every run -- "Unsupported MIME type" -- so each deck
+    # cost a failed call, a CRITICAL log line and a diagnosis pointing at the
+    # model binding, which was not the problem. Native extraction had already
+    # recovered the slide text either way.
+    #
+    # Refused here, before the call, with the reason a founder can act on:
+    # convert the deck to PDF and its charts get read.
+    unreadable = document_ai.why_not_readable(suffix)
+    if unreadable:
+        logger.info("PIPELINE: %s is not readable by a document model — %s",
+                    filename, unreadable)
+        sections.append("> The document model did not read this file. "
+                        + unreadable + "\n")
+        return ReadOutcome(status="skipped", reason=unreadable)
     try:
         return _model_read(local, filename, policy, note, profile)
     except document_ai.DocumentReadError as exc:

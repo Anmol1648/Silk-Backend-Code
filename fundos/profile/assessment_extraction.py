@@ -472,6 +472,26 @@ BENCHMARK_REASONS = {
 }
 
 
+def _sector_from_profile(profile):
+    """``(macro_sector, sub_sector)`` as the profile itself recorded them.
+
+    Read from the stored section rather than from the company row, because
+    the section is what synthesis writes and what the screen displays. "" for
+    either where the profile does not say.
+    """
+    from fundos.profile.spec_serializer import serialize_section
+
+    try:
+        data = serialize_section(profile, "company_profile").get("data") or {}
+    except Exception as exc:                # pragma: no cover - never fatal
+        logger.debug("ASSESSMENT INPUTS: company_profile unreadable: %s", exc)
+        return "", ""
+    if not isinstance(data, dict):
+        return "", ""
+    return (str(data.get("macro_sector") or "").strip(),
+            str(data.get("sub_sector") or "").strip())
+
+
 def _benchmark_cohort_rows(sector, sub_sector):
     """The deal-table row behind each level, and why one is absent.
 
@@ -913,9 +933,21 @@ def extract_assessment_inputs(profile, payloads=None, user=None):
             "justification": (item.get("justification") or "")[:2000]})
         counts["bands"] += 1
 
-    sector = (data.get("sector") or getattr(profile.company, "sector", "")
-              or "").strip()
-    sub_sector = (data.get("subSector")
+    # THE PROFILE ALREADY KNOWS THIS. It reads the dossier, resolves the
+    # sub-sector against the benchmark groups and stores the resolved value
+    # on the company_profile section -- one run logged
+    # "'Healthtech' matched the benchmark group 'Healthtech' (exact)" and
+    # then, a minute later, "sub_sector_method=unresolved sector='' ".
+    #
+    # The reason: this looked in the model's own answer, and then at
+    # `Company.sector` / `Company.sub_sector`, two columns NOTHING in the
+    # pipeline writes. The answer was sitting in the section the same run had
+    # just saved, which nothing here read. Category F is a fifth of the
+    # rating and scored blank on a company whose cohort was known.
+    profile_sector, profile_sub = _sector_from_profile(profile)
+    sector = (data.get("sector") or profile_sector
+              or getattr(profile.company, "sector", "") or "").strip()
+    sub_sector = (data.get("subSector") or profile_sub
                   or getattr(profile.company, "sub_sector", "") or "").strip()
     bench, group, method = benchmark_inputs(sector, sub_sector)
     rows.extend(bench)

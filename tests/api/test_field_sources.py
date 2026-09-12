@@ -1548,3 +1548,59 @@ class TheCompanySuppliedCitationReachesTheReader(TestCase):
         source = self._sources("Puneet Bhaskar")["sources"][0]
         self.assertEqual(source["locator"], "")
         self.assertEqual(source["title"], self.label)
+
+class AFilenameRetypedIsStillTheSameSource(TestCase):
+    """35 citations on one section were dropped in a live run as naming a
+    source not in the dossier — every financial row losing its provenance at
+    once. A model quotes a filename back with its underscores as spaces often
+    enough that the two must not count as different sources.
+
+    The words still have to match. This is forgiveness about punctuation, not
+    about content.
+    """
+
+    LABELS = ["Project Orah Teaser_vff.pptx",
+              "Project Orah_Financial Model_vf.xlsx",
+              "Batch 7: Financial Performance"]
+
+    def _match(self, claimed):
+        from fundos.profile.schema import canonical_source
+
+        return canonical_source(claimed, self.LABELS)
+
+    def test_underscores_retyped_as_spaces_still_match(self):
+        self.assertEqual(self._match("Project Orah Financial Model"),
+                         "Project Orah_Financial Model_vf.xlsx")
+
+    def test_the_exact_filename_still_matches(self):
+        self.assertEqual(self._match("Project Orah_Financial Model_vf.xlsx"),
+                         "Project Orah_Financial Model_vf.xlsx")
+
+    def test_a_filename_with_a_locator_appended_still_matches(self):
+        self.assertEqual(
+            self._match("Project Orah_Financial Model_vf.xlsx, Sheet 'P&L'"),
+            "Project Orah_Financial Model_vf.xlsx")
+
+    def test_a_dash_and_an_underscore_are_the_same_character_here(self):
+        self.assertEqual(self._match("Project Orah-Financial Model-vf.xlsx"),
+                         "Project Orah_Financial Model_vf.xlsx")
+
+    def test_a_source_that_is_not_there_still_matches_nothing(self):
+        for claimed in ("Crunchbase", "Nonexistent Source", "", None):
+            self.assertEqual(self._match(claimed), "")
+
+    def test_the_container_is_still_not_a_source(self):
+        """"Company Documents" is the section heading, not a document."""
+        self.assertEqual(self._match("Company Documents"), "")
+        self.assertEqual(self._match("Source 2: Company Documents"), "")
+
+    def test_a_batch_number_is_not_swallowed_by_a_shorter_one(self):
+        labels = ["Batch 1: Company Basics", "Batch 10: Company Story"]
+        from fundos.profile.schema import canonical_source
+
+        self.assertEqual(canonical_source("Batch 10: Company Story", labels),
+                         "Batch 10: Company Story")
+
+    def test_the_two_documents_are_still_told_apart(self):
+        self.assertEqual(self._match("Project Orah Teaser"),
+                         "Project Orah Teaser_vff.pptx")
