@@ -55,3 +55,8 @@ celerybeat.pid
 *.swp
 .DS_Store
 Thumbs.db
+
+# Generation logs pasted in for diagnosis — real company data, not source.
+*.log
+new */*.txt
+new *.txt
