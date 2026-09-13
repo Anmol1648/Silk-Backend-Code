@@ -110,6 +110,12 @@ class ExportTests(TestCase):
         did not exist. The full loop must work — and tampering must 403."""
         response = self.client_api.post(f"{self.base}/teaser/export",
                                         {"format": "pdf"}, format="json")
+        # SAY WHY, don't raise KeyError. Reading the key straight out turned
+        # a storage failure -- which returns 422 and an explanation -- into
+        # "KeyError: 'downloadUrl'", which names nothing and sent a reader
+        # looking for a contract change that had not happened.
+        self.assertEqual(response.status_code, 200,
+                         f"export failed: {response.json()}")
         url = response.json()["downloadUrl"]
         download = APIClient().get(url)          # signature IS the auth
         self.assertEqual(download.status_code, 200)
