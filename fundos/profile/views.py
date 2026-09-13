@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 
 from fundos.core.exceptions import DomainValidationError, NotFoundInDeal
 from fundos.core.services.audit import audit
+from fundos.profile import snippets
 # One definition of how a field and a section are NAMED for a reader, shared
 # with the chat suggestions so the same field is never shown under two names.
 from fundos.profile.labels import humanize as _humanize
@@ -1249,14 +1250,23 @@ def _citations_for(store, address):
     """
     if not store or not address:
         return []
+    # THE EXACT MATCH IS THE FIRST ANSWER, NOT THE ONLY ONE. A value
+    # evidenced by two sources is stored as `<field>` plus `<field>.1`, and
+    # returning on the exact key hid every one after the first — the reader
+    # saw a single chip with no way to know a second source existed.
     exact = store.get(address)
-    if isinstance(exact, dict) and exact.get("source"):
-        return [exact]
+    seeded = [exact] if isinstance(exact, dict) and exact.get("source") else []
 
     prefix = f"{address}."
     keys = sorted((k for k in store if str(k).startswith(prefix)),
                   key=_sort_key)
     out, seen = [], set()
+    for citation in seeded:
+        identity = (citation.get("source"), citation.get("locator"),
+                    citation.get("quote"))
+        seen.add(identity)
+        out.append(citation)
+
     for key in keys:
         citation = store.get(key)
         if not isinstance(citation, dict) or not citation.get("source"):
@@ -1290,6 +1300,22 @@ def _source_kind(source):
     if _FILENAME_SOURCE.search(text):
         return "document"
     return "web"
+
+
+#: Source precedence, lowest number first. The company's own documents
+#: outrank the web here for the same reason they outrank it in the dossier:
+#: where the two disagree, the document is what the company itself reported.
+_SOURCE_RANK = {"document": 0, "attribution": 1, "web": 2}
+
+
+def _documents_first(sources):
+    """Order provenance chips: uploaded documents, then web research.
+
+    A stable sort, so two documents keep the order they were cited in — the
+    rank decides between KINDS, not between sources of the same kind.
+    """
+    return sorted(sources or [],
+                  key=lambda s: _SOURCE_RANK.get(s.get("type"), 3))
 
 
 class ProfileFieldSourcesView(APIView):
@@ -1358,13 +1384,27 @@ class ProfileFieldSourcesView(APIView):
                     "fieldName": _field_label(profile, section_key,
                                               field_path),
                     "cited": True,
-                    "sources": sources,
+                    "sources": _documents_first(sources),
                     "analysis": analysis,
                 })
 
         # 1) The citations synthesis recorded for THIS field, if it has any.
         field_citations = _citations_for(
             (section.field_sources or {}) if section else None, field_path)
+
+        # THE DOCUMENT'S OWN WORDS, not the phrase the model typed. Asked
+        # where a founder came from it quoted the name and nothing else --
+        # a quote, and useless as evidence. Fetched once for the whole
+        # field: four citations must not download the same dossier four
+        # times.
+        dossier = ""
+        if field_citations:
+            latest = (ProfileGenerationRun.objects
+                      .filter(profile=profile).exclude(dossier_uri="")
+                      .order_by("-created_at").first())
+            if latest is not None:
+                dossier = snippets.dossier_text(latest)
+
         for citation in field_citations:
             src_counter += 1
             # Through the same cleaner the assessment citations use, so one
@@ -1397,7 +1437,7 @@ class ProfileFieldSourcesView(APIView):
                 "title": (f"{title} · {_short_locator(locator)}"
                           if locator else title),
                 "type": kind,
-                "snippet": citation.get("quote") or "",
+                "snippet": snippets.for_citation(citation, dossier),
                 "url": "",
             })
 
@@ -1468,7 +1508,7 @@ class ProfileFieldSourcesView(APIView):
             # "here is what the run did in general". Without it the two are
             # rendered identically and the second passes for the first.
             "cited": bool(field_citations),
-            "sources": sources,
+            "sources": _documents_first(sources),
         })
 
 

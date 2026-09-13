@@ -1023,6 +1023,64 @@ def _one_citation(citation):
     return nested[0]
 
 
+#: How much of a quote to keep. A citation is only useful if a reader can
+#: recognise the passage it came from, and 400 characters truncated the
+#: sentence a figure sat in about as often as it kept it.
+QUOTE_LIMIT = 1200
+
+
+def _all_citations(citation):
+    """Every citation inside whatever shape arrived, most useful first.
+
+    One value can be evidenced by more than one source -- a founder named in
+    the deck AND on a web profile -- and only the first was ever kept. The
+    ones carrying a quote come first, because a quote is what a reader can
+    check.
+    """
+    if isinstance(citation, dict) and citation.get("source"):
+        return [citation]
+    if isinstance(citation, list):
+        pool = citation
+    elif isinstance(citation, dict):
+        pool = list(citation.values())
+    else:
+        return []
+
+    found = []
+    for item in pool:
+        found.extend(_all_citations(item))
+
+    seen, unique = set(), []
+    for item in found:
+        key = (str(item.get("source", "")).strip().casefold(),
+               str(item.get("locator", "")).strip().casefold())
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(item)
+    unique.sort(key=lambda c: 0 if c.get("quote") else 1)
+    return unique
+
+
+def _record_citation(out, rejected, field, citation, allowed):
+    """Write one citation into the map, applying the same source check."""
+    source = sanitize.plain_text(citation.get("source", ""), limit=300)
+    if not source:
+        return
+    if allowed:
+        source = canonical_source(source, allowed)
+        if not source:
+            rejected.append(field)
+            return
+    out[sanitize.plain_text(field, limit=128)] = {
+        "source": source,
+        "locator": sanitize.plain_text(citation.get("locator", ""),
+                                       limit=120),
+        "quote": sanitize.plain_text(citation.get("quote", ""),
+                                     limit=QUOTE_LIMIT),
+    }
+
+
 def _coerce_sources(value, *, notes=None, key="", allowed=None):
     """Type the `sources` map a section came back with.
 
@@ -1048,7 +1106,19 @@ def _coerce_sources(value, *, notes=None, key="", allowed=None):
 
     out, rejected = {}, []
     for field, citation in raw_sources.items():
-        citation = _one_citation(citation)
+        # EVERY SOURCE, NOT THE FIRST ONE.
+        #
+        # A founder cited from both the deck and a web profile has two
+        # sources, and collapsing them to one threw away half the evidence
+        # for a value -- the reader saw one chip and had no way to know a
+        # second existed. The extras are written under `field.<n>`, which
+        # `_citations_for` already collects, so the storage shape and every
+        # existing reader are untouched.
+        extras = _all_citations(citation)
+        for index, extra in enumerate(extras[1:], start=1):
+            _record_citation(out, rejected, f"{field}.{index}", extra,
+                             allowed)
+        citation = extras[0] if extras else _one_citation(citation)
         if not isinstance(citation, dict):
             continue
         source = sanitize.plain_text(citation.get("source", ""), limit=300)
@@ -1067,7 +1137,8 @@ def _coerce_sources(value, *, notes=None, key="", allowed=None):
             "source": source,
             "locator": sanitize.plain_text(citation.get("locator", ""),
                                            limit=120),
-            "quote": sanitize.plain_text(citation.get("quote", ""), limit=400),
+            "quote": sanitize.plain_text(citation.get("quote", ""),
+                                         limit=QUOTE_LIMIT),
         }
     if rejected and notes is not None:
         notes.append(
