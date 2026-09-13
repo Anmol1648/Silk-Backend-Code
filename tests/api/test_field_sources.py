@@ -1604,3 +1604,75 @@ class AFilenameRetypedIsStillTheSameSource(TestCase):
     def test_the_two_documents_are_still_told_apart(self):
         self.assertEqual(self._match("Project Orah Teaser"),
                          "Project Orah Teaser_vff.pptx")
+
+class CitationsArriveInMoreThanOneShape(TestCase):
+    """A section that contains an ARRAY is cited one entry per row.
+
+    `financial_summary` and `investors_cap_table` both came back cited and
+    reached the reader with no provenance at all — reported only as "a
+    sources block came back that could not be read as citations". The block
+    was readable; it was a list, and only a dict was accepted.
+
+    Same principle as the founders fix above: the model answered the
+    question sincerely in a shape nobody had allowed for, and the answer was
+    thrown away rather than read.
+    """
+
+    def _one(self, citation):
+        from fundos.profile.schema import _one_citation
+
+        return _one_citation(citation)
+
+    def test_a_flat_citation_is_unchanged(self):
+        flat = {"source": "Model.xlsx", "quote": "56.9"}
+        self.assertEqual(self._one(flat), flat)
+
+    def test_a_list_of_citations_yields_one(self):
+        picked = self._one([{"source": "Model.xlsx", "locator": "Summary"},
+                            {"source": "Model.xlsx", "quote": "56.9"}])
+        self.assertEqual(picked["source"], "Model.xlsx")
+
+    def test_the_one_with_a_quote_is_preferred(self):
+        """It is the one a reader can actually check."""
+        picked = self._one([{"source": "Deck.pptx"},
+                            {"source": "Model.xlsx", "quote": "56.9"}])
+        self.assertEqual(picked["quote"], "56.9")
+
+    def test_a_list_of_keyed_rows_is_read(self):
+        picked = self._one([{"financial_year": {"source": "Model.xlsx",
+                                                "quote": "FY24"}}])
+        self.assertEqual(picked["source"], "Model.xlsx")
+
+    def test_a_nested_dict_still_works(self):
+        picked = self._one({"name": {"source": "Deck.pptx", "quote": "A"}})
+        self.assertEqual(picked["source"], "Deck.pptx")
+
+    def test_an_empty_list_names_nothing(self):
+        self.assertIsNone(self._one([]))
+
+    def test_junk_names_nothing(self):
+        for junk in (["text", 3], "text", 3, None, [{"no": "source"}]):
+            self.assertIsNone(self._one(junk), repr(junk))
+
+    def test_the_section_keeps_its_citations_end_to_end(self):
+        """Through `_coerce_sources`, which is what the pipeline calls."""
+        from fundos.profile.schema import _coerce_sources
+
+        notes = []
+        out = _coerce_sources(
+            {"sources": {"financials": [
+                {"source": "Model.xlsx", "locator": "Summary",
+                 "quote": "56.9"}]}},
+            notes=notes, key="financial_summary",
+            allowed=["Model.xlsx"])
+        self.assertEqual(out["financials"]["source"], "Model.xlsx")
+        self.assertEqual(notes, [])
+
+    def test_an_unreadable_block_is_still_reported(self):
+        """The message stays for a block that genuinely says nothing."""
+        from fundos.profile.schema import _coerce_sources
+
+        notes = []
+        _coerce_sources({"sources": {"financials": [{"no": "source"}]}},
+                        notes=notes, key="financial_summary")
+        self.assertTrue(any("could not be read" in n for n in notes))

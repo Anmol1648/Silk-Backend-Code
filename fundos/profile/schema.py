@@ -989,6 +989,19 @@ def _one_citation(citation):
     source, preferring the one carrying a quote, since that is the one a
     reader can check.
     """
+    # A LIST IS THE SAME ANSWER IN THE OTHER SHAPE. An object section that
+    # contains an array -- `financial_summary.financials`,
+    # `investors_cap_table.investors_list` -- is routinely cited one entry
+    # per row:
+    #
+    #     "sources": {"financials": [{"source": ..., "quote": ...}, ...]}
+    #
+    # That is as sincere as the nested-dict form below, and it was dropped
+    # whole for not being a dict: two sections came back cited and reached
+    # the reader with no provenance at all, reported only as "a sources
+    # block came back that could not be read".
+    if isinstance(citation, list):
+        citation = {str(i): item for i, item in enumerate(citation)}
     if not isinstance(citation, dict):
         return None
     if citation.get("source"):
@@ -996,6 +1009,13 @@ def _one_citation(citation):
     nested = [inner for inner in citation.values()
               if isinstance(inner, dict) and inner.get("source")]
     if not nested:
+        # One level deeper: a field whose citations are a list of rows, each
+        # of which is itself keyed by field. Same rule, same reason.
+        for inner in citation.values():
+            deeper = _one_citation(inner) if isinstance(
+                inner, (dict, list)) else None
+            if deeper:
+                return deeper
         return None
     for inner in nested:
         if inner.get("quote"):
