@@ -103,13 +103,20 @@ def record(macro_sector, sub_sector, *, company=""):
     report what happened without reading the database again. Never raises:
     a taxonomy row is not worth failing a generation run over.
     """
+    from django.db import transaction
+
     out = {"sector": IGNORED, "sub_sector": IGNORED}
     try:
-        if macro_sector:
-            out["sector"] = record_sector(macro_sector, company=company)[1]
-        if sub_sector:
-            out["sub_sector"] = record_sub_sector(
-                sub_sector, sector=macro_sector, company=company)[1]
+        # Its own savepoint here too, so a caller that forgot one is still
+        # safe. A failed statement poisons a Postgres transaction whether or
+        # not the exception is caught, and this runs inside a profile write.
+        with transaction.atomic():
+            if macro_sector:
+                out["sector"] = record_sector(macro_sector,
+                                              company=company)[1]
+            if sub_sector:
+                out["sub_sector"] = record_sub_sector(
+                    sub_sector, sector=macro_sector, company=company)[1]
     except Exception as exc:                # pragma: no cover - never fatal
         logger.warning("TAXONOMY: could not record %r/%r: %s",
                        macro_sector, sub_sector, exc)

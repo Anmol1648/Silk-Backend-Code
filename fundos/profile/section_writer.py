@@ -936,14 +936,30 @@ def _mirror_company_profile(profile, structured):
     # deliberate. The label is accepted and marked for review instead.
     #
     # No benchmark cohort is created — see fundos.platformcfg.taxonomy.
-    try:
-        from fundos.platformcfg import taxonomy
+    # A SAVEPOINT, NOT JUST A TRY/EXCEPT.
+    #
+    # `try/except` around a database call is NOT enough to make it harmless:
+    # in Postgres a failed statement poisons the whole transaction, so
+    # swallowing the error leaves every later write in the same block
+    # failing with "current transaction is aborted". That is exactly what
+    # happened when this shipped ahead of its migration — the taxonomy
+    # insert hit a missing column, the exception was caught, and the
+    # company_profile section was then lost to a transaction nobody could
+    # tell was already dead.
+    #
+    # `atomic()` opens a savepoint. A failure inside rolls back to it and
+    # the outer transaction carries on intact.
+    from django.db import transaction
 
-        taxonomy.record(structured.get("macro_sector"),
-                        structured.get("sub_sector"),
-                        company=getattr(profile.company, "name", ""))
+    try:
+        with transaction.atomic():
+            from fundos.platformcfg import taxonomy
+
+            taxonomy.record(structured.get("macro_sector"),
+                            structured.get("sub_sector"),
+                            company=getattr(profile.company, "name", ""))
     except Exception as exc:            # pragma: no cover - never fatal
-        _logger.debug("TAXONOMY: not recorded for %s: %s", profile.pk, exc)
+        _logger.warning("TAXONOMY: not recorded for %s: %s", profile.pk, exc)
 
     changed = []
     website = structured.get("website")

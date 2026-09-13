@@ -280,3 +280,76 @@ class ItHappensWhenAProfileIsSaved(TaxonomyCase):
         self._save("Healthcare", "Chronic Care Management")
         data = serialize_section(self.profile, "company_profile")["data"]
         self.assertEqual(data["sub_sector"], "Chronic Care Management")
+
+class AFailingTaxonomyWriteCannotPoisonTheProfileWrite(TestCase):
+    """`try/except` around a database call is not enough to make it harmless.
+
+    This shipped ahead of its migration. The taxonomy insert hit a column
+    that did not exist yet, the exception was caught as designed — and every
+    later write in the same transaction then failed with "current
+    transaction is aborted", losing the company_profile section. Postgres
+    poisons a transaction on a failed statement whether or not anybody
+    catches it; only a savepoint contains that.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        call_command("seed_platform_config", verbosity=0)
+
+    def setUp(self):
+        from fundos.core.models import Company, Membership, Tenant, User
+        from fundos.profile.services import get_or_create_profile
+
+        tenant = Tenant.objects.create(name=f"T-{uuid.uuid4().hex[:8]}")
+        self.user = User.objects.create_user(
+            email=f"{uuid.uuid4().hex[:8]}@example.com", tenant_id=tenant.id,
+            name="Saving User")
+        self.company = Company.objects.create(
+            tenant_id=tenant.id, name="Zyla Health", created_by=self.user)
+        Membership.objects.create(
+            tenant_id=tenant.id, user=self.user, scope_type="company",
+            scope_id=self.company.id, role="founder", status="active")
+        self.profile = get_or_create_profile(self.company, user=self.user)
+
+    def _save_with_broken_taxonomy(self):
+        """Write a section while the taxonomy tables are unusable."""
+        from unittest import mock
+
+        from django.db import ProgrammingError
+
+        from fundos.profile.section_writer import update_section_from_data
+
+        with mock.patch("fundos.platformcfg.taxonomy.record_sector",
+                        side_effect=ProgrammingError(
+                            "column lookup_sector.is_pending does not exist")):
+            update_section_from_data(
+                self.profile, "company_profile",
+                {"description_of_business": "Care.", "website": "",
+                 "country": "IN", "macro_sector": "Healthcare",
+                 "sub_sector": "Healthtech", "funding_status_name": "",
+                 "revenue_size_name": "", "currency_id": "INR"},
+                user=self.user)
+
+    def test_the_section_is_still_saved(self):
+        from fundos.profile.spec_serializer import serialize_section
+
+        self._save_with_broken_taxonomy()
+        data = serialize_section(self.profile, "company_profile")["data"]
+        self.assertEqual(data["description_of_business"], "Care.")
+        self.assertEqual(data["sub_sector"], "Healthtech")
+
+    def test_the_failure_is_reported_not_silent(self):
+        """It was logged at DEBUG, so nothing in the run said what had
+        happened until a section went missing."""
+        with self.assertLogs("fundos.profile", level="WARNING") as captured:
+            self._save_with_broken_taxonomy()
+        self.assertTrue(any("TAXONOMY" in line for line in captured.output))
+
+    def test_the_write_is_wrapped_in_a_savepoint(self):
+        import inspect
+
+        from fundos.profile import section_writer
+
+        source = inspect.getsource(section_writer._mirror_company_profile)
+        self.assertIn("transaction.atomic()", source)
