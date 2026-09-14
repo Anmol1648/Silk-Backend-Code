@@ -117,7 +117,7 @@ def _pool(env_var):
     if pool is None or pool["raw"] != raw:
         keys = _parse(raw)
         pool = {"keys": keys, "raw": raw, "cursor": 0, "cooldown": {},
-                "source": source}
+                "disabled": {}, "source": source}
         _pools[env_var] = pool
         if keys:
             logger.info("LLM: %s provides a pool of %d key(s)%s",
@@ -147,11 +147,20 @@ def next_key(env_var):
             return keys[0]
 
         cooldown = pool["cooldown"]
+        disabled = pool["disabled"]
+        live = [k for k in keys if k not in disabled]
+        if not live:
+            # Every key was rejected. Hand one out anyway so the provider's
+            # own "API key not valid" reaches the operator as an AUTH error,
+            # rather than a misleading "no key configured".
+            return keys[0]
         count = len(keys)
         start = pool["cursor"]
         for offset in range(count):
             index = (start + offset) % count
             key = keys[index]
+            if key in disabled:
+                continue
             until = cooldown.get(key)
             if until is not None and until <= now:
                 del cooldown[key]
@@ -161,7 +170,7 @@ def next_key(env_var):
                 return key
 
         # Everything is cooling down — take the one that frees up first.
-        soonest = min(keys, key=lambda k: cooldown.get(k, 0.0))
+        soonest = min(live, key=lambda k: cooldown.get(k, 0.0))
         logger.warning(
             "LLM: every key in the %s pool (%d) is in cooldown after reporting "
             "quota exhaustion; using the one that frees up soonest. Runs will "
@@ -192,6 +201,35 @@ def penalise(env_var, key, *, seconds=COOLDOWN_SECONDS, reason=""):
         max(0, available), len(pool["keys"]))
 
 
+def disable(env_var, key, *, reason=""):
+    """Take a key the provider REJECTED out of rotation for this process.
+
+    Different from :func:`penalise`: a rate-limited key comes back in a
+    minute, an invalid, revoked or suspended key never does, and each call
+    that lands on it fails. Without this, one bad key in a pool of nineteen
+    failed roughly one call in nineteen — a whole research batch each time.
+
+    A no-op for a single-key pool, where there is nothing to rotate to and
+    the AUTH error must reach the operator. Restarting the process (after
+    fixing the variable) brings the key back, as does changing the variable.
+    """
+    if not env_var or not key:
+        return
+    with _lock:
+        pool = _pool(env_var)
+        if len(pool["keys"]) < 2 or key not in pool["keys"]:
+            return
+        pool["disabled"][key] = reason or "rejected by the provider"
+        pool["cooldown"].pop(key, None)
+        live = len(pool["keys"]) - len(pool["disabled"])
+    logger.error(
+        "LLM: a key in the %s pool was REJECTED%s (key ending …%s) — removed "
+        "from rotation for this process; %d of %d key(s) remain. Remove or "
+        "replace it in %s and restart.",
+        env_var, f" ({reason})" if reason else "", key[-4:],
+        max(0, live), len(pool["keys"]), pool["source"])
+
+
 def pool_size(env_var):
     """How many keys are configured. Zero means unset."""
     if not env_var:
@@ -215,13 +253,16 @@ def describe(env_var):
     with _lock:
         pool = _pool(env_var)
         keys = pool["keys"]
-        cooling = sum(1 for k in keys
-                      if pool["cooldown"].get(k, 0.0) > now)
+        disabled = pool["disabled"]
+        cooling = sum(1 for k in keys if k not in disabled
+                      and pool["cooldown"].get(k, 0.0) > now)
         return {
             "configured": bool(keys),
             "count": len(keys),
-            "available": len(keys) - cooling,
+            "available": len(keys) - cooling - len(disabled),
             "cooling_down": cooling,
+            "rejected": len(disabled),
+            "rejected_tails": [f"…{k[-4:]}" for k in keys if k in disabled],
             "source": pool["source"],
             "tails": [f"…{k[-4:]}" for k in keys[:25]],
         }

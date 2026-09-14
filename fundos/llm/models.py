@@ -219,6 +219,11 @@ class LLMEndpoint(models.Model):
         from fundos.llm import keyring
         keyring.penalise(self.api_key_env_var, key, reason=reason)
 
+    def disable_api_key(self, key, *, reason=""):
+        """Drop a key the provider rejected as invalid, so no call uses it."""
+        from fundos.llm import keyring
+        keyring.disable(self.api_key_env_var, key, reason=reason)
+
     def has_api_key_in_env(self) -> bool:
         return bool(self.api_key)
 

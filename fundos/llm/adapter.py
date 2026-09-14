@@ -1496,6 +1496,33 @@ def _redact(text):
                   "REDACTED", text)
 
 
+#: What Gemini says when the KEY is at fault rather than the request: a
+#: mistyped or deleted key (400 API_KEY_INVALID), or a key whose project is
+#: suspended, has the API disabled, or was revoked (403).
+_GEMINI_BAD_KEY_MARKERS = (
+    "api key not valid", "api_key_invalid", "api key expired",
+    "api key was deleted", "api_key_service_blocked",
+    "has been suspended", "consumer_suspended", "permission denied: consumer",
+    "api has not been used in project", "service_disabled",
+)
+
+
+def _gemini_key_rejected(resp):
+    """The reason Gemini rejected the key itself, or "" when it did not.
+
+    Only 400 and 403, and only with a key-specific message: a 400 about a
+    bad schema or a 403 about a region is the request's fault, and switching
+    keys would just repeat it.
+    """
+    if getattr(resp, "status_code", None) not in (400, 403):
+        return ""
+    text = (getattr(resp, "text", "") or "").lower()
+    for marker in _GEMINI_BAD_KEY_MARKERS:
+        if marker in text:
+            return marker
+    return ""
+
+
 def _raise_for_status(resp, provider, model):
     """Fail with the provider's OWN explanation, not just the status line.
 
@@ -2681,18 +2708,31 @@ def _run_gemini(endpoint, system, prompt, model, temperature, max_tokens,
     # likely fine. Rotate, cool the exhausted key, and retry — bounded by the
     # pool size, so a genuinely exhausted account fails fast instead of walking
     # every key twice.
+    #
+    # An INVALID key is the same kind of problem with a longer life: the key
+    # is broken, not the request, and every call that lands on it fails. One
+    # bad key in a pool failed a whole research batch as a fatal AUTH error.
+    # Take it out of rotation and retry on the next key.
     attempts = 0
     max_rotations = max(0, min(endpoint.api_key_pool_size - 1, 4))
-    while resp.status_code == 429 and attempts < max_rotations:
+    while attempts < max_rotations:
+        rejected = _gemini_key_rejected(resp)
+        if resp.status_code != 429 and not rejected:
+            break
         attempts += 1
-        endpoint.penalise_api_key(headers.get("x-goog-api-key"),
-                                  reason=f"HTTP 429 on {model}")
+        if rejected:
+            endpoint.disable_api_key(headers.get("x-goog-api-key"),
+                                     reason=f"HTTP {resp.status_code}: {rejected}")
+        else:
+            endpoint.penalise_api_key(headers.get("x-goog-api-key"),
+                                      reason=f"HTTP 429 on {model}")
         rotated = endpoint.api_key
         if not rotated or rotated == headers.get("x-goog-api-key"):
             break
         headers = dict(headers, **{"x-goog-api-key": rotated})
-        logger.warning("LLM: gemini returned 429 for %s — retrying on another "
+        logger.warning("LLM: gemini returned %s for %s — retrying on another "
                        "key (%d of %d rotations).",
+                       "an invalid-key error" if rejected else "429",
                        model, attempts, max_rotations)
         resp = requests.post(url, json=sent_body, headers=headers,
                              timeout=timeout)
