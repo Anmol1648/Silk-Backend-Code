@@ -211,8 +211,146 @@ def _convert_with_markitdown(path):
     from markitdown import MarkItDown
 
     result = MarkItDown().convert(str(path))
-    return _drop_empty_rows(
-        (getattr(result, "text_content", None) or "").strip())
+    return _drop_empty_rows(_drop_slide_boilerplate(_drop_image_placeholders(
+        (getattr(result, "text_content", None) or "").strip())))
+
+
+#: A markdown image: `![alt](target)`. In a converted deck every picture on
+#: every slide becomes one of these, pointing at a file that exists only
+#: inside the .pptx -- `![](GoogleShape295p51.jpg)`, `![image.png](Picture3.jpg)`.
+#: The model reading the dossier cannot open any of them, so each is text
+#: that costs tokens and carries nothing, sitting between the words that do.
+_IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)]*)\)")
+
+#: Alt text a converter or an authoring tool invented rather than a person
+#: wrote: a filename, or a generic word and a number.
+_GENERIC_ALT = re.compile(
+    r"^\s*(?:[\w\- ]*\.(?:png|jpe?g|gif|bmp|svg|webp|tiff?|emf|wmf)"
+    r"|(?:image|picture|pic|img|graphic|shape|googleshape|photo|figure|"
+    r"object|diagram|chart)\s*[\w\-]*)?\s*$",
+    re.IGNORECASE)
+
+
+def _drop_image_placeholders(text):
+    """Remove pictures the model cannot see; keep any description of them.
+
+    A description somebody actually wrote -- `![Revenue by region, FY24]` --
+    is the only thing an image contributes to a text reading, so it is kept
+    as `[image: Revenue by region, FY24]`. A filename or "image.png" is not a
+    description and goes with the reference. Slide markers are untouched:
+    they are how a citation says "Slide 20".
+    """
+    if "![" not in text:
+        return text
+
+    removed = 0
+
+    def replace(match):
+        nonlocal removed
+        removed += 1
+        alt = match.group(1).strip()
+        if not alt or _GENERIC_ALT.match(alt):
+            return ""
+        return f"[image: {alt}]"
+
+    cleaned = _IMAGE.sub(replace, text)
+    # The references usually sat on lines of their own; what is left behind
+    # is a stack of blank lines. Two in a row is a paragraph break, and more
+    # than that says nothing.
+    cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
+    # Inline references leave a run of spaces where they sat. Only runs that
+    # FOLLOW text are collapsed, so a line's own indentation survives.
+    cleaned = re.sub(r"(?<=\S)[ \t]{2,}", " ", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
+    if removed:
+        logger.info("PIPELINE: removed %d image placeholder(s) from a native "
+                    "extract (%d -> %d characters).", removed, len(text),
+                    len(cleaned))
+    return cleaned
+
+
+#: The marker MarkItDown writes at the top of each slide. Kept: it is how a
+#: citation says "Slide 20".
+_SLIDE_MARKER = re.compile(r"<!--\s*Slide number:\s*\d+\s*-->")
+
+#: A speaker-notes heading with nothing under it. MarkItDown writes one on
+#: every slide whether or not the slide has notes.
+_EMPTY_NOTES = re.compile(r"^#{1,6}\s*Notes:\s*$\n?(?=\s*(?:<!--\s*Slide|\Z))",
+                          re.MULTILINE)
+
+#: A line must recur on at least this many slides, and this share of them,
+#: before it is treated as a footer rather than content.
+_FOOTER_MIN_SLIDES = 3
+_FOOTER_MIN_SHARE = 0.4
+_FOOTER_MAX_CHARS = 80
+
+
+def _drop_slide_boilerplate(text):
+    """Remove what every slide repeats and no slide means.
+
+    Two things, in a converted deck:
+
+      * an empty `### Notes:` heading on every slide without speaker notes;
+      * a footer or header line -- a logo word, "Proprietary and
+        confidential" -- repeated on slide after slide.
+
+    A repeated line is kept ONCE, on the first slide it appears, so nothing
+    it says is lost. A line carrying a digit is never treated as a footer:
+    a figure that happens to recur is a fact, and dropping its later copies
+    would be the wrong kind of tidy. Only decks are touched; a document with
+    no slide markers is returned unchanged apart from empty notes headings.
+    """
+    cleaned = _EMPTY_NOTES.sub("", text)
+
+    markers = list(_SLIDE_MARKER.finditer(cleaned))
+    if len(markers) < _FOOTER_MIN_SLIDES + 1:
+        return cleaned
+
+    # Split into [preamble, slide1, slide2, ...], each slide starting at its
+    # marker, so line counting is per slide rather than per occurrence.
+    bounds = [m.start() for m in markers] + [len(cleaned)]
+    preamble = cleaned[:bounds[0]]
+    slides = [cleaned[bounds[i]:bounds[i + 1]] for i in range(len(markers))]
+
+    def candidates(slide):
+        seen = set()
+        for line in slide.splitlines():
+            key = line.strip()
+            if (key and len(key) <= _FOOTER_MAX_CHARS
+                    and not _SLIDE_MARKER.fullmatch(key)
+                    and not key.startswith("#")
+                    and not any(ch.isdigit() for ch in key)):
+                seen.add(key)
+        return seen
+
+    counts = {}
+    for slide in slides:
+        for key in candidates(slide):
+            counts[key] = counts.get(key, 0) + 1
+
+    threshold = max(_FOOTER_MIN_SLIDES,
+                    int(len(slides) * _FOOTER_MIN_SHARE + 0.999))
+    footers = {key for key, n in counts.items() if n >= threshold}
+    if not footers:
+        return cleaned
+
+    kept_once, out, dropped = set(), [preamble], 0
+    for slide in slides:
+        lines = []
+        for line in slide.splitlines():
+            key = line.strip()
+            if key in footers:
+                if key in kept_once:
+                    dropped += 1
+                    continue
+                kept_once.add(key)
+            lines.append(line)
+        out.append("\n".join(lines) + "\n")
+
+    result = re.sub(r"\n{3,}", "\n\n", "".join(out)).strip()
+    logger.info("PIPELINE: removed %d repeated slide footer line(s) (%s).",
+                dropped, ", ".join(sorted(footers))[:200])
+    return result
 
 
 #: What a spreadsheet converter writes into a cell that holds nothing.
