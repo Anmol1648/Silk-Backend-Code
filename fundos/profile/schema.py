@@ -499,6 +499,12 @@ RULES:
     thing. The company's own deck and financial model are what a reader
     trusts; a search result repeating the same fact is weaker evidence for
     exactly the same claim.
+  * CHECK THE COMPANY'S UPLOADED FILES FIRST, for every value. Web research is
+    written as ready-made answers and is easier to quote -- that is not a
+    reason to cite it. If a document states the value (a name on a slide, a
+    figure in a sheet), cite THE DOCUMENT, with its slide, page or sheet as
+    the locator. You may add the web research as a second source. Cite web
+    research ALONE only for what no uploaded document states.
   * When the value came from what the COMPANY ITSELF supplied -- a founder
     named in their own records, their website -- cite that, even though those
     records are unverified. For "who is a founder here", the company saying so

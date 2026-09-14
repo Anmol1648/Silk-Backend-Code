@@ -346,6 +346,16 @@ def run(run_row, *, company_name, website, dossier, documents, user=None):
         if len(gained) < MIN_ROUND_GAIN:
             break
 
+    # The uploaded documents are the source of truth. Credit them wherever
+    # they state a value the model cited to web research instead.
+    from fundos.profile.pipeline.document_citations import credit_documents
+
+    credited = credit_documents(profile, text, labels[:document_count])
+    if credited:
+        logger.info("PIPELINE: credited the uploaded documents with %d "
+                    "citation(s) for %s, from their own text",
+                    credited, company_name)
+
     profile = schema.apply_document_center(profile, documents)
 
     populated = _populated(profile)
@@ -360,6 +370,7 @@ def run(run_row, *, company_name, website, dossier, documents, user=None):
         "rounds": rounds,
         "recovered_by_continuation": sum(r.get("gained", 0) for r in rounds[1:]),
         "citations": _citation_summary(profile, labels[:document_count]),
+        "document_citations_added": credited,
     }
     if notes:
         logger.info("PIPELINE: normalization corrected %d field(s) on the "
