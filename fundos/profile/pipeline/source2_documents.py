@@ -227,7 +227,9 @@ _IMAGE = re.compile(r"!\[([^\]]*)\]\(([^)]*)\)")
 _GENERIC_ALT = re.compile(
     r"^\s*(?:[\w\- ]*\.(?:png|jpe?g|gif|bmp|svg|webp|tiff?|emf|wmf)"
     r"|(?:image|picture|pic|img|graphic|shape|googleshape|photo|figure|"
-    r"object|diagram|chart)\s*[\w\-]*)?\s*$",
+    r"object|diagram|chart)\s*[\w\-]*)?\s*$"
+    # A file path is not a description: /home/x/team_linkedin_purple.png.
+    r"|.*[/\\].*",
     re.IGNORECASE)
 
 

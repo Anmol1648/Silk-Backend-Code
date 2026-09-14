@@ -27,15 +27,9 @@ _RULE_CELL = re.compile(r"^:?-{2,}:?$")
 #: A column header a converter invented: "Unnamed: 7".
 _UNNAMED = re.compile(r"^unnamed:?\s*\d+$", re.IGNORECASE)
 
-#: Alt text that describes nothing: a filename or a generic word.
-_GENERIC_ALT = re.compile(
-    r"^\s*(?:[\w\- ]*\.(?:png|jpe?g|gif|bmp|svg|webp|tiff?|emf|wmf)"
-    r"|(?:image|picture|pic|img|graphic|shape|googleshape|photo|figure|"
-    r"object|diagram|chart)\s*[\w\-]*)?\s*$",
-    re.IGNORECASE)
-
-#: Longest a cleaned citation is allowed to run before it is cut.
-MAX_CHARS = 900
+#: Longest a cleaned citation is allowed to run before it is cut. A quote is
+#: a short extract, not a passage.
+MAX_CHARS = 300
 
 
 def _cells(row):
@@ -119,13 +113,6 @@ def _flat_table(text):
     return " · ".join(kept)
 
 
-def _image(match):
-    alt = match.group(1).strip()
-    if not alt or _GENERIC_ALT.match(alt):
-        return ""
-    return f"Image: {alt}"
-
-
 def _join(lines):
     """Lines as one passage: a wrapped sentence rejoined with a space, a
     heading or a table row separated from what follows with a semicolon."""
@@ -167,8 +154,13 @@ def clean(text, *, limit=MAX_CHARS):
     elif text.count("|") >= 2:
         text = _flat_table(text)
 
-    text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", _image, text)
-    text = re.sub(r"\[image:\s*([^\]]+)\]", r"Image: \1", text)
+    # A picture is not a quote. Even a real alt text is not the words being
+    # cited, so every image mention goes: `![..](..)`, `[image: ..]`, and the
+    # "Image: /path/team_linkedin_purple.png" an earlier cleaning left behind.
+    text = re.sub(r"!\[([^\]]*)\]\([^)]*\)", " ", text)
+    text = re.sub(r"\[image:[^\]]*\]", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\bImage:\s*\S*\.(?:png|jpe?g|gif|bmp|svg|webp|tiff?|emf|wmf)\b",
+                  " ", text, flags=re.IGNORECASE)
     text = re.sub(r"\[([^\]]+)\]\((?:https?://|www\.)[^)]*\)", r"\1", text)
 
     lines = []

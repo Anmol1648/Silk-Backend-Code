@@ -39,6 +39,13 @@ class PlaceholdersAreRemoved(TestCase):
     def test_no_run_of_spaces_is_left_behind(self):
         self.assertEqual(clean("A ![](a.jpg) ![](b.jpg) B"), "A B")
 
+    def test_an_alt_text_that_is_a_file_path_goes(self):
+        """A live deck carried `/home/claude/work/team_assets/...png` as the
+        alt text of every LinkedIn icon on the team slide."""
+        out = clean("B.Tech ![/home/claude/work/team_assets/team_linkedin_purple.png]"
+                    "(Picture7.png) IIT Bombay")
+        self.assertEqual(out, "B.Tech IIT Bombay")
+
     def test_no_stack_of_blank_lines_is_left_behind(self):
         out = clean("Top\n\n![](a.jpg)\n\n![](b.jpg)\n\n![](c.jpg)\n\nBottom")
         self.assertNotIn("\n\n\n", out)

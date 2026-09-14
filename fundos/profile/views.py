@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 
 from fundos.core.exceptions import DomainValidationError, NotFoundInDeal
 from fundos.core.services.audit import audit
-from fundos.profile import snippets
+from fundos.core.services.citation_text import clean as _clean_quote
 # One definition of how a field and a section are NAMED for a reader, shared
 # with the chat suggestions so the same field is never shown under two names.
 from fundos.profile.labels import humanize as _humanize
@@ -1392,19 +1392,6 @@ class ProfileFieldSourcesView(APIView):
         field_citations = _citations_for(
             (section.field_sources or {}) if section else None, field_path)
 
-        # THE DOCUMENT'S OWN WORDS, not the phrase the model typed. Asked
-        # where a founder came from it quoted the name and nothing else --
-        # a quote, and useless as evidence. Fetched once for the whole
-        # field: four citations must not download the same dossier four
-        # times.
-        dossier = ""
-        if field_citations:
-            latest = (ProfileGenerationRun.objects
-                      .filter(profile=profile).exclude(dossier_uri="")
-                      .order_by("-created_at").first())
-            if latest is not None:
-                dossier = snippets.dossier_text(latest)
-
         for citation in field_citations:
             src_counter += 1
             # Through the same cleaner the assessment citations use, so one
@@ -1425,7 +1412,6 @@ class ProfileFieldSourcesView(APIView):
                 # this fills the gap rather than saying it twice.
                 title = f"Web Research · {title}"
             locator = citation.get("locator") or ""
-            snippet, verified = snippets.locate(citation, dossier)
             sources.append({
                 "id": f"src_{src_counter}",
                 # `name` and `locator` are the two halves a reader needs and
@@ -1438,11 +1424,10 @@ class ProfileFieldSourcesView(APIView):
                 "title": (f"{title} · {_short_locator(locator)}"
                           if locator else title),
                 "type": kind,
-                "snippet": snippet,
-                # True only when the snippet is the source's own passage,
-                # found where the citation points. False: the model's quote,
-                # which the panel should not present as a document extract.
-                "snippetVerified": verified,
+                # The model's own short quote, cleaned of markup. Not a
+                # passage pulled from the document around it: that read as
+                # a wall of slide text, image paths included.
+                "snippet": _clean_quote(citation.get("quote")),
                 "url": "",
             })
 

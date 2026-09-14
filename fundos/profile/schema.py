@@ -1023,10 +1023,9 @@ def _one_citation(citation):
     return nested[0]
 
 
-#: How much of a quote to keep. A citation is only useful if a reader can
-#: recognise the passage it came from, and 400 characters truncated the
-#: sentence a figure sat in about as often as it kept it.
-QUOTE_LIMIT = 1200
+#: How much of a quote to keep. A citation quote is a short extract a reader
+#: can check at a glance, not a passage.
+QUOTE_LIMIT = 400
 
 
 def _all_citations(citation):
