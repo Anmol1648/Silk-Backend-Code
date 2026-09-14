@@ -59,6 +59,12 @@ complete first response costs exactly what it costs today.
 """
 
 MIN_ROUND_GAIN = 1
+
+#: How many sections must come back with data but no citation before a round
+#: is spent re-asking for them. One uncited section is usually one with
+#: nothing citable (no news, say), and re-sending a 600,000-character dossier
+#: for it would cost a full call. Fourteen, as in a live run, is a failure.
+MIN_UNCITED_TO_REASK = 3
 """Stop when a round adds fewer sections than this.
 
 A section can be legitimately empty -- the dossier genuinely says nothing
@@ -101,8 +107,19 @@ def _truncate(dossier, limit):
     return head + note, True
 
 
+#: Added to a continuation round's schema block. The first live continuation
+#: round filled fourteen sections and cited almost none of them: asked only
+#: for "what is missing", the model treated `sources` as optional.
+CONTINUATION_CITATION_RULE = """
+
+THIS IS A FOLLOW-UP REQUEST FOR THE SECTIONS LISTED ABOVE. Every section you
+return MUST carry its `sources` block, exactly as the rules above describe.
+A section returned without citations is treated as not returned.
+"""
+
+
 def _ask(sections, dossier, *, company_name, website, user=None,
-         source_labels=None, document_count=0):
+         source_labels=None, document_count=0, continuation=False):
     """One synthesis call, for whichever sections are asked for.
 
     Takes the section list rather than reading it from the schema, so a
@@ -126,7 +143,9 @@ def _ask(sections, dossier, *, company_name, website, user=None,
             "section_keys": "\n".join(f"  - {key}" for key in keys),
             "schema_block": schema.schema_prompt_block(
                 sections, source_labels=source_labels,
-                document_count=document_count),
+                document_count=document_count)
+            + (CONTINUATION_CITATION_RULE
+               if continuation and source_labels else ""),
             "dossier": dossier,
         },
         config_profile=pipeline_settings.synthesis_config_profile(),
@@ -141,17 +160,34 @@ def _populated(profile):
             if section.get("isComplete")]
 
 
-def _unpopulated(profile, sections):
+def _is_cited(section):
+    """True when a section carries at least one citation."""
+    return bool((section or {}).get("sources"))
+
+
+def _unpopulated(profile, sections, *, require_citations=False):
     """The sections the model was asked for and did not fill.
 
     Pipeline-owned sections are excluded: the Document Center is written from
     our own records and is never the model's to populate, so counting it as
     missing would make every run look like it lost a section.
+
+    With `require_citations`, a section that has data but NO citation counts
+    as unfilled too. A reader cannot check a value with no source, and a live
+    continuation round returned fourteen such sections that the run then
+    reported as complete.
     """
     owned = getattr(schema, "PIPELINE_OWNED_SECTIONS", set())
-    return [s for s in sections
-            if s["key"] not in owned
-            and not (profile["sections"].get(s["key"]) or {}).get("isComplete")]
+    missing = []
+    for s in sections:
+        if s["key"] in owned:
+            continue
+        current = profile["sections"].get(s["key"]) or {}
+        if not current.get("isComplete"):
+            missing.append(s)
+        elif require_citations and not _is_cited(current):
+            missing.append(s)
+    return missing
 
 
 def _citation_summary(profile, document_labels):
@@ -253,6 +289,12 @@ def run(run_row, *, company_name, website, dossier, documents, user=None):
                "filled": len(_populated(profile))}]
     for round_no in range(2, MAX_SYNTHESIS_ROUNDS + 1):
         missing = _unpopulated(profile, active)
+        if labels:
+            uncited = [s for s in _unpopulated(profile, active,
+                                               require_citations=True)
+                       if s not in missing]
+            if len(uncited) >= MIN_UNCITED_TO_REASK:
+                missing = missing + uncited
         if not missing:
             break
 
@@ -265,7 +307,7 @@ def run(run_row, *, company_name, website, dossier, documents, user=None):
         try:
             more = _ask(missing, text, company_name=company_name,
                         website=website, user=user, source_labels=labels,
-                        document_count=document_count)
+                        document_count=document_count, continuation=True)
         except Exception as exc:  # noqa: BLE001 - a top-up, not a dependency
             logger.warning(
                 "PIPELINE: synthesis round %d failed (%s). Keeping what the "
@@ -280,7 +322,17 @@ def run(run_row, *, company_name, website, dossier, documents, user=None):
         for section in missing:
             key = section["key"]
             candidate = filled["sections"].get(key) or {}
-            if candidate.get("isComplete"):
+            if not candidate.get("isComplete"):
+                continue
+            current = profile["sections"].get(key) or {}
+            if not current.get("isComplete"):
+                # Filled at last. Taken even uncited: data with no source is
+                # still better than an empty section.
+                profile["sections"][key] = candidate
+                gained.append(key)
+            elif _is_cited(candidate) and not _is_cited(current):
+                # Already filled but uncited; this answer cites it. A cited
+                # version is never replaced by an uncited one.
                 profile["sections"][key] = candidate
                 gained.append(key)
 

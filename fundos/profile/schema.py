@@ -585,21 +585,84 @@ def canonical_source(claimed, labels):
     Exact first, then containment either way, so "Web Research, Batch 3:
     Products, Services & Business Model" still resolves to the batch it
     names. Longest match wins: "Batch 1" must not swallow "Batch 10".
+
+    A claim that is only a PART of several labels names none of them:
+    "Project Orah" is inside both the deck and the financial model, and
+    picking the longer one attached a slide quote to a spreadsheet.
     """
     claim = _normalise_label(claimed)
     if not claim or not labels:
         return ""
     best = ""
+    partial = []
     for label in labels:
         norm = _normalise_label(label)
         if not norm:
             continue
         if norm == claim:
             return label
-        if (norm in claim or claim in norm) and len(norm) > len(
-                _normalise_label(best)):
+        if norm in claim and len(norm) > len(_normalise_label(best)):
             best = label
-    return best
+        elif claim in norm:
+            partial.append(label)
+    if best:
+        return best
+    if len(partial) == 1:
+        return partial[0]
+    if partial:
+        return ""
+    return _source_by_words(claim, labels)
+
+
+#: Words that say what KIND of thing a source is, not WHICH one. Two labels
+#: sharing only these ("research", "batch") are not the same source.
+_GENERIC_SOURCE_WORDS = {
+    "a", "an", "and", "the", "of", "for", "on", "in", "to", "vs", "v",
+    "batch", "web", "research", "search", "grounded", "source", "sources",
+    "document", "documents", "file", "company", "uploaded", "report",
+    "pdf", "pptx", "ppt", "xlsx", "xls", "docx", "doc", "csv", "md",
+}
+
+
+def _source_words(norm):
+    """The distinguishing words of a normalised label: no digits, no kinds."""
+    words = set()
+    for word in norm.replace("&", " and ").replace(".", " ").split():
+        word = word.strip(",:;()[]'\"")
+        if len(word) < 2 or word.isdigit() or word in _GENERIC_SOURCE_WORDS:
+            continue
+        words.add(word)
+    return words
+
+
+def _source_by_words(claim, labels):
+    """The one label whose distinguishing words the claim shares, or "".
+
+    The model often names a source in its own words rather than copying it:
+    "Orah teaser deck" for "Project Orah Teaser_vff.pptx", "Founders and
+    Leadership research" for "Batch 2: Founders & Leadership". Containment
+    misses both, and each citation was dropped.
+
+    Accepted only when it is unambiguous: at least two distinguishing words
+    shared, at least two-thirds of the claim's distinguishing words found in
+    the label, and no other label scoring as well. A claim naming a site the
+    dossier does not list ("LinkedIn") shares nothing and is still dropped --
+    attaching it to some batch would invent a source the model never named.
+    """
+    claim_words = _source_words(claim)
+    if len(claim_words) < 2:
+        return ""
+    scored = []
+    for label in labels:
+        shared = claim_words & _source_words(_normalise_label(label))
+        if len(shared) >= 2 and len(shared) * 3 >= len(claim_words) * 2:
+            scored.append((len(shared), label))
+    if not scored:
+        return ""
+    scored.sort(key=lambda item: item[0], reverse=True)
+    if len(scored) > 1 and scored[0][0] == scored[1][0]:
+        return ""
+    return scored[0][1]
 
 
 #: A canonical group must be at least this long to be recognised inside a

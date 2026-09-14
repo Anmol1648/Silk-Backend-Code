@@ -1894,6 +1894,19 @@ def _parse_json_with_repair(endpoint, system, text, binding, model_override,
     except Exception:
         pass
 
+    # Repair before salvage. A response that FINISHED but carries one bad
+    # string -- an unescaped `"` in a verbatim quote, a raw line break -- is
+    # whole apart from that character. Salvage keeps only what came before
+    # it, which on a live synthesis kept 13,030 of 198,194 characters and
+    # threw fourteen complete, cited sections away.
+    repaired, fixes = _repair_json_text(text)
+    if repaired is not None:
+        logger.warning(
+            "LLM: %s returned JSON that would not parse; repaired it locally "
+            "(%d fix(es): %s) and kept the whole response.",
+            role or endpoint.code, len(fixes), ", ".join(sorted(set(fixes))))
+        return repaired, True
+
     # Salvage before spending money. A truncated-but-well-formed prefix is
     # the single most common shape here, and it needs no model to fix.
     salvaged = _salvage_truncated_json(text)
@@ -1937,6 +1950,112 @@ def _parse_json_with_repair(endpoint, system, text, binding, model_override,
         if salvaged is not None:
             return salvaged, True
         raise
+
+
+#: How many single-character repairs one response may need before it is
+#: judged not worth repairing. A quote-heavy response can carry dozens of
+#: unescaped quotes; hundreds means something else is wrong.
+_REPAIR_ATTEMPTS = 300
+
+
+def _repair_json_text(text):
+    """Parse a response with the usual one-character faults fixed in place.
+
+    :returns: ``(parsed, fixes)``, or ``(None, [])`` when it cannot be
+        repaired -- the caller then falls back to salvage.
+
+    Only faults whose fix is unambiguous are touched, so a repair never turns
+    malformed JSON into DIFFERENT data:
+
+    * a raw control character (line break, tab) inside a string -- parsed
+      with ``strict=False``, which reads it as the character it is;
+    * trailing commas before ``}`` or ``]``;
+    * an unescaped ``"`` INSIDE a string -- recognised by the parser stopping
+      on ordinary text straight after a closing quote (``"he said "hi" to"``
+      stops on ``h``). The quote before it is escaped. A quote followed by
+      structure (``,`` ``:`` ``}`` ``]`` or another ``"``) is a real string
+      end and is never touched, so a genuinely missing comma still fails;
+    * an invalid backslash escape (``\\d``) -- the backslash is doubled.
+    """
+    if not text:
+        return None, []
+    raw = text.strip()
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        if raw.lower().startswith("json"):
+            raw = raw[4:]
+    start = min([i for i in (raw.find("{"), raw.find("[")) if i >= 0],
+                default=-1)
+    end = max(raw.rfind("}"), raw.rfind("]"))
+    if start < 0 or end <= start:
+        return None, []
+    raw = raw[start:end + 1]
+
+    fixes = []
+
+    decoder = json.JSONDecoder(strict=False)
+    for _ in range(_REPAIR_ATTEMPTS):
+        try:
+            parsed, consumed = decoder.raw_decode(raw)
+        except json.JSONDecodeError as exc:
+            pos = exc.pos
+            if "Invalid \\escape" in exc.msg and 0 <= pos < len(raw) \
+                    and raw[pos] == "\\":
+                raw = raw[:pos] + "\\" + raw[pos:]
+                fixes.append("invalid escape")
+                continue
+            comma = _trailing_comma_before(raw, pos)
+            if comma is not None:
+                raw = raw[:comma] + raw[comma + 1:]
+                fixes.append("trailing comma")
+                continue
+            quote = _stray_quote_before(raw, pos)
+            if quote is None:
+                return None, []
+            raw = raw[:quote] + "\\" + raw[quote:]
+            fixes.append("unescaped quote")
+            continue
+        if raw[consumed:].strip():
+            return None, []
+        if not fixes:
+            fixes.append("control character")
+        return parsed, fixes
+    return None, []
+
+
+def _trailing_comma_before(raw, pos):
+    """The index of a `,` directly before a closing bracket, or None.
+
+    Found from the parser's own fault position rather than a text search, so
+    a comma INSIDE a quoted value ("a, ]") is never removed.
+    """
+    if not (0 <= pos < len(raw)) or raw[pos] not in "}]":
+        return None
+    back = pos - 1
+    while back >= 0 and raw[back].isspace():
+        back -= 1
+    return back if back >= 0 and raw[back] == "," else None
+
+
+def _stray_quote_before(raw, pos):
+    """The index of an unescaped quote that ended a string too early, or None.
+
+    The parser reports the first character it could not place. When that is
+    ordinary text and the nearest non-space character before it is a `"`,
+    the string ended one quote too soon.
+    """
+    if not (0 <= pos < len(raw)):
+        return None
+    if raw[pos] in ',:}]"' or raw[pos].isspace():
+        return None
+    back = pos - 1
+    while back >= 0 and raw[back] in " \t":
+        back -= 1
+    if back < 0 or raw[back] != '"':
+        return None
+    if back > 0 and raw[back - 1] == "\\":
+        return None
+    return back
 
 
 #: How many times salvage may cut back to the reported fault and retry. Each

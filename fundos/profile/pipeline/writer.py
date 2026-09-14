@@ -170,6 +170,19 @@ def _store_sources(profile, key, row, data, sources):
 
     resolved = {}
     for field, citation in sources.items():
+        # A second or third source for one item arrives as "0.1", "0.2" --
+        # the item's position, then which extra it is. It is stored under the
+        # item's id with the same suffix ("<id>.1"), which is where the field
+        # sources endpoint collects extras. `int("0.2")` fails, and every
+        # extra source for a founder or competitor was silently discarded.
+        base, dot, extra = str(field).rpartition(".")
+        suffix = ""
+        if dot and extra.isdigit() and (
+                base.strip().isdigit()
+                or base.strip().casefold() in by_identity):
+            # Only when what precedes the dot is itself an address, so a
+            # name like "Company 2.0" is not mistaken for an extra.
+            suffix, field = f".{extra}", base
         try:
             cited = data[int(field)]
         except (ValueError, TypeError, IndexError):
@@ -179,7 +192,7 @@ def _store_sources(profile, key, row, data, sources):
             # matching below reduces the position to anyway.
             item_id = by_identity.get(str(field).strip().casefold())
             if item_id:
-                resolved[item_id] = citation
+                resolved[item_id + suffix] = citation
             continue
         item_id = by_identity.get(_identity(cited))
         if not item_id and len(served) == len(data):
@@ -191,7 +204,7 @@ def _store_sources(profile, key, row, data, sources):
                        if isinstance(candidate, dict) and candidate.get("id")
                        else "")
         if item_id:
-            resolved[item_id] = citation
+            resolved[item_id + suffix] = citation
 
     if resolved:
         section.field_sources = resolved
