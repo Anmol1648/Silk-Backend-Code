@@ -36,6 +36,7 @@ fifth of the deal, so the resolution is recorded with its method and left
 UNSET rather than guessed when nothing matches.
 """
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -864,7 +865,8 @@ def extract_assessment_inputs(profile, payloads=None, user=None):
 
     for item in bands:
         key = item.get("inputKey")
-        band = (item.get("band") or "").strip().title()
+        written = (item.get("band") or "").strip()
+        band = _normalise_band(written) or written.title()
         if key not in anchor_keys:
             # The key is not an anchor parameter.  Before rejecting, check
             # whether it is a numeric parameter the LLM misplaced into bands.
@@ -914,10 +916,16 @@ def extract_assessment_inputs(profile, payloads=None, user=None):
             continue
         if band not in ("Excellent", "Good", "Fair", "Poor"):
             counts["unparseable_band"] += 1
+            # Named, not just counted: "unparseable_band: 2" said something
+            # was lost and nothing about what.
+            logger.info("ASSESSMENT INPUTS: band for %s not scored -- the "
+                        "model wrote %r.", key, written[:80])
             continue
         url, detail, sourced = _citation(item, dossier=has_dossier)
         if not sourced:
             counts["unsourced_rejected"] += 1
+            logger.info("ASSESSMENT INPUTS: band for %s not scored -- no "
+                        "source was given.", key)
             continue
         from_dossier = detail == DOSSIER_SOURCE and not url
         if from_dossier:
@@ -1326,6 +1334,43 @@ def _ask(profile, payloads, numeric, anchors, user=None):
         bands = coerced.get("bands") or []
         logger.info("ASSESSMENT EXTRACTION: batch '%s' completed -> returned %d values, %d bands.",
                     name, len(vals), len(bands))
+
+        # ASK AGAIN FOR WHAT DID NOT COME BACK -- the anchors only, once.
+        #
+        # One run scored a founder's education Excellent; the next, from the
+        # same deck, returned nothing usable for it and the scorecard showed a
+        # blank. A band that is missing or unreadable is re-asked on its own,
+        # in a call a fraction of the size, instead of waiting for a full
+        # re-run to roll the dice again.
+        missing = _unanswered_anchors(b_anc, bands)
+        if missing:
+            logger.info("ASSESSMENT EXTRACTION: batch '%s' -- asking again "
+                        "for %d band(s) that did not come back: %s", name,
+                        len(missing), ", ".join(p.input_key for p in missing))
+            retry_ctx = dict(ctx, parameters=[], qualitative_parameters=[{
+                "inputKey": p.input_key, "parameter": p.name,
+                "definition": p.definition, "ifMissing": p.if_missing,
+                "bands": defs.get(p.input_key, {})} for p in missing])
+            try:
+                more = _coerce(llm_generate(
+                    role="assessment_inputs", system=EXTRACTION_SYSTEM,
+                    context=retry_ctx, user=user,
+                    calling_context=f"profile.assessment_inputs.{name}.retry"
+                )) or {}
+            except Exception as exc:        # noqa: BLE001 - a top-up only
+                logger.warning("ASSESSMENT EXTRACTION: retry for batch '%s' "
+                               "failed (%s); keeping the first answer.",
+                               name, exc)
+                more = {}
+            wanted = {p.input_key for p in missing}
+            recovered = [b for b in (more.get("bands") or [])
+                         if isinstance(b, dict) and b.get("inputKey") in wanted]
+            bands = [b for b in bands
+                     if not (isinstance(b, dict) and b.get("inputKey") in {
+                         r.get("inputKey") for r in recovered})] + recovered
+            logger.info("ASSESSMENT EXTRACTION: batch '%s' retry recovered "
+                        "%d of %d band(s).", name, len(recovered),
+                        len(missing))
         return {"values": vals, "bands": bands}
 
     all_values = []
@@ -1344,6 +1389,43 @@ def _ask(profile, payloads, numeric, anchors, user=None):
     logger.info("ASSESSMENT EXTRACTION (consolidated 3 batches): %d total values, %d total bands returned.",
                 len(all_values), len(all_bands))
     return {"values": all_values, "bands": all_bands}
+
+
+_BAND_ORDER = ("Poor", "Fair", "Good", "Excellent")
+
+
+def _normalise_band(text):
+    """One of Excellent/Good/Fair/Poor from how a model actually wrote it.
+
+    Returns "" when no band can be read. A founder's education came back
+    in a wording the strict check did not accept and was dropped without a
+    trace, on a run whose previous answer had scored it Excellent.
+
+    * case and surrounding words are ignored: "EXCELLENT", "Good (tier-1)";
+    * a range takes the LOWER band -- "Good/Excellent", "Good to Excellent"
+      -- because a score is a claim the evidence must fully carry;
+    * anything naming no band at all ("Strong", "Not Evidenced") is "".
+    """
+    found = [band for band in _BAND_ORDER
+             if re.search(rf"\b{band}\b", str(text or ""), re.IGNORECASE)]
+    return found[0] if found else ""
+
+
+def _unanswered_anchors(asked, bands):
+    """The anchor parameters with no readable band in `bands`.
+
+    "Not Evidenced" is an answer -- the model looked and found nothing -- and
+    is not asked again. Missing, blank or unreadable is not.
+    """
+    answered = set()
+    for item in bands or []:
+        if not isinstance(item, dict):
+            continue
+        written = str(item.get("band") or "")
+        if _normalise_band(written) or re.search(
+                r"not\s+evidenced", written, re.IGNORECASE):
+            answered.add(item.get("inputKey"))
+    return [p for p in asked or [] if p.input_key not in answered]
 
 
 def _float(value):

@@ -530,6 +530,14 @@ def _provider_output_cap(model_name):
 
 DEFAULT_MAX_OUTPUT_TOKENS = 2048
 
+#: Roles whose output must be repeatable: the same inputs should give the same
+#: profile and the same assessment. They get temperature 0 unless configured,
+#: a fixed seed, and JSON mode when no search tool is attached.
+STABLE_OUTPUT_ROLES = {"profile_synthesis", "assessment_inputs"}
+
+#: Any fixed value; what matters is that it does not change between runs.
+STABLE_OUTPUT_SEED = 7
+
 # Per-role output ceilings — the budget each role was DESIGNED for, and the
 # value used whenever the role binding does not state a lower one.
 ROLE_MAX_OUTPUT_TOKENS = {
@@ -1915,13 +1923,22 @@ def _parse_json_with_repair(endpoint, system, text, binding, model_override,
     body = _json_body(text)
     lenient = _lenient_json_text(body) if body else None
     if lenient is not None:
-        kept = len(json.dumps(lenient, ensure_ascii=False))
-        if kept >= 0.8 * len(body):
+        # Two checks, both needed. Size, ignoring whitespace (a pretty-printed
+        # response is a third indentation). And never FEWER values than the
+        # old prefix salvage keeps: a stray bracket rebuilt in the wrong place
+        # can nest later items under the wrong key, where a duplicate key
+        # silently overwrites one -- the salvage would have kept it.
+        kept = _dense_len(json.dumps(lenient, ensure_ascii=False))
+        whole = _dense_len(body)
+        baseline = _salvage_truncated_json(text)
+        if kept >= 0.8 * whole and \
+                _leaf_count(lenient) >= _leaf_count(baseline):
             logger.warning(
                 "LLM: %s returned JSON that would not parse; rebuilt it "
-                "leniently and kept the whole response (%d of %d characters). "
-                "First fault was %s",
-                role or endpoint.code, kept, len(body), _fault_context(body))
+                "leniently and kept the whole response (%d of %d characters, "
+                "%d values). First fault was %s",
+                role or endpoint.code, kept, whole, _leaf_count(lenient),
+                _fault_context(body))
             return lenient, True
 
     # Salvage before spending money. A truncated-but-well-formed prefix is
@@ -2040,6 +2057,20 @@ def _repair_json_text(text):
             fixes.append("control character")
         return parsed, fixes
     return None, []
+
+
+def _dense_len(text):
+    """Length without whitespace -- content, not indentation."""
+    return len(re.sub(r"\s+", "", text or ""))
+
+
+def _leaf_count(value):
+    """How many scalar values a parsed response carries."""
+    if isinstance(value, dict):
+        return sum(_leaf_count(v) for v in value.values())
+    if isinstance(value, list):
+        return sum(_leaf_count(v) for v in value)
+    return 0 if value is None else 1
 
 
 def _json_body(text):
@@ -2529,6 +2560,24 @@ def _dispatch(endpoint, system, prompt, binding, model_override=None,
     max_tokens = min(max_tokens, role_cap) if max_tokens else role_cap
     capabilities = capabilities or {}
 
+    if role in STABLE_OUTPUT_ROLES:
+        # The same dossier must produce the same profile and the same scores.
+        # A founder's education scored Excellent on one run and was missing on
+        # the next, from identical documents. Sampling is the variation these
+        # roles do not need: they read and extract, they do not write freely.
+        # An administrator's explicit temperature still wins.
+        if temperature is None:
+            temperature = 0.0
+        capabilities = dict(capabilities)
+        capabilities.setdefault("stable_output", {"seed": STABLE_OUTPUT_SEED})
+        so = capabilities.get("structured_output") or {}
+        if "web_search" not in capabilities and not so.get("schema"):
+            # JSON mode: the provider escapes every quote and line break
+            # itself. A single unescaped quote in a verbatim extract is what
+            # broke a 198,000-character synthesis. Not combinable with the
+            # search tool on Gemini, so only when no search is attached.
+            capabilities["json_mode"] = True
+
     from fundos.llm.models import KINDS_REQUIRING_KEY
     if kind in KINDS_REQUIRING_KEY and not endpoint.has_api_key_in_env():
         raise RuntimeError(
@@ -3008,6 +3057,13 @@ def _run_gemini(endpoint, system, prompt, model, temperature, max_tokens,
     if so and so.get("schema"):
         generation_config["responseMimeType"] = "application/json"
         generation_config["responseSchema"] = so["schema"]
+    elif capabilities.get("json_mode") and "web_search" not in capabilities:
+        # JSON without a schema: valid, fully escaped JSON, in whatever shape
+        # the prompt asked for.
+        generation_config["responseMimeType"] = "application/json"
+    seed = (capabilities.get("stable_output") or {}).get("seed")
+    if seed is not None:
+        generation_config["seed"] = seed
 
     # Tools. Gemini requires search-type tools NOT be mixed with function
     # calling in one request; the config layer already blocks that combo, so
@@ -3068,6 +3124,28 @@ def _run_gemini(endpoint, system, prompt, model, temperature, max_tokens,
                                  timeout=timeout)
             generation_config = retry_config
 
+    # JSON mode and the seed are there for repeatability, never at the price of
+    # the call: a model or API version that refuses either is retried once
+    # without both, and the response is parsed and repaired as before.
+    if resp.status_code == 400 and (
+            "seed" in generation_config
+            or (generation_config.get("responseMimeType")
+                and "responseSchema" not in generation_config)):
+        body_text = (resp.text or "").lower()
+        if any(word in body_text for word in ("seed", "mime", "json",
+                                              "response_mime_type")):
+            logger.warning(
+                "LLM: %s rejected JSON mode or the fixed seed — retrying "
+                "without them. Output will be parsed and repaired as usual.",
+                model)
+            retry_config = {k: v for k, v in generation_config.items()
+                            if k not in ("seed", "responseMimeType")}
+            retry_body = dict(sent_body, generationConfig=retry_config)
+            sent_body = retry_body
+            resp = requests.post(url, json=retry_body, headers=headers,
+                                 timeout=timeout)
+            generation_config = retry_config
+
     if resp.status_code == 400 and "thinkingConfig" in generation_config:
         body_text = (resp.text or "").lower()
         if "thinking" in body_text or "thinkingbudget" in body_text:
@@ -3081,7 +3159,7 @@ def _run_gemini(endpoint, system, prompt, model, temperature, max_tokens,
             # recorder hold a reference to.
             retry_config = {k: v for k, v in generation_config.items()
                             if k != "thinkingConfig"}
-            retry_body = dict(body, generationConfig=retry_config)
+            retry_body = dict(sent_body, generationConfig=retry_config)
             sent_body = retry_body
             resp = requests.post(url, json=retry_body, headers=headers,
                                  timeout=timeout)
