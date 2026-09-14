@@ -64,7 +64,8 @@ class TheSnippetIsTheDocumentsOwnWords(TestCase):
         self.assertIn("Twelve years in chronic care", out)
 
     def test_an_extract_says_it_is_one(self):
-        out = snippets.expand("Khushboo Aggarwal", DOSSIER)
+        # Narrower than this small dossier, so something is actually left out.
+        out = snippets.expand("Khushboo Aggarwal", DOSSIER, width=200)
         self.assertTrue(out.startswith("…") or out.endswith("…"))
 
     def test_a_quote_that_is_not_there_expands_to_nothing(self):

@@ -429,8 +429,14 @@ def _deduplicate_and_sort_citations(citations):
             return ""
         return " ".join(str(q).strip().split()).lower()
 
+    from fundos.core.services.citation_text import clean as _clean_citation
+
     for c in citations:
         if isinstance(c, dict):
+            # The same cleaner the profile's sources panel uses, so a quote
+            # reads the same on both screens and dedupes on what is shown.
+            if c.get("quote"):
+                c["quote"] = _clean_citation(c["quote"])
             stype = str(c.get("source_type", "")).lower()
             if "source_rank" not in c or c["source_rank"] is None:
                 c["source_rank"] = 1 if stype == "document" else 2

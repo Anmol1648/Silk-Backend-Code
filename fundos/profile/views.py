@@ -1425,6 +1425,7 @@ class ProfileFieldSourcesView(APIView):
                 # this fills the gap rather than saying it twice.
                 title = f"Web Research · {title}"
             locator = citation.get("locator") or ""
+            snippet, verified = snippets.locate(citation, dossier)
             sources.append({
                 "id": f"src_{src_counter}",
                 # `name` and `locator` are the two halves a reader needs and
@@ -1437,7 +1438,11 @@ class ProfileFieldSourcesView(APIView):
                 "title": (f"{title} · {_short_locator(locator)}"
                           if locator else title),
                 "type": kind,
-                "snippet": snippets.for_citation(citation, dossier),
+                "snippet": snippet,
+                # True only when the snippet is the source's own passage,
+                # found where the citation points. False: the model's quote,
+                # which the panel should not present as a document extract.
+                "snippetVerified": verified,
                 "url": "",
             })
 

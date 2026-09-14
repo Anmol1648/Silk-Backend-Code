@@ -19,6 +19,8 @@ same 600,000-character file four times.
 import logging
 import re
 
+from fundos.core.services.citation_text import clean
+
 logger = logging.getLogger("fundos.profile")
 
 #: How much surrounding text to return. Enough to carry the sentence a figure
@@ -85,35 +87,130 @@ def _find(haystack, needle):
     return flat.find(target)
 
 
+#: Where a sentence ends: terminal punctuation followed by a space.
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[\"'(\[A-Z0-9₹$€£])")
+
+
+def _is_row(line):
+    return line.strip().startswith("|")
+
+
+def _sentence_window(line, at, length, width):
+    """Whole sentences of one long line around [at, at+length).
+
+    A paragraph a converter wrote as one line would otherwise be cut at a
+    character count — mid-sentence at both ends. Sentences are added outward
+    from the one holding the quote while they fit; a single sentence longer
+    than the budget falls back to word boundaries.
+    """
+    bounds, start = [], 0
+    for match in _SENTENCE_END.finditer(line):
+        bounds.append((start, match.start()))
+        start = match.end()
+    bounds.append((start, len(line)))
+
+    first = next((i for i, (s, e) in enumerate(bounds) if e > at), 0)
+    last = next((i for i, (s, e) in enumerate(bounds)
+                 if e >= at + length), len(bounds) - 1)
+    lo, hi = first, max(last, first)
+    while True:
+        grew = False
+        if hi + 1 < len(bounds) and bounds[hi + 1][1] - bounds[lo][0] <= width:
+            hi, grew = hi + 1, True
+        if lo > 0 and bounds[hi][1] - bounds[lo - 1][0] <= width:
+            lo, grew = lo - 1, True
+        if not grew:
+            break
+
+    s, e = bounds[lo][0], bounds[hi][1]
+    if e - s > width:
+        # One sentence bigger than the panel: whole words around the quote.
+        pad = max((width - length) // 2, 0)
+        s2, e2 = max(at - pad, s), min(at + length + pad, e)
+        if s2 > s:
+            space = line.find(" ", s2)
+            s2 = space + 1 if 0 <= space < at else s2
+        if e2 < e:
+            space = line.rfind(" ", at + length, e2)
+            e2 = space if space > 0 else e2
+        return line[s2:e2].strip(), s2 > 0, e2 < len(line)
+    return line[s:e].strip(), s > 0, e < len(line)
+
+
 def expand(quote, dossier, *, width=SNIPPET_CHARS):
     """The passage around `quote` in `dossier`, or "" when it is not there.
 
-    Returned on whole-word boundaries with an ellipsis where text was cut, so
-    a reader can see it is an extract rather than the whole document.
+    Built from WHOLE LINES, so a spreadsheet row is never sliced through the
+    middle and keeps the line break that makes it a row (the cleaner then
+    pairs its figures with their column headers). A long prose line is cut on
+    sentence boundaries. An ellipsis marks each edge where text was left out.
     """
-    flat = _normalise(dossier)
-    at = _find(dossier, quote)
+    target = _normalise(quote)
+    if len(target) < MIN_SEARCHABLE or not dossier:
+        return ""
+    wanted = target.casefold()
+
+    # Normalised lines, and where each one starts in their joined text.
+    lines, offsets, flat = [], [], ""
+    for raw in str(dossier).split("\n"):
+        norm = _normalise(raw)
+        if not norm:
+            continue
+        if flat:
+            flat += " "
+        offsets.append(len(flat))
+        lines.append(norm)
+        flat += norm
+    at = flat.casefold().find(wanted)
     if at < 0:
         return ""
+    end_at = at + len(target)
 
-    target = _normalise(quote)
-    pad = max((width - len(target)) // 2, 0)
-    start = max(at - pad, 0)
-    end = min(at + len(target) + pad, len(flat))
+    first = max(i for i, off in enumerate(offsets) if off <= at)
+    last = max(i for i, off in enumerate(offsets) if off < end_at)
 
-    # Whole words at both edges: a snippet starting mid-word reads as damage.
-    if start > 0:
-        space = flat.find(" ", start)
-        start = space + 1 if 0 <= space < at else start
-    if end < len(flat):
-        space = flat.rfind(" ", at + len(target), end)
-        end = space if space > 0 else end
+    if first == last and len(lines[first]) > width and not _is_row(lines[first]):
+        text, cut_left, cut_right = _sentence_window(
+            lines[first], at - offsets[first], len(target), width)
+        return (("… " if cut_left or first > 0 else "") + text
+                + (" …" if cut_right or last < len(lines) - 1 else ""))
 
-    passage = flat[start:end].strip()
-    if not passage:
-        return ""
-    return (("… " if start > 0 else "") + passage
-            + (" …" if end < len(flat) else ""))
+    lo, hi = first, last
+
+    def size(a, b):
+        return sum(len(line) + 1 for line in lines[a:b + 1])
+
+    while True:
+        grew = False
+        if hi + 1 < len(lines) and size(lo, hi + 1) <= width:
+            hi, grew = hi + 1, True
+        if lo > 0 and size(lo - 1, hi) <= width:
+            lo, grew = lo - 1, True
+        if not grew:
+            break
+
+    # A table row needs its header to be read: include the header and rule
+    # of the table it sits in, even past the budget, when they are nearby.
+    if _is_row(lines[lo]):
+        top = lo
+        while top > 0 and _is_row(lines[top - 1]) and lo - top < 40:
+            top -= 1
+        if top < lo and top + 1 < len(lines) and re.fullmatch(
+                r"\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?", lines[top + 1]):
+            block = lines[top:top + 2] + lines[max(lo, top + 2):hi + 1]
+            return _marked(block, top > 0, hi < len(lines) - 1)
+
+    return _marked(lines[lo:hi + 1], lo > 0, hi < len(lines) - 1)
+
+
+def _marked(block, cut_before, cut_after):
+    """Lines joined, with an ellipsis on its own line at each cut edge.
+
+    On its own line so a table's first row still begins with `|` — glued to
+    the row, the ellipsis would stop the row being read as one.
+    """
+    return "\n".join((["…"] if cut_before else []) + list(block)
+                     + (["…"] if cut_after else []))
 
 
 #: `### Project Orah Teaser_vff.pptx` -- where one uploaded file begins.
@@ -183,6 +280,32 @@ def _slide_or_page(section, locator):
     return ""
 
 
+def locate(citation, dossier):
+    """(snippet, verified) for one citation.
+
+    `verified` is True only when the snippet is the document's own passage,
+    found where the citation points. False means the text is the model's
+    quote, shown because nothing better was found — a panel must not present
+    it as an extract from the document.
+    """
+    citation = citation if isinstance(citation, dict) else {}
+    quote = citation.get("quote") or ""
+    if not isinstance(quote, str):
+        quote = str(quote)
+    if not quote:
+        return "", False
+    if dossier:
+        section = _section_for(citation.get("source"), dossier)
+        if section:
+            narrow = _slide_or_page(section, citation.get("locator"))
+            for scope in (narrow, section):
+                if scope:
+                    passage = expand(quote, scope)
+                    if passage:
+                        return clean(passage), True
+    return clean(quote), False
+
+
 def for_citation(citation, dossier):
     """The best snippet available for one citation.
 
@@ -195,32 +318,4 @@ def for_citation(citation, dossier):
     Never empty when the citation carried a quote — a panel that shows
     nothing is worse than one showing the short version.
     """
-    citation = citation or {}
-    quote = citation.get("quote") or ""
-    if not dossier or not quote:
-        return quote
-
-    section = _section_for(citation.get("source"), dossier)
-    if not section:
-        return quote
-
-    narrow = _slide_or_page(section, citation.get("locator"))
-    for scope in (narrow, section):
-        if scope:
-            passage = expand(quote, scope)
-            if passage:
-                return _readable(passage)
-    return quote
-
-
-def _readable(passage):
-    """Strip the dossier's markup from a passage shown to a reader.
-
-    `<!-- Slide number: 20 -->` and `# Leadership team` are how the dossier
-    is organised, not what the document says — the locator beside the
-    snippet already names the slide. The words are left exactly as they are.
-    """
-    text = re.sub(r"<!--.*?-->", " ", passage)
-    text = re.sub(r"(^|\s)#{1,6}\s+", r"", text)
-    text = text.replace("**", "")
-    return re.sub(r"\s{2,}", " ", text).strip()
+    return locate(citation, dossier)[0]
