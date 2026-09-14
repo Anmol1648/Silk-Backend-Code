@@ -65,6 +65,37 @@ class TheResponseIsRepairedNotCut(SimpleTestCase):
         self.assertTrue(repaired)
         self.assertEqual(len(parsed), 41)
 
+    def test_a_quote_followed_by_a_comma_is_rebuilt(self):
+        """The strict repair misses it: the parser fails a word later."""
+        endpoint = mock.Mock(code="GEMINI")
+        good = ", ".join(f'"s{i}": {{"data": "value {i}"}}' for i in range(40))
+        text = '{"s_bad": {"quote": "rated "Best", leader in care"}, ' + good + "}"
+        parsed, repaired = adapter._parse_json_with_repair(
+            endpoint, "", text, None, None, role="profile_synthesis")
+        self.assertTrue(repaired)
+        self.assertEqual(len(parsed), 41)
+        self.assertEqual(parsed["s_bad"]["quote"],
+                         'rated "Best", leader in care')
+
+    def test_unquoted_figures_and_literals(self):
+        parsed = adapter._lenient_json_text(
+            '{"rev": 1,20,000, "cap": Rs 56.9 Cr, "x": NaN, "y": True}')
+        self.assertEqual(parsed, {"rev": "1,20,000", "cap": "Rs 56.9 Cr",
+                                  "x": None, "y": True})
+
+    def test_a_missing_comma_between_members(self):
+        self.assertEqual(adapter._lenient_json_text('{"a": "x"\n "b": "y"}'),
+                         {"a": "x", "b": "y"})
+
+    def test_an_array_of_numbers_is_not_read_as_one_figure(self):
+        self.assertEqual(adapter._lenient_json_text('{"a": [1,20,300]}'),
+                         {"a": [1, 20, 300]})
+
+    def test_the_fault_is_named_in_the_log_context(self):
+        context = adapter._fault_context('{"a": "x" "b": 1}')
+        self.assertIn("char", context)
+        self.assertIn('"b"', context)
+
     def test_unrepairable_text_still_falls_back_to_salvage(self):
         endpoint = mock.Mock(code="GEMINI")
         text = '{"a": {"x": 1}, "b": {"y": 2} "c": 3}'

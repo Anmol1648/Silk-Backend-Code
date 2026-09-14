@@ -43,6 +43,7 @@ import base64
 import hashlib
 import json
 import logging
+import re
 import time
 
 import requests
@@ -1907,6 +1908,22 @@ def _parse_json_with_repair(endpoint, system, text, binding, model_override,
             role or endpoint.code, len(fixes), ", ".join(sorted(set(fixes))))
         return repaired, True
 
+    # The strict repair only fixes a fault where the parser reports it. The
+    # lenient rebuild reads the whole response for what each character means,
+    # and is accepted only if it kept nearly all of it -- a "repair" that
+    # silently lost a fifth of the response is a salvage by another name.
+    body = _json_body(text)
+    lenient = _lenient_json_text(body) if body else None
+    if lenient is not None:
+        kept = len(json.dumps(lenient, ensure_ascii=False))
+        if kept >= 0.8 * len(body):
+            logger.warning(
+                "LLM: %s returned JSON that would not parse; rebuilt it "
+                "leniently and kept the whole response (%d of %d characters). "
+                "First fault was %s",
+                role or endpoint.code, kept, len(body), _fault_context(body))
+            return lenient, True
+
     # Salvage before spending money. A truncated-but-well-formed prefix is
     # the single most common shape here, and it needs no model to fix.
     salvaged = _salvage_truncated_json(text)
@@ -1923,8 +1940,10 @@ def _parse_json_with_repair(endpoint, system, text, binding, model_override,
             "repair call. The result is INCOMPLETE by definition. If the "
             "response was CUT OFF, raise the role's output ceiling; if it "
             "finished (finish_reason=STOP) the fault is a malformed value "
-            "mid-response and the ceiling is not the problem.",
-            role or endpoint.code, kept, len(text or ""))
+            "mid-response and the ceiling is not the problem. First fault "
+            "was %s",
+            role or endpoint.code, kept, len(text or ""),
+            _fault_context(_json_body(text) or ""))
         return salvaged, True
 
     if (capabilities.get("structured_output") or {}).get("schema"):
@@ -2021,6 +2040,254 @@ def _repair_json_text(text):
             fixes.append("control character")
         return parsed, fixes
     return None, []
+
+
+def _json_body(text):
+    """The text from the first `{`/`[` to the last `}`/`]`, fences removed."""
+    raw = (text or "").strip()
+    if raw.startswith("```"):
+        raw = raw.strip("`")
+        if raw.lower().startswith("json"):
+            raw = raw[4:]
+    starts = [i for i in (raw.find("{"), raw.find("[")) if i >= 0]
+    end = max(raw.rfind("}"), raw.rfind("]"))
+    if not starts or end <= min(starts):
+        return ""
+    return raw[min(starts):end + 1]
+
+
+_BARE_LITERALS = {"true": "true", "false": "false", "null": "null",
+                  "True": "true", "False": "false", "None": "null",
+                  "NaN": "null", "nan": "null", "undefined": "null",
+                  "Infinity": "null", "-Infinity": "null"}
+
+_JSON_NUMBER = re.compile(r"-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?\Z")
+
+#: A figure written the Indian or Western way with thousands separators,
+#: which a model emits unquoted as a value: 1,20,000 or 12,500.50.
+_GROUPED_NUMBER = re.compile(r"[-+]?\d{1,3}(?:,\d{2,3})+(?:\.\d+)?")
+
+_VALID_ESCAPES = set('"\\/bfnrtu')
+
+
+def _lenient_json_text(text):
+    """Rebuild a model's almost-JSON as JSON, or None when it is not close.
+
+    The strict repair above fixes a fault at the position the parser names.
+    That misses faults the parser reports somewhere else -- a stray quote
+    followed by a comma ("rated "Best", leader") parses on and fails a word
+    later -- so this reads the text once, tracking what the grammar expects
+    next, and decides what each character MEANS from what follows it:
+
+    * a `"` ends a string only when what follows can follow a string there:
+      `:` after a key; `,` `}` `]` after a value, and after that comma the
+      start of the next key or value. Anything else is a quote inside the
+      text and is escaped;
+    * a raw line break or tab inside a string is escaped; an invalid `\\x`
+      escape has its backslash doubled;
+    * an unquoted value is kept as what it is: `1,20,000` and `Rs 56.9 Cr`
+      become strings, `NaN`/`None` become null, `True` true;
+    * a missing comma between two members is inserted, a trailing one
+      removed, and brackets left open at the end are closed.
+    """
+    s = text
+    n = len(s)
+    out = []
+    stack = []          # [kind, expect] -- kind "{" or "[", expect key/colon/value/comma
+
+    def expecting():
+        return stack[-1][1] if stack else "value"
+
+    def after_value():
+        if stack:
+            stack[-1][1] = "comma"
+
+    def skip_ws(k):
+        while k < n and s[k] in " \t\r\n":
+            k += 1
+        return k
+
+    def looks_like_key(k):
+        """A quoted string at k followed by a colon."""
+        if k >= n or s[k] != '"':
+            return False
+        m = k + 1
+        while m < n and s[m] not in '"\n':
+            m += 1 if s[m] != "\\" else 2
+        return m < n and s[m] == '"' and skip_ws(m + 1) < n \
+            and s[skip_ws(m + 1)] == ":"
+
+    i = 0
+    while i < n:
+        ch = s[i]
+        if ch in " \t\r\n":
+            out.append(ch)
+            i += 1
+            continue
+        state = expecting()
+
+        if state == "comma" and ch not in ",}]":
+            # Two members with nothing between them.
+            if ch == '"' or ch in "{[" or ch.isalnum():
+                out.append(",")
+                stack[-1][1] = "key" if stack[-1][0] == "{" else "value"
+                state = expecting()
+            else:
+                return None
+
+        if ch in "{[":
+            if state not in ("value",):
+                return None
+            stack.append([ch, "key" if ch == "{" else "value"])
+            out.append(ch)
+            i += 1
+            continue
+
+        if ch in "}]":
+            if not stack:
+                break
+            while out and out[-1] in " \t\r\n":
+                out.pop()
+            if out and out[-1] == ",":
+                out.pop()
+            closer = "}" if stack[-1][0] == "{" else "]"
+            stack.pop()
+            out.append(closer)
+            after_value()
+            i += 1
+            continue
+
+        if ch == ",":
+            if state != "comma":
+                i += 1              # a doubled or leading comma says nothing
+                continue
+            out.append(",")
+            stack[-1][1] = "key" if stack[-1][0] == "{" else "value"
+            i += 1
+            continue
+
+        if ch == ":":
+            if state != "colon":
+                return None
+            out.append(":")
+            stack[-1][1] = "value"
+            i += 1
+            continue
+
+        if ch == '"':
+            is_key = state == "key"
+            parent = stack[-1][0] if stack else ""
+            buf = ['"']
+            j = i + 1
+            closed = False
+            while j < n:
+                c = s[j]
+                if c == "\\":
+                    nxt = s[j + 1] if j + 1 < n else ""
+                    if nxt in _VALID_ESCAPES:
+                        buf.append(c + nxt)
+                        j += 2
+                    else:
+                        buf.append("\\\\")
+                        j += 1
+                    continue
+                if c == '"':
+                    k = skip_ws(j + 1)
+                    follow = s[k] if k < n else ""
+                    if is_key:
+                        ends = follow == ":"
+                    elif follow in "}]" or follow == "":
+                        ends = True
+                    elif follow == ",":
+                        k2 = skip_ws(k + 1)
+                        nxt = s[k2] if k2 < n else ""
+                        ends = (nxt in '"}]' if parent == "{"
+                                else nxt in '"{[]-0123456789tfn')
+                    elif follow == '"' and parent == "{" and looks_like_key(k):
+                        ends = True     # missing comma before the next key
+                    else:
+                        ends = False
+                    if ends:
+                        buf.append('"')
+                        j += 1
+                        closed = True
+                        break
+                    buf.append('\\"')
+                    j += 1
+                    continue
+                if c == "\n":
+                    buf.append("\\n")
+                elif c == "\r":
+                    buf.append("\\r")
+                elif c == "\t":
+                    buf.append("\\t")
+                else:
+                    buf.append(c)
+                j += 1
+            if not closed:
+                buf.append('"')
+            out.append("".join(buf))
+            i = j
+            if is_key:
+                stack[-1][1] = "colon"
+            else:
+                after_value()
+            continue
+
+        # An unquoted token.
+        if state == "key":
+            k = s.find(":", i)
+            if k < 0:
+                return None
+            name = s[i:k].strip().strip("'")
+            out.append(json.dumps(name))
+            stack[-1][1] = "colon"
+            i = k
+            continue
+        if state != "value":
+            return None
+        grouped = _GROUPED_NUMBER.match(s, i)
+        if grouped and (not stack or stack[-1][0] == "{"):
+            k = skip_ws(grouped.end())
+            if k >= n or s[k] in ",}]":
+                out.append(json.dumps(grouped.group(0)))
+                i = grouped.end()
+                after_value()
+                continue
+        k = i
+        while k < n and s[k] not in ",}]\n":
+            k += 1
+        token = s[i:k].strip()
+        if token in _BARE_LITERALS:
+            out.append(_BARE_LITERALS[token])
+        elif _JSON_NUMBER.match(token):
+            out.append(token)
+        else:
+            out.append(json.dumps(token.strip("'")))
+        i = k
+        after_value()
+
+    while stack:
+        while out and out[-1] in " \t\r\n,":
+            out.pop()
+        out.append("}" if stack.pop()[0] == "{" else "]")
+    try:
+        return json.loads("".join(out), strict=False)
+    except ValueError:
+        return None
+
+
+def _fault_context(text):
+    """Where a response fails to parse, with the text around it. Never raises."""
+    try:
+        json.loads(text, strict=False)
+        return ""
+    except json.JSONDecodeError as exc:
+        start = max(exc.pos - 80, 0)
+        return (f"{exc.msg} at char {exc.pos}: "
+                f"{text[start:exc.pos + 80]!r}")
+    except Exception:  # noqa: BLE001
+        return ""
 
 
 def _trailing_comma_before(raw, pos):
