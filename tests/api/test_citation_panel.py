@@ -104,17 +104,19 @@ class TheModelsQuoteIsTheFallbackNeverTheInvention(TestCase):
                          "Khushboo Aggarwal")
 
     def test_the_quote_stands_when_the_passage_is_not_found(self):
-        citation = {"source": "Deck.pptx", "quote": "Something not present"}
+        citation = {"source": "Project Orah Teaser_vff.pptx",
+                    "quote": "Something not present"}
         self.assertEqual(snippets.for_citation(citation, DOSSIER),
                          "Something not present")
 
     def test_the_document_wins_when_it_can_be_found(self):
-        citation = {"source": "Deck.pptx", "quote": "Khushboo Aggarwal"}
+        citation = {"source": "Project Orah Teaser_vff.pptx",
+                    "quote": "Khushboo Aggarwal"}
         self.assertIn("Co-founder", snippets.for_citation(citation, DOSSIER))
 
     def test_a_citation_with_no_quote_yields_nothing_rather_than_noise(self):
-        self.assertEqual(snippets.for_citation({"source": "Deck.pptx"},
-                                               DOSSIER), "")
+        self.assertEqual(snippets.for_citation(
+            {"source": "Project Orah Teaser_vff.pptx"}, DOSSIER), "")
 
     def test_it_never_raises(self):
         for bad in (None, {}, {"quote": None}, {"quote": 3}):
@@ -244,3 +246,106 @@ class DocumentsComeBeforeWeb(TestCase):
     def test_an_empty_list_is_fine(self):
         self.assertEqual(self._order([]), [])
         self.assertEqual(self._order(None), [])
+
+
+LAYERED = """# Consolidated research dossier: Zyla Health
+
+## Founders (research leads — unverified)
+4. _Do not treat anything in this list as evidence on its own._
+- **Khushboo Aggarwal** — https://www.linkedin.com/in/khushbooaggarwal/
+
+---
+
+# Source 2: Company Documents (native extraction + document model)
+
+## Company Presentation
+
+### Project Orah Teaser_vff.pptx
+
+#### Extracted content
+
+<!-- Slide number: 19 -->
+# Our investors
+Backed by leading healthcare funds.
+
+<!-- Slide number: 20 -->
+# Leadership team
+Khushboo Aggarwal, Co-founder & CEO. Twelve years in chronic care.
+
+<!-- Slide number: 21 -->
+# The ask
+Raising a Series A.
+
+---
+
+# Source 1: Web Research (search-grounded)
+
+## Batch 2: Founders & Leadership
+
+Khushboo Aggarwal previously led clinical operations at a diagnostics chain.
+"""
+
+
+class TheSnippetComesFromWhereTheCitationPoints(TestCase):
+    """A live panel labelled "Project Orah Teaser_vff.pptx · Slide 20" showed
+    the research-leads list from the TOP of the dossier — the first place the
+    founder's name appeared — and then the Source 2 preamble. The right name,
+    from the wrong place, under the right label: a citation that passes
+    review looking correct."""
+
+    def _snippet(self, source, quote, locator=""):
+        return snippets.for_citation(
+            {"source": source, "quote": quote, "locator": locator}, LAYERED)
+
+    def test_a_slide_citation_shows_that_slide(self):
+        out = self._snippet("Project Orah Teaser_vff.pptx",
+                            "Khushboo Aggarwal", "Slide 20")
+        self.assertIn("Co-founder & CEO", out)
+
+    def test_it_never_shows_the_research_leads_list(self):
+        out = self._snippet("Project Orah Teaser_vff.pptx",
+                            "Khushboo Aggarwal", "Slide 20")
+        self.assertNotIn("linkedin", out)
+        self.assertNotIn("research leads", out)
+        self.assertNotIn("Do not treat", out)
+
+    def test_it_never_shows_a_neighbouring_slide(self):
+        out = self._snippet("Project Orah Teaser_vff.pptx",
+                            "Khushboo Aggarwal", "Slide 20")
+        self.assertNotIn("Series A", out)
+        self.assertNotIn("healthcare funds", out)
+
+    def test_a_research_citation_shows_its_own_batch(self):
+        out = self._snippet("Batch 2: Founders & Leadership",
+                            "Khushboo Aggarwal")
+        self.assertIn("diagnostics chain", out)
+        self.assertNotIn("Co-founder & CEO", out)
+
+    def test_a_file_citation_with_no_slide_searches_the_whole_file(self):
+        out = self._snippet("Project Orah Teaser_vff.pptx",
+                            "Khushboo Aggarwal")
+        self.assertIn("Co-founder & CEO", out)
+        self.assertNotIn("linkedin", out)
+
+    def test_a_retyped_filename_still_finds_its_file(self):
+        out = self._snippet("Project Orah Teaser vff.pptx",
+                            "Khushboo Aggarwal", "Slide 20")
+        self.assertIn("Co-founder & CEO", out)
+
+    def test_an_unlocatable_source_falls_back_to_the_quote_not_the_dossier(self):
+        """The whole-dossier fallback is exactly what produced the defect."""
+        self.assertEqual(self._snippet("Something.pdf", "Khushboo Aggarwal"),
+                         "Khushboo Aggarwal")
+
+    def test_a_slide_title_does_not_end_the_files_section(self):
+        """A converted deck renders each slide title as `# Title`."""
+        out = self._snippet("Project Orah Teaser_vff.pptx", "Series A",
+                            "Slide 21")
+        self.assertIn("Raising a Series A", out)
+
+    def test_the_dossiers_markup_is_not_shown_to_a_reader(self):
+        out = self._snippet("Project Orah Teaser_vff.pptx",
+                            "Khushboo Aggarwal", "Slide 20")
+        self.assertNotIn("<!--", out)
+        self.assertNotIn("# Leadership", out)
+        self.assertIn("Leadership team", out)
