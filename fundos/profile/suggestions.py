@@ -63,9 +63,7 @@ def for_section(key, *, fields, populated, confirmed, blank_fields=None):
             "sectionKey": key,
             "kind": "empty",
             "label": f"Start {name}",
-            "question": (f"What do you need from me to complete the {name} "
-                         f"section, and where would that information "
-                         f"normally come from?"),
+            "question": f"Help me fill {name}.",
             "why": f"{name} is empty",
         })
     elif populated < fields:
@@ -74,15 +72,12 @@ def for_section(key, *, fields, populated, confirmed, blank_fields=None):
         out.append({
             "sectionKey": key,
             "kind": "fill",
-            "label": (f"Fill in {listed}" if listed
+            "label": (f"Fill {listed}" if listed
                       else f"Fill {missing} blank in {name}"),
             "question": (
-                f"In {name}, {listed} {'is' if len(blank_fields) == 1 else 'are'} "
-                f"blank. What should go there, and what do you already know "
-                f"from my documents that would answer it?"
+                f"Fill {listed} in {name}."
                 if listed else
-                f"{missing} of the {fields} entries in {name} are blank. "
-                f"Which are they, and what should go in them?"),
+                f"Fill {missing} blanks in {name}."),
             "why": f"{missing} of {fields} blank",
         })
 
@@ -91,13 +86,11 @@ def for_section(key, *, fields, populated, confirmed, blank_fields=None):
         out.append({
             "sectionKey": key,
             "kind": "confirm",
-            "label": (f"Check {unconfirmed} unconfirmed in {name}"
-                      if unconfirmed > 1 else f"Check {name} before I confirm"),
-            "question": (
-                f"Summarise what {name} currently says and where each part "
-                f"came from, so I can check it before confirming."),
-            "why": (f"{unconfirmed} of {populated} populated "
-                    f"{'entry is' if unconfirmed == 1 else 'entries are'} "
+            "label": (f"Review {unconfirmed} in {name}"
+                      if unconfirmed > 1 else f"Review {name}"),
+            "question": f"Summarise {name} so I can confirm.",
+            "why": (f"{unconfirmed} of {populated} "
+                    f"{'entry' if unconfirmed == 1 else 'entries'} "
                     f"unconfirmed"),
         })
 

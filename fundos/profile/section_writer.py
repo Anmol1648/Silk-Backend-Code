@@ -832,21 +832,24 @@ def update_section_from_data(profile, section_key, data, *, user=None,
                 structured[f] = float(d) if d is not None else None
             else:
                 structured[f] = data.get(f, "") if data.get(f) is not None else ""
-        section = _store(structured, has=_object_has_data(structured))
-        # company_profile mirrors a couple of fields onto the profile itself.
         if section_key == "company_profile":
-            # Req 2: parse display strings and derive _usd_mn values.
+            # Req 2: parse display strings and derive _usd_mn values, or vice-versa.
             for disp_key, usd_key in _DISPLAY_TO_USD_MN.items():
-                disp_val = structured.get(disp_key, "")
-                if disp_val:
-                    converted = _parse_display_to_usd_mn(disp_val)
-                    if converted is not None:
-                        structured[usd_key] = converted
-                        # Persist the derived value onto the section.
-                        sec = section
-                        if sec and sec.structured:
-                            sec.structured[usd_key] = converted
-                            sec.save(update_fields=["structured", "updated_at"])
+                prev_usd = (previous_structured or {}).get(usd_key)
+                curr_usd = structured.get(usd_key)
+                if usd_key in data and (disp_key not in data or curr_usd != prev_usd):
+                    if curr_usd is not None:
+                        structured[disp_key] = f"USD:{curr_usd:g}:M"
+                    else:
+                        structured[disp_key] = ""
+                elif disp_key in data:
+                    disp_val = structured.get(disp_key, "")
+                    if disp_val:
+                        converted = _parse_display_to_usd_mn(disp_val)
+                        if converted is not None:
+                            structured[usd_key] = converted
+        section = _store(structured, has=_object_has_data(structured))
+        if section_key == "company_profile":
             _mirror_company_profile(profile, section.structured or structured)
 
     elif section_key in _STRUCTURED_LIST_FIELDS:

@@ -564,21 +564,92 @@ class ProfileProposalApplyView(APIView):
         company = _company_or_404(request, company_id)
         profile = get_or_create_profile(company, user=request.user)
 
-        section_key = (request.data or {}).get("sectionKey", "")
-        field = (request.data or {}).get("field", "")
-        value = (request.data or {}).get("value", "")
+        data = request.data or {}
+        section_key = data.get("sectionKey") or data.get("section_key") or ""
+        field = data.get("field") or data.get("fieldKey") or ""
+        value = data.get("value") if data.get("value") is not None else data.get("proposedValue", data.get("proposed_value", data.get("proposed", data.get("text", data.get("content", "")))))
+        action = data.get("action", "edit")
+        item_id = data.get("itemId") or data.get("item_id")
+        item_name = data.get("itemName") or data.get("item_name")
+        item_index = data.get("itemIndex") or data.get("item_index")
+        item_data = data.get("itemData") or data.get("item")
+
+        # Parse field_id if present (e.g. "company_profile__latest_pre_money_display")
+        field_id = data.get("field_id") or data.get("fieldId") or ""
+        if field_id and "__" in str(field_id):
+            parts = str(field_id).split("__", 1)
+            if not section_key:
+                section_key = parts[0]
+            field = parts[1]
+
+        from fundos.profile.proposals import editable_fields, default_field_for_section, FIELD_ALIASES
+        if field and "__" in str(field):
+            field = str(field).split("__", 1)[1]
+        if field in FIELD_ALIASES:
+            field = FIELD_ALIASES[field]
+
+        if (section_key, field) not in editable_fields():
+            if section_key in ("founders", "products_services", "customers_markets", "competitive_advantages", "revenue_model", "company_metrics", "funding_history", "competitors", "news"):
+                if field and ("-" in str(field) or len(str(field)) > 20 or str(field).isalnum()):
+                    if not item_id:
+                        item_id = str(field)
+                field = default_field_for_section(section_key)
+
+        # Check for nested proposal dict or list + proposal_index
+        proposal_obj = data.get("proposal") or data.get("proposed_change") or {}
+        if isinstance(proposal_obj, dict):
+            if not section_key:
+                section_key = proposal_obj.get("sectionKey") or proposal_obj.get("section_key") or ""
+            if not field:
+                field = proposal_obj.get("field") or proposal_obj.get("fieldKey") or ""
+            if not value:
+                value = proposal_obj.get("value") if proposal_obj.get("value") is not None else proposal_obj.get("proposedValue", proposal_obj.get("proposed_value", ""))
+            if action == "edit" and proposal_obj.get("action"):
+                action = proposal_obj.get("action")
+            if not item_id:
+                item_id = proposal_obj.get("itemId") or proposal_obj.get("item_id")
+            if not item_name:
+                item_name = proposal_obj.get("itemName") or proposal_obj.get("item_name")
+            if not item_index:
+                item_index = proposal_obj.get("itemIndex") or proposal_obj.get("item_index")
+            if not item_data:
+                item_data = proposal_obj.get("itemData") or proposal_obj.get("item")
+
+        proposals_list = data.get("proposals") or data.get("proposedChanges") or data.get("proposed_changes")
+        if isinstance(proposals_list, list) and isinstance(data.get("proposal_index"), int):
+            idx = data.get("proposal_index")
+            if 0 <= idx < len(proposals_list) and isinstance(proposals_list[idx], dict):
+                prop_item = proposals_list[idx]
+                if not section_key:
+                    section_key = prop_item.get("sectionKey") or prop_item.get("section_key") or ""
+                if not field:
+                    field = prop_item.get("field") or prop_item.get("fieldKey") or ""
+                if not value:
+                    value = prop_item.get("value") if prop_item.get("value") is not None else prop_item.get("proposedValue", prop_item.get("proposed_value", ""))
+                if action == "edit" and prop_item.get("action"):
+                    action = prop_item.get("action")
+                if not item_id:
+                    item_id = prop_item.get("itemId") or prop_item.get("item_id")
+                if not item_name:
+                    item_name = prop_item.get("itemName") or prop_item.get("item_name")
+                if not item_index:
+                    item_index = prop_item.get("itemIndex") or prop_item.get("item_index")
+                if not item_data:
+                    item_data = prop_item.get("itemData") or prop_item.get("item")
 
         try:
             applied = apply(profile, section_key, field, value,
                             user=request.user,
-                            question=(request.data or {}).get("question", ""))
+                            question=(request.data or {}).get("question", ""),
+                            item_id=item_id, item_name=item_name, item_index=item_index,
+                            action=action, item_data=item_data)
         except ProposalError as exc:
             raise DomainValidationError({"field": str(exc)})
 
         audit("profile.proposal_applied", actor=request.user,
               entity="company_profile_section", entity_id=profile.id,
               tenant_id=company.tenant_id,
-              meta={"sectionKey": section_key, "field": field})
+              meta={"sectionKey": section_key, "field": field, "action": action})
 
         # The same three numbers and the same chips the chat already reads,
         # recomputed against what this write just changed.
@@ -598,6 +669,50 @@ class ProfileProposalApplyView(APIView):
             "readinessTotals": _readiness_totals(breakdown),
         })
         return Response(applied)
+
+
+class ProfileProposalApplyBatchView(APIView):
+    """POST — apply a list of proposals in a single batch transaction."""
+
+    def post(self, request, company_id):
+        from fundos.profile.proposals import ProposalError, apply_batch
+        from fundos.profile.services import get_or_create_profile
+
+        company = _company_or_404(request, company_id)
+        profile = get_or_create_profile(company, user=request.user)
+
+        proposals_list = (request.data or {}).get("proposals") or []
+        if not isinstance(proposals_list, list) or not proposals_list:
+            raise DomainValidationError({"proposals": "A list of proposals is required."})
+
+        question = (request.data or {}).get("question", "")
+
+        try:
+            applied_items = apply_batch(profile, proposals_list, user=request.user, question=question)
+        except ProposalError as exc:
+            raise DomainValidationError({"proposals": str(exc)})
+
+        audit("profile.proposals_batch_applied", actor=request.user,
+              entity="company_profile", entity_id=profile.id,
+              tenant_id=company.tenant_id,
+              meta={"count": len(applied_items)})
+
+        from fundos.profile import suggestions
+        from fundos.profile.spec_serializer import (
+            build_sections, _readiness_breakdown, _readiness_score,
+            _readiness_stage, _readiness_totals,
+        )
+        profile.refresh_from_db()
+        sections = build_sections(profile)
+        breakdown = suggestions.attach(_readiness_breakdown(sections))
+        score = _readiness_score(sections)
+        return Response({
+            "applied": applied_items,
+            "score": score,
+            "readiness_stage": _readiness_stage(score),
+            "readinessBreakdown": breakdown,
+            "readinessTotals": _readiness_totals(breakdown),
+        })
 
 
 class ProfileSectionRegenerateView(APIView):
@@ -1250,14 +1365,23 @@ def _citations_for(store, address):
     """
     if not store or not address:
         return []
+
+    norm_address = re.sub(r'([a-z0-9])([A-Z])', r'\1_\2', str(address or '')).lower()
+    exact = None
+    matched_addr = address
+    for addr in (address, norm_address):
+        if addr in store:
+            exact = store.get(addr)
+            matched_addr = addr
+            break
+
     # THE EXACT MATCH IS THE FIRST ANSWER, NOT THE ONLY ONE. A value
     # evidenced by two sources is stored as `<field>` plus `<field>.1`, and
     # returning on the exact key hid every one after the first — the reader
     # saw a single chip with no way to know a second source existed.
-    exact = store.get(address)
     seeded = [exact] if isinstance(exact, dict) and exact.get("source") else []
 
-    prefix = f"{address}."
+    prefix = f"{matched_addr}."
     keys = sorted((k for k in store if str(k).startswith(prefix)),
                   key=_sort_key)
     out, seen = [], set()
@@ -1283,20 +1407,12 @@ def _citations_for(store, address):
 
 
 def _source_kind(source):
-    """"document" or "web", from the STORED source, not the display title.
-
-    This read the cleaned title, which is the one string that cannot answer
-    it: the cleaner strips the "Batch 3: " prefix, and the test then asked
-    whether the result started with "batch". It never did, so every web
-    research citation in every profile came back `type: "document"` — a file
-    icon and a filename affordance over a search topic, promising a document
-    the reader could open and a page they could turn to. Neither exists.
-    """
+    """"document", "attribution", or "web", from the STORED source, not the display title."""
     from fundos.profile.pipeline.dossier import FOUNDER_SOURCE_LABEL
 
     text = str(source or "").strip()
-    if text == FOUNDER_SOURCE_LABEL:
-        return "founder"
+    if text in (FOUNDER_SOURCE_LABEL, "Profile chat") or text.startswith("Profile chat"):
+        return "attribution"
     if _FILENAME_SOURCE.search(text):
         return "document"
     return "web"
@@ -1503,7 +1619,7 @@ class ProfileFieldSourcesView(APIView):
 
 
 class ProfileQAView(APIView):
-    """POST {question} — grounded Q&A over the retrieved profile (SIMPLE tier)."""
+    """POST {question, history} — grounded Q&A over the retrieved profile (SIMPLE tier)."""
 
     def post(self, request, company_id):
         from fundos.profile.services import (answer_profile_question,
@@ -1511,7 +1627,9 @@ class ProfileQAView(APIView):
         company = _company_or_404(request, company_id)
         profile = get_or_create_profile(company, user=request.user)
         question = (request.data or {}).get("question", "").strip()
+        history = (request.data or {}).get("history")
         if not question:
             return Response({"detail": "question is required"}, status=400)
         return Response(answer_profile_question(profile, question,
-                                                user=request.user))
+                                                user=request.user,
+                                                history=history))

@@ -548,7 +548,7 @@ ROLE_MAX_OUTPUT_TOKENS = {
     # middle of the numbers rather than at the end of some prose.
     "document_read": 32768,
     "company_profile_field": 512,
-    "profile_qa": 1024,
+    "profile_qa": 4096,
     "company_profile_records": 2048,
     "company_profile_structured": 2048,
     "company_profile_deep_extract": 8192,

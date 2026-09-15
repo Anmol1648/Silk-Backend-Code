@@ -3220,22 +3220,40 @@ def compute_profile_ratios(profile):
     return out
 
 
-def answer_profile_question(profile, question, user=None):
+def answer_profile_question(profile, question, user=None, history=None):
     """Grounded Q&A over the already-retrieved profile. SIMPLE tier, no web.
 
     Builds the assembled profile as context and asks the profile_qa role,
     which the tenant's SIMPLE tier routes to a cheap, tools-off model.
+    Accepts optional conversation `history` for multi-turn Q&A.
     """
     from fundos.llm.adapter import llm_generate
     from fundos.profile import proposals, spec_serializer, suggestions
 
     dossier = spec_serializer.build_sections(profile)
-    result = llm_generate(
-        role="profile_qa",
-        context={"company": {"name": profile.company.name},
-                 "profile": dossier, "question": question},
-        section_context={"question": question},
-        user=user, calling_context="profile.qa")
+    context_data = {
+        "company": {"name": profile.company.name},
+        "profile": dossier,
+        "question": question,
+    }
+    if isinstance(history, list) and history:
+        context_data["history"] = history[:10]
+
+    try:
+        result = llm_generate(
+            role="profile_qa",
+            context=context_data,
+            section_context={"question": question},
+            user=user, calling_context="profile.qa")
+    except Exception as exc:
+        logger.warning("profile_qa call failed: %s", exc)
+        result = {
+            "answer": "The AI assistant is temporarily experiencing high server load on the LLM provider (503 Capacity). Please retry your request in a few seconds.",
+            "citations": [],
+            "answered": False,
+            "missing": [],
+            "proposedChanges": []
+        }
 
     # WHAT TO ASK NEXT, from the same dossier this answer was grounded in.
     #
@@ -3251,6 +3269,22 @@ def answer_profile_question(profile, question, user=None):
         # checked against the schema and given the profile's own current
         # text, so the diff a founder is shown is a real one and a card
         # they click Apply on cannot fail.
-        result["proposedChanges"] = proposals.validate(
-            profile, result.get("proposedChanges"))
+        raw_proposals = result.get("proposedChanges")
+        logger.info(
+            "profile_qa: LLM returned %d raw proposals for question=%r",
+            len(raw_proposals) if isinstance(raw_proposals, list) else 0,
+            question[:80])
+        if isinstance(raw_proposals, list):
+            for i, p in enumerate(raw_proposals):
+                logger.info(
+                    "profile_qa: raw[%d] action=%s section=%s field=%s "
+                    "proposedValue_len=%d",
+                    i, p.get("action"), p.get("sectionKey"), p.get("field"),
+                    len(str(p.get("proposedValue") or "")))
+        validated = proposals.validate(profile, raw_proposals)
+        logger.info(
+            "profile_qa: after validate — %d of %d proposals survived",
+            len(validated),
+            len(raw_proposals) if isinstance(raw_proposals, list) else 0)
+        result["proposedChanges"] = validated
     return result

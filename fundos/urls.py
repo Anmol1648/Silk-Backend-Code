@@ -71,6 +71,8 @@ urlpatterns = [
     # fields it may propose against.
     path(f"{COMPANY}/profile/proposals/apply",
          profile.ProfileProposalApplyView.as_view()),
+    path(f"{COMPANY}/profile/proposals/apply-batch",
+         profile.ProfileProposalApplyBatchView.as_view()),
     # Generation runs. A profile build is a long, multi-stage job with real
     # sub-progress; before these routes the only signal a client had was the
     # profile's status flipping, which cannot tell "still researching" from

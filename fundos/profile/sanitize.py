@@ -222,12 +222,25 @@ def plain_text(value, *, limit=MAX_STRING_CHARS, budget=None):
         return "true" if value else "false"
     if isinstance(value, (int, float, Decimal)):
         return _number_to_text(value)
+    if isinstance(value, str):
+        text_str = value.strip()
+        if text_str.startswith("[") and text_str.endswith("]"):
+            try:
+                import json
+                parsed = json.loads(text_str)
+                if isinstance(parsed, list):
+                    value = parsed
+            except Exception:
+                pass
+
     if isinstance(value, (list, tuple, set)):
-        # A list where a string was asked for: join rather than drop. Losing
-        # four of five values silently is worse than a slightly long string,
-        # and `first_term` exists for the fields where only one is meaningful.
+        # A list where a string was asked for: join paragraphs with newlines or tags with commas.
         parts = [plain_text(v, limit=limit) for v in list(value)[:MAX_LIST_ITEMS]]
-        value = ", ".join(p for p in parts if p)
+        parts = [p for p in parts if p]
+        if any(len(p) > 60 or "\n" in p for p in parts):
+            value = "\n\n".join(parts)
+        else:
+            value = ", ".join(parts)
     elif isinstance(value, dict):
         # Objects reaching a string field are almost always {"value": …,
         # "source": …} wrappers. Prefer the obvious payload key over dumping
