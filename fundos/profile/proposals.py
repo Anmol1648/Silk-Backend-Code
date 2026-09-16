@@ -23,7 +23,7 @@ Three rules hold this together.
 
 TEXT AND LIST ITEM FIELDS: Supported across all object and list sections.
 Supports actions: "edit" (default), "add" (new list item), "delete" (remove item).
-Array items (founders, competitors, products, etc.) are matched by itemId,
+Array items (founders, competitors, products, metrics, etc.) are matched by itemId,
 itemName, itemIndex, or contextual text in the prompt/reason.
 """
 import logging
@@ -57,29 +57,132 @@ FIELD_ALIASES = {
     "latest_pre_money_amount": "latest_pre_money_usd_mn",
     "latest_post_money_amount": "latest_post_money_usd_mn",
     "total_funding_raised_amount": "total_funding_raised_usd_mn",
+    "metric_name": "metric",
+    "kpi_name": "metric",
+    "kpi": "metric",
+}
+
+LIST_SECTIONS = {
+    "founders", "products_services", "customers_markets", "competitive_advantages",
+    "revenue_model", "company_metrics", "funding_history", "competitors",
+    "news", "investors_cap_table"
+}
+
+SECTION_ALIASES = {
+    "metrics": "company_metrics",
+    "company_metric": "company_metrics",
+    "metric": "company_metrics",
+    "kpis": "company_metrics",
+    "kpi": "company_metrics",
+    "founders_and_key_people": "founders",
+    "founder": "founders",
+    "key_people": "founders",
+    "team": "founders",
+    "leadership": "founders",
+    "products_and_services": "products_services",
+    "products": "products_services",
+    "services": "products_services",
+    "product": "products_services",
+    "service": "products_services",
+    "customers_and_markets": "customers_markets",
+    "customers": "customers_markets",
+    "markets": "customers_markets",
+    "target_market": "customers_markets",
+    "target_markets": "customers_markets",
+    "competitive_advantage": "competitive_advantages",
+    "advantages": "competitive_advantages",
+    "usps": "competitive_advantages",
+    "usp": "competitive_advantages",
+    "business_models": "business_model",
+    "revenue_models": "revenue_model",
+    "revenue_streams": "revenue_model",
+    "revenue": "revenue_model",
+    "financials": "financial_summary",
+    "financial_highlights": "financial_summary",
+    "funding": "funding_history",
+    "fundraising": "funding_history",
+    "funding_rounds": "funding_history",
+    "rounds": "funding_history",
+    "competitor": "competitors",
+    "competition": "competitors",
+    "recent_news": "news",
+    "press": "news",
+    "cap_table": "investors_cap_table",
+    "investors": "investors_cap_table",
+    "company_overview": "company_profile",
+    "overview": "company_profile",
+    "documents": "document_center",
 }
 
 
+def _norm_str(s):
+    return re.sub(r'[\s\-_]+', ' ', str(s or '').strip()).lower()
+
+
+def resolve_section_key(section_key):
+    """Dynamically resolve wire key for any section key or alias."""
+    raw = str(section_key or "").strip()
+    if not raw:
+        return ""
+    norm = re.sub(r'[\s\-]+', '_', raw.lower())
+
+    if norm in SECTION_ALIASES:
+        return SECTION_ALIASES[norm]
+
+    from fundos.profile.schema import SHIPPED_SECTIONS, sections
+    try:
+        sec_list = sections() or SHIPPED_SECTIONS
+    except Exception:
+        sec_list = SHIPPED_SECTIONS
+
+    for sec in sec_list:
+        if isinstance(sec, dict):
+            k = sec.get("key")
+            sk = sec.get("storage_key")
+            if k and (k == raw or k == norm or _norm_str(k) == _norm_str(norm)):
+                return k
+            if sk and (sk == raw or sk == norm or _norm_str(sk) == _norm_str(norm)):
+                return k or sk
+
+    return SECTION_ALIASES.get(norm, norm)
+
+
+def is_list_section(section_key):
+    """Check if section stores array/list of items dynamically."""
+    canon = resolve_section_key(section_key)
+    if canon in LIST_SECTIONS:
+        return True
+
+    from fundos.profile.schema import SHIPPED_SECTIONS, sections
+    try:
+        sec_list = sections() or SHIPPED_SECTIONS
+    except Exception:
+        sec_list = SHIPPED_SECTIONS
+
+    for sec in sec_list:
+        if isinstance(sec, dict) and (sec.get("key") == canon or sec.get("storage_key") == canon):
+            kind = str(sec.get("kind") or sec.get("container_kind") or "").lower()
+            return kind in ("array", "list") or sec.get("is_array") is True
+
+    return False
+
+
 def editable_fields():
-    """``{(section_key, field)}`` the chat may propose a change to, across object and list sections."""
+    """``{(section_key, field)}`` the chat may propose a change to across object sections."""
     from fundos.profile.schema import sections
 
     out = set()
     for section in sections():
         key = section["key"]
+        if is_list_section(key):
+            continue
         for field, spec in (section.get("fields") or {}).items():
+            if not str(spec).startswith(_TEXT_SPEC_PREFIX):
+                continue
             if (key, field) in CONTROLLED_FIELDS:
                 continue
             out.add((key, field))
-
-    for alias_k, canonical_k in FIELD_ALIASES.items():
-        out.add(("company_profile", alias_k))
-
     return out
-
-
-def _norm_str(s):
-    return re.sub(r'[\s\-_]+', ' ', str(s or '').strip()).lower()
 
 
 def _evidence(raw):
@@ -100,22 +203,34 @@ def _evidence(raw):
     return out
 
 
+def _section_fields(section_key):
+    """Dynamically fetch field keys for a section from schema.sections()."""
+    canon = resolve_section_key(section_key)
+    from fundos.profile.schema import SHIPPED_SECTIONS, sections
+    try:
+        sec_list = sections() or SHIPPED_SECTIONS
+    except Exception:
+        sec_list = SHIPPED_SECTIONS
+
+    for sec in sec_list:
+        if isinstance(sec, dict) and (sec.get("key") == canon or sec.get("storage_key") == canon):
+            fields = sec.get("fields") or {}
+            if isinstance(fields, dict):
+                return set(fields.keys())
+    return set()
+
+
 def default_field_for_section(section_key):
     """Fallback field name when a list section edit is supplied with an item_id or invalid field."""
-    defaults = {
-        "founders": "background",
-        "products_services": "description",
-        "customers_markets": "description",
-        "competitive_advantages": "description",
-        "revenue_model": "description",
-        "competitors": "description",
-        "company_metrics": "metric",
-        "funding_history": "round",
-        "news": "headline",
-        "company_profile": "description_of_business",
-        "business_model": "value_proposition",
-    }
-    return defaults.get(str(section_key or "").strip().lower(), "background")
+    canon = resolve_section_key(section_key)
+    fields = _section_fields(canon)
+    priority_order = ("metric", "background", "description", "headline", "stream", "market", "round", "title", "name", "category", "type")
+    for pref in priority_order:
+        if pref in fields:
+            return pref
+    if fields:
+        return sorted(list(fields))[0]
+    return "description"
 
 
 def _find_item_index(items, *, item_id=None, item_name=None, item_index=None, reason="", evidence=None, field=None, value=""):
@@ -136,7 +251,7 @@ def _find_item_index(items, *, item_id=None, item_name=None, item_index=None, re
         for i, item in enumerate(items):
             if not isinstance(item, dict):
                 continue
-            for id_key in ("name", "title", "market", "stream", "metric", "round", "role"):
+            for id_key in ("name", "title", "market", "stream", "metric", "round", "role", "headline"):
                 val = _norm_str(item.get(id_key))
                 if val and (val == target_name or target_name in val or val in target_name):
                     return i
@@ -156,7 +271,7 @@ def _find_item_index(items, *, item_id=None, item_name=None, item_index=None, re
         for i, item in enumerate(items):
             if not isinstance(item, dict):
                 continue
-            for id_key in ("name", "title", "market", "stream", "metric", "round"):
+            for id_key in ("name", "title", "market", "stream", "metric", "round", "headline"):
                 val = _norm_str(item.get(id_key))
                 if val and len(val) > 2 and val in combined_text:
                     return i
@@ -179,7 +294,7 @@ def _item_summary(item):
     if not isinstance(item, dict):
         return str(item or "")
     parts = []
-    for k in ("name", "title", "role", "market", "stream", "metric", "description", "background"):
+    for k in ("metric", "name", "title", "role", "market", "stream", "value", "description", "background", "headline"):
         v = str(item.get(k) or "").strip()
         if v:
             parts.append(v)
@@ -192,11 +307,12 @@ def _current_value(profile, section_key, field, *, item_id=None, item_name=None,
     """What the profile says today for scalar fields or list section item fields."""
     from fundos.profile.spec_serializer import serialize_section
 
+    canon_key = resolve_section_key(section_key)
     try:
-        data = serialize_section(profile, section_key).get("data")
-    except Exception as exc:                # pragma: no cover - never fatal
-        logger.debug("PROPOSAL: %s unreadable: %s", section_key, exc)
-        return None
+        data = serialize_section(profile, canon_key).get("data")
+    except Exception as exc:
+        logger.debug("PROPOSAL: %s unreadable: %s", canon_key, exc)
+        return "" if action in ("add", "edit") else None
 
     if action == "add":
         return ""
@@ -217,7 +333,8 @@ def _current_value(profile, section_key, field, *, item_id=None, item_name=None,
                         item_val = sub_v[idx].get(field)
                         if isinstance(item_val, (str, int, float, bool)):
                             return str(item_val)
-            return "" if field in data else None
+                        return _item_summary(sub_v[idx])
+            return "" if field in data else ""
         if isinstance(val, list):
             idx = _find_item_index(val, item_id=item_id, item_name=item_name, item_index=item_index, reason=reason, evidence=evidence, field=field)
             if idx is not None and 0 <= idx < len(val):
@@ -225,11 +342,11 @@ def _current_value(profile, section_key, field, *, item_id=None, item_name=None,
                 if action == "delete":
                     return _item_summary(item_val)
                 if isinstance(item_val, dict):
-                    return item_val.get(field, item_val.get("description", item_val.get("name", "")))
+                    return item_val.get(field, item_val.get("description", item_val.get("name", _item_summary(item_val))))
                 elif isinstance(item_val, str):
                     return item_val
             return ""
-        return None
+        return ""
 
     elif isinstance(data, list):
         idx = _find_item_index(data, item_id=item_id, item_name=item_name, item_index=item_index, reason=reason, evidence=evidence, field=field)
@@ -237,10 +354,15 @@ def _current_value(profile, section_key, field, *, item_id=None, item_name=None,
             if action == "delete":
                 return _item_summary(data[idx])
             val = data[idx].get(field)
-            return val if isinstance(val, str) else ("" if val is None else None)
+            if val is None:
+                for k, v in data[idx].items():
+                    if k != "id" and v is not None and str(v).strip():
+                        val = v
+                        break
+            return str(val) if val is not None else ""
         return ""
 
-    return None
+    return "" if action in ("add", "edit") else None
 
 
 def validate(profile, raw, *, allowed=None):
@@ -263,8 +385,8 @@ def validate(profile, raw, *, allowed=None):
     for index, item in enumerate(raw):
         if not isinstance(item, dict):
             continue
-        raw_s_key = str(item.get("sectionKey") or item.get("section_key") or "").strip()
-        raw_field = str(item.get("field") or item.get("fieldKey") or "").strip()
+        raw_s_key = str(item.get("sectionKey") or item.get("section_key") or item.get("section") or "").strip()
+        raw_field = str(item.get("field") or item.get("fieldKey") or item.get("field_key") or "").strip()
         if raw_field and "__" in raw_field:
             raw_field = raw_field.split("__", 1)[1]
         if raw_field in FIELD_ALIASES:
@@ -273,15 +395,17 @@ def validate(profile, raw, *, allowed=None):
         if action not in ("edit", "add", "delete"):
             action = "edit"
 
-        value = item.get("proposedValue", item.get("value"))
+        value = item.get("proposedValue", item.get("proposed_value", item.get("value")))
         item_id = item.get("itemId") or item.get("item_id") or item.get("id")
         item_name = item.get("itemName") or item.get("item_name") or item.get("name")
         item_index = item.get("itemIndex") or item.get("item_index") or item.get("index")
-        item_data = item.get("itemData") or item.get("item")
+        item_data = item.get("itemData") or item.get("item_data") or item.get("item")
         reason = str(item.get("reason") or "")[:500]
         evidence = item.get("evidence")
 
-        if raw_s_key in ("company_profile", "company_overview"):
+        canon_s_key = resolve_section_key(raw_s_key)
+
+        if canon_s_key == "company_profile":
             reason_lower = reason.lower()
             if "post-money" in reason_lower or "post money" in reason_lower:
                 raw_field = "latest_post_money_usd_mn"
@@ -290,29 +414,39 @@ def validate(profile, raw, *, allowed=None):
             elif ("total funding" in reason_lower or "funding raised" in reason_lower) and not any(k in reason_lower for k in ("post-money", "post money", "pre-money", "pre money")):
                 raw_field = "total_funding_raised_usd_mn"
 
-        norm_pair = (_norm(raw_s_key), _norm(raw_field))
+        norm_pair = (_norm(canon_s_key), _norm(raw_field))
+        is_list = is_list_section(canon_s_key)
+
         if norm_pair in norm_allowed:
             section_key, field = norm_allowed[norm_pair]
-        elif (raw_s_key, raw_field) in allowed:
-            section_key, field = raw_s_key, raw_field
-        elif action in ("add", "delete") and raw_s_key:
-            section_key = raw_s_key
-            field = raw_field if (raw_s_key, raw_field) in allowed else "name"
+        elif (canon_s_key, raw_field) in allowed:
+            section_key, field = canon_s_key, raw_field
+        elif is_list:
+            section_key = canon_s_key
+            allowed_fields = _section_fields(section_key)
+            if raw_field in allowed_fields:
+                field = raw_field
+            else:
+                field = default_field_for_section(section_key)
+        elif action in ("add", "delete") and canon_s_key:
+            section_key = canon_s_key
+            field = raw_field if raw_field else "name"
         else:
             logger.info("PROPOSAL: dropped %r on %r — not a field the chat may change.", raw_field, raw_s_key)
             continue
 
-        val_str = str(value).strip() if value is not None else ""
-        if action == "delete":
-            value = "[Delete Item]"
-        elif not val_str:
-            if isinstance(item_data, dict):
+        if action != "delete":
+            if isinstance(value, str) and value.strip():
+                value = value.strip()
+            elif isinstance(item_data, dict):
                 value = _item_summary(item_data)
+            elif isinstance(value, (int, float, bool)):
+                value = str(value)
             else:
                 logger.info("PROPOSAL: dropped %r on %r — no text proposed.", field, section_key)
                 continue
         else:
-            value = val_str
+            value = "[Delete Item]"
 
         if len(value) > MAX_VALUE_CHARS:
             logger.info("PROPOSAL: dropped %r on %r — %d characters is a document, not an edit.", field, section_key, len(value))
@@ -320,7 +454,7 @@ def validate(profile, raw, *, allowed=None):
 
         current = _current_value(profile, section_key, field, item_id=item_id, item_name=item_name, item_index=item_index, reason=reason, evidence=evidence, action=action)
         if current is None:
-            continue
+            current = ""
         if action == "edit" and current.strip() == value.strip():
             continue
 
@@ -332,30 +466,21 @@ def validate(profile, raw, *, allowed=None):
             "itemId": item_id,
             "itemName": item_name,
             "itemIndex": item_index,
-            "itemData": item_data if isinstance(item_data, dict) else None,
-            "currentValue": current,
-            "proposedValue": value.strip(),
+            "itemData": item_data,
+            "currentValue": current if isinstance(current, str) else "",
+            "proposedValue": value,
             "reason": reason,
             "evidence": _evidence(evidence),
         })
 
-    # Deduplicate proposals targeting the same (sectionKey, field, itemId)
     deduped = []
-    seen = {}
+    seen = set()
     for p in out:
-        key = (p["sectionKey"], p["field"], str(p.get("itemId") or ""))
+        key = (p["sectionKey"], p["field"], p["itemId"], p["itemName"], p["itemIndex"], p["action"], p["proposedValue"])
         if key not in seen:
-            seen[key] = len(deduped)
+            seen.add(key)
             deduped.append(p)
-        else:
-            existing_idx = seen[key]
-            existing_val = str(deduped[existing_idx].get("proposedValue", ""))
-            new_val = str(p.get("proposedValue", ""))
-            # Prefer plain numeric string (e.g. "12.0") over formatted display string ("USD:12:M")
-            if "usd:" in existing_val.lower() and "usd:" not in new_val.lower():
-                deduped[existing_idx] = p
 
-    # Re-assign clean IDs
     for idx, p in enumerate(deduped):
         p["id"] = f"prop_{idx + 1}"
 
@@ -376,6 +501,11 @@ def apply(profile, section_key, field, value, *, user=None, question="", item_id
     if action not in ("edit", "add", "delete"):
         action = "edit"
 
+    canon_s_key = resolve_section_key(section_key)
+
+    if value is not None and not isinstance(value, str):
+        value = str(value)
+
     if item_id and str(item_id).startswith("prop_"):
         item_id = None
 
@@ -385,13 +515,21 @@ def apply(profile, section_key, field, value, *, user=None, question="", item_id
     if field in FIELD_ALIASES:
         field = FIELD_ALIASES[field]
 
-    allowed = editable_fields()
-    if (section_key, field) not in allowed:
-        if section_key in ("founders", "products_services", "customers_markets", "competitive_advantages", "revenue_model", "company_metrics", "funding_history", "competitors", "news"):
-            if field and ("-" in str(field) or len(str(field)) > 20):
-                if not item_id:
-                    item_id = str(field)
+    is_list = is_list_section(canon_s_key)
+    if is_list:
+        section_key = canon_s_key
+        allowed_fields = _section_fields(section_key)
+        if field and ("-" in str(field) or len(str(field)) > 20):
+            if not item_id:
+                item_id = str(field)
+        if field not in allowed_fields:
             field = default_field_for_section(section_key)
+    else:
+        allowed = editable_fields()
+        if (canon_s_key, field) in allowed:
+            section_key = canon_s_key
+        else:
+            section_key = canon_s_key
 
     val_str = str(value).strip() if value is not None else ""
     if action != "delete" and not val_str and not isinstance(item_data, dict):
@@ -402,6 +540,7 @@ def apply(profile, section_key, field, value, *, user=None, question="", item_id
 
     data = serialize_section(profile, section_key).get("data")
     previous = ""
+    idx = None
 
     if isinstance(data, dict):
         if action == "edit":
@@ -433,7 +572,6 @@ def apply(profile, section_key, field, value, *, user=None, question="", item_id
             new_obj = dict(item_data) if isinstance(item_data, dict) else {field: value.strip()}
             if item_name and "name" not in new_obj:
                 new_obj["name"] = str(item_name)
-            # Find sub list if any
             for sub_k, sub_v in data.items():
                 if isinstance(sub_v, list):
                     sub_v = list(sub_v)
@@ -472,10 +610,12 @@ def apply(profile, section_key, field, value, *, user=None, question="", item_id
                 data.append(new_item)
 
         elif action == "add":
-            new_item = dict(item_data) if isinstance(item_data, dict) else {field: value.strip()}
-            if item_id and "id" not in new_item:
-                new_item["id"] = str(item_id)
-            if item_name and "name" not in new_item and field != "name":
+            new_item = dict(item_data) if isinstance(item_data, dict) else {}
+            if not new_item.get("id"):
+                new_item["id"] = str(uuid.uuid4())
+            if not new_item.get(field) and value.strip():
+                new_item[field] = value.strip()
+            if item_name and "name" not in new_item:
                 new_item["name"] = str(item_name)
             data.append(new_item)
 
@@ -492,7 +632,11 @@ def apply(profile, section_key, field, value, *, user=None, question="", item_id
     section = ProfileSection.objects.filter(
         profile=profile, section_key=internal_key, is_active=True).first()
     if section is not None:
-        _unconfirm(section, field)
+        if action == "delete":
+            _unconfirm(section, field, item_id=item_id, item_index=idx, data=data)
+        else:
+            fresh_data = serialize_section(profile, section_key).get("data")
+            _confirm_proposal_field(section, field, item_id=item_id, item_name=item_name, item_index=idx, data=fresh_data)
         _record_provenance(section, field, question, user, item_id=item_id)
 
     logger.info("PROPOSAL: applied %s proposal (%r) on %r for profile %s.", action, field, section_key, profile.id)
@@ -517,8 +661,8 @@ def apply_batch(profile, proposals_list, *, user=None, question=""):
     for prop in proposals_list:
         if not isinstance(prop, dict):
             continue
-        s_key = prop.get("sectionKey") or prop.get("section_key") or ""
-        field = prop.get("field") or prop.get("fieldKey") or ""
+        s_key = prop.get("sectionKey") or prop.get("section_key") or prop.get("section") or ""
+        field = prop.get("field") or prop.get("fieldKey") or prop.get("field_key") or ""
         field_id = prop.get("field_id") or prop.get("fieldId") or ""
         if field_id and "__" in str(field_id):
             parts = str(field_id).split("__", 1)
@@ -530,19 +674,7 @@ def apply_batch(profile, proposals_list, *, user=None, question=""):
         item_id = prop.get("itemId") or prop.get("item_id")
         item_name = prop.get("itemName") or prop.get("item_name")
         item_index = prop.get("itemIndex") or prop.get("item_index")
-        item_data = prop.get("itemData") or prop.get("item")
-
-        if field and "__" in str(field):
-            field = str(field).split("__", 1)[1]
-        if field in FIELD_ALIASES:
-            field = FIELD_ALIASES[field]
-
-        if (s_key, field) not in editable_fields():
-            if s_key in ("founders", "products_services", "customers_markets", "competitive_advantages", "revenue_model", "company_metrics", "funding_history", "competitors", "news"):
-                if field and ("-" in str(field) or len(str(field)) > 20):
-                    if not item_id:
-                        item_id = str(field)
-                field = default_field_for_section(s_key)
+        item_data = prop.get("itemData") or prop.get("item_data") or prop.get("item")
 
         val = prop.get("value") if prop.get("value") is not None else prop.get("proposedValue", prop.get("proposed_value", ""))
 
@@ -553,39 +685,75 @@ def apply_batch(profile, proposals_list, *, user=None, question=""):
     return applied_results
 
 
-def _unconfirm(section, field):
-    """A confirmed field that CHANGES is no longer confirmed."""
+def _confirm_proposal_field(section, field, item_id=None, item_name=None, item_index=None, data=None):
+    """When a proposal is applied by the user, mark that field or item as confirmed globally."""
     confirmed = list(section.confirmed_fields or [])
-    if field not in confirmed:
-        return
-    section.confirmed_fields = [f for f in confirmed if f != field]
+    sec_key = section.section_key
+    from fundos.profile.schema import wire_key_for, storage_key_for
+    w_key = wire_key_for(sec_key)
+    s_key = storage_key_for(sec_key)
+
+    targets_to_add = set()
+
+    if isinstance(data, list):
+        targets_to_add.add(sec_key)
+        targets_to_add.add(w_key)
+        targets_to_add.add(s_key)
+        targets_to_add.add(f"{sec_key}__array")
+        targets_to_add.add("array")
+        for idx, item in enumerate(data):
+            if isinstance(item, dict) and item.get("id"):
+                targets_to_add.add(str(item["id"]))
+            targets_to_add.add(str(idx))
+            targets_to_add.add(str(idx + 1))
+    else:
+        if field:
+            targets_to_add.add(str(field))
+            if field in FIELD_ALIASES:
+                targets_to_add.add(FIELD_ALIASES[field])
+            for k_alias, k_canon in FIELD_ALIASES.items():
+                if field == k_canon:
+                    targets_to_add.add(k_alias)
+        if item_id:
+            targets_to_add.add(str(item_id))
+
+    new_confirmed = list(confirmed)
+    for t in targets_to_add:
+        if t not in new_confirmed:
+            new_confirmed.append(t)
+
+    from fundos.profile.spec_serializer import normalize_confirmed_fields
+    normalized = normalize_confirmed_fields(sec_key, data, new_confirmed)
+    section.confirmed_fields = normalized
     section.save(update_fields=["confirmed_fields", "updated_at"])
-    logger.info("PROPOSAL: %r was confirmed and has changed — the confirmation is cleared, not carried over.", field)
+    logger.info("PROPOSAL: Applied proposal confirmed %r for section %r.", targets_to_add, sec_key)
+
+
+def _unconfirm(section, field, item_id=None, item_index=None, data=None, previous_data=None):
+    """A confirmed field or item that CHANGES is no longer confirmed."""
+    confirmed = list(section.confirmed_fields or [])
+    if not confirmed:
+        return
+
+    sec_key = section.section_key
+    remove_targets = {str(field)}
+    if item_id:
+        remove_targets.add(str(item_id))
+
+    new_confirmed = [c for c in confirmed if c not in remove_targets]
+    section.confirmed_fields = new_confirmed
+    section.save(update_fields=["confirmed_fields", "updated_at"])
 
 
 def _record_provenance(section, field, question, user, item_id=None):
-    """Say where this value came from while preserving original dossier sources."""
-    sources = dict(section.field_sources or {})
-    target_keys = set()
-    if field:
-        target_keys.add(str(field))
-    if item_id:
-        target_keys.add(str(item_id))
-
-    chat_source = {
-        "source": "Profile chat",
-        "locator": (str(question)[:200] if question else "Applied chat proposal"),
-        "quote": "",
-        "appliedBy": getattr(user, "email", "") or "",
+    """Record provenance when proposal is applied."""
+    meta = dict(getattr(section, "field_sources", None) or {})
+    key = f"{field}:{item_id}" if item_id else field
+    meta[key] = {
+        "source": "chat_proposal",
+        "question": question[:200] if question else "",
+        "applied_by": getattr(user, "username", "founder"),
     }
-
-    for target_key in target_keys:
-        existing = sources.get(target_key)
-        if isinstance(existing, dict) and existing.get("source") and existing.get("source") != "Profile chat":
-            if not sources.get(f"{target_key}.orig"):
-                sources[f"{target_key}.orig"] = existing
-
-        sources[target_key] = chat_source
-
-    section.field_sources = sources
+    section.field_sources = meta
     section.save(update_fields=["field_sources", "updated_at"])
+

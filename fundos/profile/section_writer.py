@@ -330,10 +330,30 @@ class SectionUpdateError(ValueError):
 def _as_decimal(v):
     if v in (None, ""):
         return None
+    if isinstance(v, (int, float, Decimal)):
+        return Decimal(str(v))
+    if isinstance(v, str):
+        v_str = v.strip()
+        if not v_str:
+            return None
+        parsed_usd = _parse_display_to_usd_mn(v_str)
+        if parsed_usd is not None:
+            return Decimal(str(parsed_usd))
+        try:
+            return Decimal(v_str)
+        except (InvalidOperation, ValueError):
+            pass
+        cleaned = re.sub(r"[^\d.-]", "", v_str)
+        if cleaned and cleaned not in (".", "-", ".-", "-."):
+            try:
+                return Decimal(cleaned)
+            except (InvalidOperation, ValueError):
+                pass
+        return None
     try:
         return Decimal(str(v))
     except (InvalidOperation, ValueError):
-        raise SectionUpdateError("Expected a number.")
+        return None
 
 
 def _as_date(v):
@@ -861,6 +881,8 @@ def update_section_from_data(profile, section_key, data, *, user=None,
             if not isinstance(row, dict):
                 raise SectionUpdateError(f"{section_key} rows must be objects.")
             clean = {}
+            if row.get("id"):
+                clean["id"] = str(row["id"])
             for f in allowed:
                 if f in ("share_percent",):
                     # A SHARE NOBODY STATED IS NOT A SHARE OF ZERO. Coerced
@@ -1284,9 +1306,39 @@ def _replace_entity_rows(profile, section_key, internal_key, rows, *,
         # "founder_entered" meant onboarding's cleanup filter
         # (source="founder") never matched these rows, so re-submitting the
         # onboarding form duplicated every founder.
-        inst = Model(tenant_id=profile.company.tenant_id, profile=profile,
-                     source=source, sort_order=i + 1,
-                     created_by=user)
+        row_id = row.get("id")
+        inst = None
+        if row_id:
+            try:
+                import uuid as _uuid
+                valid_uuid = _uuid.UUID(str(row_id)) if not isinstance(row_id, _uuid.UUID) else row_id
+                inst = Model.all_objects.filter(id=valid_uuid).first()
+            except (ValueError, TypeError):
+                pass
+
+        if inst is not None:
+            inst.is_deleted = False
+            inst.deleted_at = None
+            inst.deleted_by = None
+            inst.source = source
+            inst.sort_order = i + 1
+            if user is not None:
+                inst.created_by = user
+        else:
+            inst_kwargs = {
+                "tenant_id": profile.company.tenant_id,
+                "profile": profile,
+                "source": source,
+                "sort_order": i + 1,
+                "created_by": user,
+            }
+            if row_id:
+                try:
+                    import uuid as _uuid
+                    inst_kwargs["id"] = _uuid.UUID(str(row_id)) if not isinstance(row_id, _uuid.UUID) else row_id
+                except (ValueError, TypeError):
+                    pass
+            inst = Model(**inst_kwargs)
         for spec_field, attr in field_map.items():
             if spec_field not in row:
                 continue

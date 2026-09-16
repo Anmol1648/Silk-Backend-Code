@@ -1137,7 +1137,8 @@ def preflight_report(profile):
                 row = PromptTemplate.objects.filter(
                     role=role
                 ).latest('version_no')
-                age_days = (timezone.now() - row.created_at).days
+                ts = getattr(row, 'updated_at', getattr(row, 'created_at', None))
+                age_days = (timezone.now() - ts).days if ts else 0
                 
                 # Warn if older than 30 days (likely stale after deployment)
                 if age_days > 30:
@@ -3255,21 +3256,17 @@ def answer_profile_question(profile, question, user=None, history=None):
             "proposedChanges": []
         }
 
-    # WHAT TO ASK NEXT, from the same dossier this answer was grounded in.
-    #
-    # The chat lives at this endpoint and nowhere else. Without this it would
-    # have to re-fetch the whole profile after every reply just to refresh
-    # its chips -- a second round trip for something already computed here,
-    # and a window in which the chips describe a state one answer out of
-    # date. The dossier is already built; the suggestions are a walk over it.
     if isinstance(result, dict):
         result["readinessBreakdown"] = suggestions.attach(
             spec_serializer._readiness_breakdown(dossier))
-        # A CHANGE THE CHAT SUGGESTS, NOT ONE IT MAKES. Every entry is
-        # checked against the schema and given the profile's own current
-        # text, so the diff a founder is shown is a real one and a card
-        # they click Apply on cannot fail.
-        raw_proposals = result.get("proposedChanges")
+        raw_proposals = (
+            result.get("proposedChanges") or
+            result.get("proposals") or
+            result.get("proposed_changes") or
+            result.get("changes")
+        )
+        if isinstance(raw_proposals, dict):
+            raw_proposals = [raw_proposals]
         logger.info(
             "profile_qa: LLM returned %d raw proposals for question=%r",
             len(raw_proposals) if isinstance(raw_proposals, list) else 0,
@@ -3281,7 +3278,7 @@ def answer_profile_question(profile, question, user=None, history=None):
                     "proposedValue_len=%d",
                     i, p.get("action"), p.get("sectionKey"), p.get("field"),
                     len(str(p.get("proposedValue") or "")))
-        validated = proposals.validate(profile, raw_proposals)
+        validated = proposals.validate(profile, raw_proposals) if raw_proposals else []
         logger.info(
             "profile_qa: after validate — %d of %d proposals survived",
             len(validated),

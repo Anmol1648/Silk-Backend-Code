@@ -1456,9 +1456,10 @@ def build_sections(profile):
             "sectionKey": spec_key,
             "isComplete": _section_is_complete(spec_key, data, sec, required),
             "lastUpdatedAt": _iso(sec.updated_at) if sec else None,
-            "confirmed_fields": (sec.confirmed_fields
-                                 if sec and hasattr(sec, 'confirmed_fields')
-                                 else []),
+            "confirmed_fields": normalize_confirmed_fields(
+                spec_key, data,
+                sec.confirmed_fields if sec and hasattr(sec, 'confirmed_fields') else []
+            ),
             "data": data,
         }
     return sections
@@ -1497,9 +1498,10 @@ def serialize_section(profile, spec_key):
         "sectionKey": spec_key,
         "isComplete": _section_is_complete(spec_key, data, sec, set()),
         "lastUpdatedAt": _iso(sec.updated_at) if sec else None,
-        "confirmed_fields": (sec.confirmed_fields
-                             if sec and hasattr(sec, 'confirmed_fields')
-                             else []),
+        "confirmed_fields": normalize_confirmed_fields(
+            spec_key, data,
+            sec.confirmed_fields if sec and hasattr(sec, 'confirmed_fields') else []
+        ),
         "data": data,
     }
 
@@ -1536,6 +1538,70 @@ _SECTION_WEIGHTS = {
 ITEM_ID = "id"
 
 
+def normalize_confirmed_fields(section_key, data, confirmed_fields):
+    """Normalize confirmed_fields for list sections by converting legacy position strings ("1", "2", "0")
+    to persistent item UUIDs if available, preserving string UUIDs, sentinels, and scalar field names.
+    Also resolves field aliases (e.g. latest_pre_money_display <-> latest_pre_money_usd_mn) and section prefixes.
+    """
+    if not confirmed_fields or not isinstance(confirmed_fields, list):
+        return []
+    if not isinstance(data, list):
+        normalized = []
+        for x in confirmed_fields:
+            item_str = str(x)
+            clean = item_str[len(section_key) + 2:] if item_str.startswith(f"{section_key}__") else item_str
+            if item_str not in normalized:
+                normalized.append(item_str)
+            if clean not in normalized:
+                normalized.append(clean)
+        return normalized
+
+    normalized = []
+    from fundos.profile.schema import storage_key_for, wire_key_for
+    s_key = storage_key_for(section_key)
+    w_key = wire_key_for(section_key)
+    sentinels = {
+        section_key, s_key, w_key,
+        f"{section_key}__array", f"{s_key}__array", f"{w_key}__array",
+        f"{section_key}__obj", f"{s_key}__obj", f"{w_key}__obj",
+        "array", "obj"
+    }
+
+    for item in confirmed_fields:
+        item_str = str(item)
+        if item_str.isdigit() and data and isinstance(data, list):
+            idx = int(item_str)
+            target = None
+            if 0 <= idx < len(data) and isinstance(data[idx], dict) and data[idx].get("id"):
+                target = str(data[idx]["id"])
+            elif 1 <= idx <= len(data) and isinstance(data[idx - 1], dict) and data[idx - 1].get("id"):
+                target = str(data[idx - 1]["id"])
+
+            if target and target not in normalized:
+                normalized.append(target)
+            elif item_str not in normalized:
+                normalized.append(item_str)
+        else:
+            if item_str not in normalized:
+                normalized.append(item_str)
+
+    has_sentinel = any(str(x) in sentinels for x in confirmed_fields)
+    if has_sentinel and data and isinstance(data, list):
+        for idx, sub_item in enumerate(data):
+            if isinstance(sub_item, dict) and sub_item.get("id"):
+                iid = str(sub_item["id"])
+                if iid not in normalized:
+                    normalized.append(iid)
+            s_idx0 = str(idx)
+            if s_idx0 not in normalized:
+                normalized.append(s_idx0)
+            s_idx1 = str(idx + 1)
+            if s_idx1 not in normalized:
+                normalized.append(s_idx1)
+
+    return normalized
+
+
 def _confirmed_items(section_key, data, confirmed):
     """How many objects in a list section a human has actually confirmed.
 
@@ -1564,12 +1630,22 @@ def _confirmed_items(section_key, data, confirmed):
     """
     if not confirmed:
         return 0
-    if section_key in confirmed:
+    from fundos.profile.schema import storage_key_for, wire_key_for
+    s_key = storage_key_for(section_key)
+    w_key = wire_key_for(section_key)
+    sentinels = {
+        section_key, s_key, w_key,
+        f"{section_key}__array", f"{s_key}__array", f"{w_key}__array",
+        "array",
+    }
+    if sentinels & set(confirmed):
         return len(data)
+    cf_norm = set(normalize_confirmed_fields(section_key, data, list(confirmed)))
     return sum(1 for position, item in enumerate(data)
                if isinstance(item, dict)
-               and (str(item.get(ITEM_ID) or "") in confirmed
-                    or str(position) in confirmed))
+               and (str(item.get("id") or "") in cf_norm
+                    or str(position) in cf_norm
+                    or str(position + 1) in cf_norm))
 
 
 def _row_has_content(sec):
@@ -1640,7 +1716,8 @@ def _readiness_breakdown(sections_dict):
             blank = [k for k in field_keys
                      if data.get(k) in (None, "", [], {})]
             populated = len(field_keys) - len(blank)
-            confirmed = len(cf & set(field_keys))
+            cf_norm = set(normalize_confirmed_fields(key, data, list(cf)))
+            confirmed = len(cf_norm & set(field_keys))
         elif isinstance(data, list):
             # One object is one part. A founder is a single unit with a
             # single Confirm — the name, role and background inside it are

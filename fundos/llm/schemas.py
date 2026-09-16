@@ -121,9 +121,8 @@ SCHEMAS = {
                      "needsInput": bool, "missing": list},
     },
     "profile_qa": {
-        "required": {"answer": str},
-        "optional": {"citations": list, "answered": bool, "missing": list,
-                     "proposedChanges": list},
+        "required": {"answer": str, "proposedChanges": list},
+        "optional": {"citations": list, "answered": bool, "missing": list},
     },
     "company_profile_field": {
         "optional": {"fieldKey": str, "needsInput": bool},

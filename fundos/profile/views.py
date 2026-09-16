@@ -461,9 +461,18 @@ class ProfileSectionView(APIView):
         if "data" in request.data:
             # Standardized contract (section-data-integrity doc §3).
             try:
-                update_section_from_data(
+                from fundos.profile.section_writer import _current_structured
+                from fundos.profile.spec_serializer import storage_key_for
+                internal_key = storage_key_for(section_key)
+                prev_structured, _, _ = _current_structured(profile, internal_key)
+
+                sec_row = update_section_from_data(
                     profile, section_key, request.data.get("data"),
                     user=request.user)
+
+                if "confirmed_fields" not in request.data and sec_row is not None:
+                    from fundos.profile.proposals import _unconfirm
+                    _unconfirm(sec_row, section_key, data=request.data.get("data"), previous_data=prev_structured)
             except SectionUpdateError as e:
                 return Response({"detail": str(e)}, status=422)
         elif ("content" in request.data) or ("structured" in request.data):
@@ -502,7 +511,10 @@ class ProfileSectionView(APIView):
                     profile=profile, section_key=internal_key,
                     tenant_id=profile.tenant_id, is_active=True)
             cf = request.data["confirmed_fields"]
-            sec.confirmed_fields = cf if isinstance(cf, list) else []
+            raw_cf = cf if isinstance(cf, list) else []
+            from fundos.profile.spec_serializer import serialize_section, normalize_confirmed_fields
+            sec_data = serialize_section(profile, section_key).get("data")
+            sec.confirmed_fields = normalize_confirmed_fields(section_key, sec_data, raw_cf)
             sec.save(update_fields=["confirmed_fields", "updated_at"])
 
         audit("profile.section_edited", actor=request.user,

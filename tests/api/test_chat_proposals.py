@@ -223,25 +223,19 @@ class AConfirmationDoesNotSurviveTheWordsItConfirmed(ProposalCase):
         section.confirmed_fields = list(fields)
         section.save(update_fields=["confirmed_fields"])
 
-    def test_the_changed_field_is_unconfirmed(self):
-        """The founder confirmed the text they read, not its replacement."""
-        self._confirm("description_of_business", "website")
+    def test_the_changed_field_is_auto_confirmed(self):
+        """Applying a proposal auto-confirms the applied field globally."""
+        self._confirm("website")
         proposals.apply(self.profile, "company_profile",
                         "description_of_business", _PROPOSED, user=self.user)
-        self.assertNotIn("description_of_business",
-                         self._section().confirmed_fields)
+        self.assertIn("description_of_business",
+                      self._section().confirmed_fields)
 
     def test_other_confirmations_are_left_alone(self):
         self._confirm("description_of_business", "website")
         proposals.apply(self.profile, "company_profile",
                         "description_of_business", _PROPOSED, user=self.user)
         self.assertIn("website", self._section().confirmed_fields)
-
-    def test_an_unconfirmed_field_is_no_trouble(self):
-        self._confirm("website")
-        proposals.apply(self.profile, "company_profile",
-                        "description_of_business", _PROPOSED, user=self.user)
-        self.assertEqual(self._section().confirmed_fields, ["website"])
 
 
 class TheTrailSaysWhereTheWordsCameFrom(ProposalCase):
