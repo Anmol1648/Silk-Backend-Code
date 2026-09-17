@@ -1789,6 +1789,42 @@ def _readiness_score(sections_dict):
     return round(earned_weight / total_weight * 100)
 
 
+def _readiness_score_populated(sections_dict):
+    """Readiness from POPULATED fields, weighted by section as above.
+
+    `_readiness_score` credits only what a founder has confirmed, so a
+    profile with 64 of 66 fields filled and nothing confirmed scores 0: the
+    ring reads "just getting started" beside a form that is visibly almost
+    complete, and nothing on the screen explains the gap.
+
+    This scores the work that exists rather than the sign-off it has not had.
+    Confirmation is still tracked and still reported — the breakdown's
+    `confirmed`, `readinessTotals.confirmed` and `sectionsConfirmed` are
+    unchanged, and the review prompts in `suggestions` still count what is
+    unconfirmed. Only the headline number stops waiting on it.
+
+    Weighted the same way as `_readiness_score`, deliberately: the section
+    weights are a configured statement of what matters, and a flat
+    populated/fields ratio would silently discard them.
+
+    Kept ALONGSIDE `_readiness_score` rather than replacing it, so a
+    confirmation-weighted score stays available to anything that wants one.
+    """
+    breakdown = _readiness_breakdown(sections_dict)
+    total_weight = 0.0
+    earned_weight = 0.0
+    for entry in breakdown:
+        w = entry["weight"]
+        fields = entry["fields"]
+        if fields == 0:
+            continue
+        total_weight += w
+        earned_weight += w * (entry["populated"] / fields)
+    if total_weight == 0:
+        return 0
+    return round(earned_weight / total_weight * 100)
+
+
 def _readiness_stage(score):
     """Map score 0–100 to the readiness ladder label (Req 4)."""
     if score >= 95:
@@ -1807,7 +1843,7 @@ def serialize_profile(profile, company, *, default_deal_id=None,
     """Full §6 top-level record with the §8 sections object."""
     sections = build_sections(profile)
     breakdown = suggestions.attach(_readiness_breakdown(sections))
-    score = _readiness_score(sections)
+    score = _readiness_score_populated(sections)
     return {
         "companyId": str(company.id),
         "companyName": company.name,

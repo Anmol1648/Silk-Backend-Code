@@ -394,6 +394,10 @@ class Command(BaseCommand):
 
         self._changes = []
         self._dry_run = bool(options.get("dry_run"))
+        # `_llm_provider_selection` reports the models it left in place, but
+        # `--pin-models` runs after it and can move every one of them. It has
+        # to know, or the same run prints two lines that contradict each other.
+        self._pinning = bool(options.get("pin_models"))
         if self._dry_run:
             self.stdout.write(self.style.WARNING(
                 "DRY RUN — nothing will be written."))
@@ -592,9 +596,10 @@ class Command(BaseCommand):
         # here means one model serves the entire system rather than two that
         # have to be kept in step.
         #
-        # The catalog marks it "retiring". That is a real end date to plan
-        # against, not a reason to let the tier drift onto a name the key may
-        # not serve — change it here, in one place, when the account moves.
+        # The catalog marks it "retiring" on 16-Oct-2026. That is a real end
+        # date to plan against, not a reason to let the tier drift onto a name
+        # the key may not serve — change it here, in one place, when the
+        # account moves.
         "gemini": {"simple": "gemini-2.5-flash",
                    "advanced": "gemini-2.5-flash",
                    "judgment": "gemini-2.5-flash"},
@@ -722,8 +727,21 @@ class Command(BaseCommand):
                 f"  llm provider selection: {provider} via {endpoint.code} "
                 f"({', '.join(changed)})")
         if healthy:
-            self.stdout.write(
-                f"  llm provider selection: left as-is ({', '.join(healthy)})")
+            if self._pinning:
+                # Naming models here would print a line the model pin below
+                # then contradicts — which is how this block came to report
+                # gemini-3.5-flash on a run that moved every tier to
+                # gemini-2.5-flash four lines later. What this block actually
+                # decided is that nothing needed repairing; the models are the
+                # pin's to report, once they are final.
+                self.stdout.write(
+                    f"  llm provider selection: left as-is "
+                    f"({len(healthy)} tier(s) healthy; models reported by "
+                    f"the model pin below)")
+            else:
+                self.stdout.write(
+                    f"  llm provider selection: left as-is "
+                    f"({', '.join(healthy)})")
 
     def _pin_models(self):
         """Force every Gemini profile onto the pinned model. ``--pin-models``.
@@ -806,6 +824,18 @@ class Command(BaseCommand):
                " — every Gemini profile already on the pinned model"))
 
         self._pin_endpoint_default(self.PIPELINE_MODEL)
+
+        # Read back rather than restated: this is the line the "left as-is"
+        # report above defers to, so it has to describe the rows as they now
+        # stand, not the table this method meant to apply. (Inside the block's
+        # own transaction, so a --dry-run read sees its own pending writes.)
+        final = sorted(set(
+            LLMConfigProfile.objects
+            .filter(code__in=list(targets), provider="gemini")
+            .values_list("model_string", flat=True)))
+        if final:
+            self.stdout.write(
+                "  model pin: gemini profiles now on " + ", ".join(final))
 
     def _pin_endpoint_default(self, model):
         """Point the Gemini endpoint's own default at the pinned model too.

@@ -21,7 +21,7 @@ if not os.environ.get("FUNDOS_DB_HOST"):
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
-CELERY_TASK_ALWAYS_EAGER = True          # run tasks inline in dev
+CELERY_TASK_ALWAYS_EAGER = False          # run tasks inline in dev
 FUNDOS_STORAGE_BACKEND = "local"
 
 # Dev: throttling stays functional but generous (tests exercise the real

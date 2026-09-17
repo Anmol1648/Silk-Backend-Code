@@ -530,7 +530,7 @@ class ProfileSectionView(APIView):
         # Req 4: include top-level score + readiness_stage + breakdown after
         # every PATCH so the frontend can update the progress bar.
         from fundos.profile.spec_serializer import (
-            build_sections, _readiness_score, _readiness_stage,
+            build_sections, _readiness_score_populated, _readiness_stage,
             _readiness_breakdown, _readiness_totals,
         )
         from fundos.profile import suggestions
@@ -538,7 +538,7 @@ class ProfileSectionView(APIView):
         # The same per-section prompts the profile GET returns, so the chat
         # beside a freshly-saved section offers what that save left undone.
         breakdown = suggestions.attach(_readiness_breakdown(sections))
-        score = _readiness_score(sections)
+        score = _readiness_score_populated(sections)
         result["score"] = score
         result["readiness_stage"] = _readiness_stage(score)
         result["readinessBreakdown"] = breakdown
@@ -667,13 +667,14 @@ class ProfileProposalApplyView(APIView):
         # recomputed against what this write just changed.
         from fundos.profile import suggestions
         from fundos.profile.spec_serializer import (
-            build_sections, _readiness_breakdown, _readiness_score,
+            build_sections, _readiness_breakdown,
+            _readiness_score_populated,
             _readiness_stage, _readiness_totals,
         )
         profile.refresh_from_db()
         sections = build_sections(profile)
         breakdown = suggestions.attach(_readiness_breakdown(sections))
-        score = _readiness_score(sections)
+        score = _readiness_score_populated(sections)
         applied.update({
             "score": score,
             "readiness_stage": _readiness_stage(score),
@@ -711,13 +712,14 @@ class ProfileProposalApplyBatchView(APIView):
 
         from fundos.profile import suggestions
         from fundos.profile.spec_serializer import (
-            build_sections, _readiness_breakdown, _readiness_score,
+            build_sections, _readiness_breakdown,
+            _readiness_score_populated,
             _readiness_stage, _readiness_totals,
         )
         profile.refresh_from_db()
         sections = build_sections(profile)
         breakdown = suggestions.attach(_readiness_breakdown(sections))
-        score = _readiness_score(sections)
+        score = _readiness_score_populated(sections)
         return Response({
             "applied": applied_items,
             "score": score,
